@@ -1,0 +1,21 @@
+/* src/styles/animations.module.css */
+
+@keyframes pulseBadge {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+}
+
+.badgePulse {
+  animation: pulseBadge 0.8s ease-out;
+  animation-fill-mode: forwards;
+}

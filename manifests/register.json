@@ -1,0 +1,14 @@
+/* project-root/manifests/register.json */
+
+{
+  "hooks": {
+    "onInit": [
+      {
+        "module": "manifest",
+        "role": "admin",
+        "action": "./hooks/initManifest.ts"
+      }
+    ]
+  }
+}
+

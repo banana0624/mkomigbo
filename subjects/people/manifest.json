@@ -1,0 +1,17 @@
+/* project-root/subjects/people/manifest.json */
+
+{
+  "id": "people",
+  "subjectNumber": 3,
+  "title": "Igbo People",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo People - Ndi Igbo. Origin and Migratory tales.",
+    "description": "Igbo People, Ndi Igbo - Many versions of the origin.",
+    "keywords": ["Igbo People - Many versions of the origin of Ndi Igbo."],
+    "subject": "Igbo People"
+  }
+}

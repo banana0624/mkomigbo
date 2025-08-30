@@ -1,0 +1,17 @@
+/* project-root/subjects/africa/manifest.json */
+
+{
+  "id": "africa",
+  "subjectNumber": 15,
+  "title": "Africa History and Origin",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Africa – Origins, Lineage & Legacy",
+    "description": "Explore the rich historical roots of Africa and her people, including lineage systems, migrations, and cultural evolution.",
+    "keywords": ["Africa history", "lineage", "African heritage", "culture", "migration", "ancestry"],
+    "subject": "Africa"
+  }
+}

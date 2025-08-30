@@ -1,0 +1,7 @@
+## project-root/manifests/hooks.yaml 
+
+hooks:
+  onInit:
+    - module: manifest
+      role: admin
+      action: ./hooks/initManifest.ts

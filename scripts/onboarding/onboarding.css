@@ -1,0 +1,109 @@
+/* scripts/onboarding/onboarding.css */
+
+/* ────────────────────────────────────────────────
+   🎉 Onboarding Overlay Visibility
+   ──────────────────────────────────────────────── */
+#onboarding-overlay.fade-in {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+#onboarding-overlay.fade-out {
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+}
+#onboarding-overlay.visible {
+  display: block;
+}
+
+/* ────────────────────────────────────────────────
+   🏅 Badge Animation Variants
+   ──────────────────────────────────────────────── */
+.badge-anim-pulse {
+  animation: badgePulse 1.2s ease-in-out;
+}
+.badge-anim-glow {
+  animation: badgeGlow 1.2s ease-in-out;
+}
+.badge-anim-bounce {
+  animation: badgeBounce 1s ease;
+}
+
+@keyframes badgePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes badgeGlow {
+  0% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+  50% { box-shadow: 0 0 16px rgba(255, 215, 0, 0.9); }
+  100% { box-shadow: 0 0 0 rgba(255, 215, 0, 0); }
+}
+
+@keyframes badgeBounce {
+  0% { transform: translateY(0); }
+  40% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+/* ────────────────────────────────────────────────
+   📣 Toast Feedback Messages
+   ──────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 9999;
+}
+
+.toast {
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: #0b0b0b;
+  background: #f3f3f3;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  opacity: 0.95;
+  transition: transform 200ms, opacity 300ms;
+}
+
+.toast-exit {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.toast-info    { border-left: 4px solid #3a7afe; }
+.toast-success { border-left: 4px solid #16a34a; }
+.toast-warning { border-left: 4px solid #f59e0b; }
+.toast-error   { border-left: 4px solid #ef4444; }
+
+/* ────────────────────────────────────────────────
+   📢 Banner Feedback Messages
+   ──────────────────────────────────────────────── */
+.banner {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  padding: 8px 12px;
+  z-index: 9998;
+  text-align: center;
+}
+
+.banner-info    { background: #e8f0ff; color: #0b2a6f; }
+.banner-success { background: #e9f9ef; color: #0c3a1f; }
+.banner-warning { background: #fff7e6; color: #5f3b00; }
+.banner-error   { background: #ffecec; color: #6b1111; }
+
+/* ────────────────────────────────────────────────
+   🔥 Audit Heatmap Rhythm Classes
+   ──────────────────────────────────────────────── */
+#audit-heatmap.rhythm-0 { background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 100%); }
+#audit-heatmap.rhythm-1 { background: linear-gradient(90deg, #e5e7eb 0%, #d1d5db 100%); }
+#audit-heatmap.rhythm-2 { background: linear-gradient(90deg, #d1d5db 0%, #9ca3af 100%); }
+#audit-heatmap.rhythm-3 { background: linear-gradient(90deg, #9ca3af 0%, #6b7280 100%); }
+#audit-heatmap.rhythm-4 { background: linear-gradient(90deg, #6b7280 0%, #4b5563 100%); }
+#audit-heatmap.rhythm-5 { background: linear-gradient(90deg, #4b5563 0%, #374151 100%); }
+#audit-heatmap.rhythm-6 { background: linear-gradient(90deg, #374151 0%, #1f2937 100%); }
+#audit-heatmap.rhythm-7 { background: linear-gradient(90deg, #1f2937 0%, #111827 100%); }

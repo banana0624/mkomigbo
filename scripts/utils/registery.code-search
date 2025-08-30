@@ -1,0 +1,30 @@
+# Query: registery
+# ContextLines: 1
+
+6 results - 6 files
+
+project-root\core\registries\coreSubjects.ts:
+  4  import { SubjectManifest } from './types';
+  5: import { registerSubject } from './manifestRegistry';
+  6  
+
+project-root\core\registries\lifecycleRegistry.ts:
+  1: // project-root/core/registeries/lifecycleRegistry.ts
+  2  
+
+project-root\core\registries\manifestRegistry.ts:
+  1: // project-root/core/registeries/manifestRegistry.ts
+  2  
+
+project-root\dist\core\registries\coreSubjects.js:
+  1  // project-root/core/registeries/coreSubjects.ts
+  2: import { registerSubject } from './manifestRegistry';
+  3  const coreSubjects = {
+
+project-root\dist\core\registries\lifecycleRegistry.js:
+  1: // project-root/core/registeries/lifecycleRegistry.ts
+  2  export const lifecycleRegistry = {
+
+project-root\dist\core\registries\manifestRegistry.js:
+  1: // project-root/core/registeries/manifestRegistry.ts
+  2  export const manifestRegistry = {

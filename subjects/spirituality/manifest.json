@@ -1,0 +1,17 @@
+/* project-root/subjects/spirituality/manifest.json */
+
+{
+  "id": "spirituality",
+  "subjectNumber": 7,
+  "title": "Spirituality",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Spirituality - Ndi Igbo had no religion, they are spiritual people. Even their calendar is a form of spirituality.",
+    "description": "Spiritaulity - Four market days representing the four elements of nature. Eke, fire, Orie water, Afo, earth, nkwo, air",
+    "keywords": ["Spiritaulity, Eke, Orie, Afo, Nkwo."],
+    "subject": "Spirituality"
+  }
+}

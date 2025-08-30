@@ -1,0 +1,17 @@
+/* project-root/subjects/europe/manifest.json */
+
+{
+  "id": "europe",
+  "subjectNumber": 17,
+  "title": "European Influence",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "European influence on Ndi Igbo – Origins, Lineage & Legacy",
+    "description": "Advent and Exploitation Europeeans on Ndi Igbo. Slavery, culture rape, imposition of religion, chaos and tribal war. Theft of our resources.",
+    "keywords": ["Slavery, colonisation, dethroning of Igbo and African Monachs"],
+    "subject": "Europe"
+  }
+}

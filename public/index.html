@@ -1,0 +1,55 @@
+<!-- Project-root/public/index.html //-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Backup Summary</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    #timeline {
+      transition: opacity 0.5s ease;
+      opacity: 1;
+    }
+    #timeline.fade-out {
+      opacity: 0;
+    }
+    .vis-item.dry-run { background-color: #f0f8ff; border-color: #00bfff; }
+    .vis-item.real { background-color: #e6ffe6; border-color: #2e8b57; }
+    .vis-item.created { background-color: #fffbe6; border-color: #f0ad4e; }
+    .vis-item.validated { background-color: #e6f7ff; border-color: #5bc0de; }
+    .vis-item.archived { background-color: #f9e6ff; border-color: #d9534f; }
+  </style>
+</head>
+<body>
+  <h1>Backup Timeline</h1>
+
+  <section>
+    <h2>Audit History</h2>
+    <div id="auditTable"></div>
+  </section>
+
+  <section>
+    <label>
+      <input type="checkbox" id="dryRunToggle" />
+      Dry Run Mode
+    </label>
+    <div id="timeline" style="height: 400px;"></div>
+  </section>
+
+  <section>
+    <h2>Lifecycle Timeline</h2>
+    <div id="lifecycleTimeline" style="height: 300px;"></div>
+  </section>
+
+  <h2>Audit Mode Switches</h2>
+  <div id="auditTimeline" style="height: 300px;"></div>
+
+  <script type="module">
+    import { renderLifecycleTimeline } from './lifecycleTimeline.js';
+    renderLifecycleTimeline(document.getElementById('lifecycleTimeline'), false);
+  </script>
+  <script src="script.js"></script>
+  <script src="/dist/index.js"></script>
+</body>
+</html>

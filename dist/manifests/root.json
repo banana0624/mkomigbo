@@ -1,0 +1,28 @@
+/* project-root/manifests/root.json */
+{
+    "id": "root",
+    "title": "Platform Home",
+    "modules": [
+        {
+            "id": "subject-about",
+            "path": "./modules/subject-about/index.ts",
+            "layout": "./layouts/aboutLayout.tsx",
+            "roles": ["admin", "editor"],
+            "seo": {
+                "title": "About This Subject",
+                "description": "Learn more about this subject and its role in the platform.",
+                "keywords": ["subject", "about", "platform", "overview"]
+            }
+        },
+        {
+            "id": "subject-history",
+            "path": "./modules/subject-history/index.ts",
+            "layout": "./layouts/aboutLayout.tsx",
+            "seo": {
+                "title": "History of the Subject",
+                "description": "Explore the historical background and evolution of this subject.",
+                "keywords": ["subject", "history", "timeline", "origin"]
+            }
+        }
+    ]
+}

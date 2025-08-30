@@ -1,0 +1,68 @@
+/* project-root/src/components/timeline/LifecycleTimeline.module.css */
+
+.timeline {
+  padding: 16px;
+  background-color: #fefefe;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: sans-serif;
+}
+
+.entry {
+  margin-bottom: 12px;
+  padding: 8px;
+  border-left: 4px solid #4caf50;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+}
+
+.id {
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.track {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.state {
+  transition: all 0.3s ease-in-out;
+  opacity: 0.5;
+}
+
+.created,
+.validated,
+.archived {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.timestamp {
+  font-style: italic;
+}
+
+.empty {
+  padding: 16px;
+  font-style: italic;
+  color: #666;
+}
+
+.legend {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  background-color: #f9f9f9;
+  border-left: 4px solid #4A90E2;
+}
+
+.legend ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+}
+
+.legend li {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}

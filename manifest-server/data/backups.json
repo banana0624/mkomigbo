@@ -1,0 +1,23 @@
+[
+  {
+    "id": "backup-001",
+    "timestamp": "2025-08-17T08:00:00Z",
+    "status": "complete",
+    "size": "42MB",
+    "path": "/backups/backup-001.tar.gz"
+  },
+  {
+    "id": "backup-002",
+    "timestamp": "2025-08-16T08:00:00Z",
+    "status": "pending",
+    "size": "38MB",
+    "path": "/backups/backup-002.tar.gz"
+  },
+  {
+    "id": "backup-003",
+    "timestamp": "2025-08-15T08:00:00Z",
+    "status": "failed",
+    "error": "Checksum mismatch",
+    "path": "/backups/backup-003.tar.gz"
+  }
+]

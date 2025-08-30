@@ -1,0 +1,17 @@
+/* project-root/subjects/culture/manifest.json */
+
+{
+  "id": "culture",
+  "subjectNumber": 5,
+  "title": "Igbo Culture",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Cultural – Origins, Lineage & Legacy",
+    "description": "Explore the rich culturel heritage of Igbo people, Ndi Igbo including lineage systems, migrations, and cultural evolution.",
+    "keywords": ["Igbo culure", "lineage", "Igbo cultural heritage", "culture", "migration", "ancestry"],
+    "subject": "Culture"
+  }
+}

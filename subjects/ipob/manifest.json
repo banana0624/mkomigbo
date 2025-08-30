@@ -1,0 +1,17 @@
+/* project-root/subjects/ipob/manifest.json */
+
+{
+  "id": "ipob",
+  "subjectNumber": 13,
+  "title": "Igbo National Struggle",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo Opression and Marginalization",
+    "description": "Explore the rich historical roots of the Igbo people, including lineage systems, migrations, and cultural evolution.",
+    "keywords": ["Igbo history", "lineage", "African heritage", "culture", "migration", "ancestry"],
+    "subject": "History"
+  }
+}

@@ -1,0 +1,17 @@
+/* project-root/subjects/tradition/manifest.json */
+
+{
+  "id": "Tradition",
+  "subjectNumber": 8,
+  "title": "Igbo Tradition",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo Tradition - Ndi Igbo have unique traditon.",
+    "description": "Igbo Traditioncovers all aspect of our daily living, social, health, spiritaulity and all.",
+    "keywords": ["Tradition, Social, marriage, birth, burial."],
+    "subject": "Tradition"
+  }
+}

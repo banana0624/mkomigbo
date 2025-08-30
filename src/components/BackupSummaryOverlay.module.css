@@ -1,0 +1,28 @@
+/* project-root/src/components/BackupSummaryOverlay.css */
+
+@import '/../styles/theme.module.css';
+
+.backup-summary-overlay {
+  position: fixed;
+  bottom: var(--spacing-md);
+  left: var(--spacing-md);
+  background-color: var(--color-secondary);
+  color: var(--color-light);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-md);
+  animation: slideUpFade var(--transition-slow);
+  z-index: 1000;
+}
+
+/* Entry animation */
+@keyframes slideUpFade {
+  0% {
+    transform: translateY(var(--spacing-md));
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

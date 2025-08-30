@@ -1,0 +1,52 @@
+<!-- project-root/playground/onboarding-demo.html //-->
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Onboarding Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Onboarding UI styles -->
+    <link rel="stylesheet" href="../scripts/onboarding/onboarding.css" />
+    <style>
+      /* Minimal scaffolding for playground */
+      body { font-family: system-ui, sans-serif; margin: 16px; }
+      .row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+      #audit-heatmap { width: 320px; height: 140px; border-radius: 8px; }
+      #onboarding-overlay { display: none; padding: 12px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; }
+      #onboarding-overlay.visible { display: block; }
+      .controls { display: flex; gap: 8px; margin-top: 12px; }
+      button { padding: 8px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: #f9fafb; cursor: pointer; }
+      button:active { transform: translateY(1px); }
+    </style>
+  </head>
+  <body>
+    <h1>Onboarding Demo</h1>
+
+    <div class="row">
+      <div id="audit-heatmap" aria-label="Audit heatmap"></div>
+      <div>
+        <div id="onboarding-overlay" class="fade-out" aria-live="polite"></div>
+        <div class="controls">
+          <button id="start-onboarding">Start</button>
+          <button id="next-step">Next step</button>
+          <button id="stop-onboarding">Stop</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Option A: Use compiled JS output (recommended in plain HTML) -->
+    <!-- Adjust the ../dist/ path to your actual build output -->
+    <script type="module" src="../dist/scripts/onboarding/demoPage.js"></script>
+
+    <!-- Option B: If using a dev server that serves TS modules (e.g., Vite), replace Option A with: -->
+    <!--
+    <script type="module">
+      import { mountOnboardingDemo } from '../scripts/onboarding/demoHarness.ts';
+      import { mountToastContainer } from '../scripts/utils/feedbackRenderer.ts';
+      mountToastContainer();
+      mountOnboardingDemo();
+    </script>
+    -->
+  </body>
+</html>

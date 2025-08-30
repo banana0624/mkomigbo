@@ -1,0 +1,6 @@
+{
+  "project": "mkomigbo",
+  "version": "1.0.0",
+  "contributors": ["Theo"],
+  "features": ["backup", "dry-run", "audit"]
+}

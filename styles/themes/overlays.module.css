@@ -1,0 +1,42 @@
+/* project-root/styles/themes/overlays.module.css */
+
+@layer components {
+    .overlay {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: var(--rhythm-4);
+    z-index: 1000;
+    }
+
+    .backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in lch, var(--platform-fg), transparent 70%);
+    backdrop-filter: blur(6px);
+    }
+
+    .content {
+    position: relative;
+    width: min(720px, 100%);
+    border-radius: 12px;
+    border: 1px solid var(--platform-border);
+    background: var(--platform-bg);
+    color: var(--platform-fg);
+    padding: var(--rhythm-6);
+    box-shadow:
+        0 10px 30px color-mix(in lch, var(--subject-accent), transparent 85%),
+        0 2px 10px rgba(0,0,0,.06);
+    animation: celebrate-rise var(--motion-medium) var(--easing-emph);
+    }
+
+    .title { font: 700 1.25rem/1.2 var(--font-sans, ui-sans-serif); }
+    .body { font: 400 1rem/1.5 var(--font-sans, ui-sans-serif); color: var(--platform-muted); }
+
+    @media (prefers-reduced-motion: reduce) {
+    .content { animation: none; }
+    .backdrop { backdrop-filter: none; }
+    }
+}
+

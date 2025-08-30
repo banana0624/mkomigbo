@@ -1,0 +1,17 @@
+/* project-root/subjects/about/manifest.json */
+
+{
+  "id": "about",
+  "subjectNumber": 19,
+  "title": "About mkomigbo",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo nationality – Origins, Lineage & Legacy",
+    "description": "Explore the rich historical roots of the Igbo people, including lineage systems, migrations, and cultural evolution.",
+    "keywords": ["Igbo history", "lineage", "African heritage", "culture", "migration", "ancestry"],
+    "subject": "Biafra"
+  }
+}

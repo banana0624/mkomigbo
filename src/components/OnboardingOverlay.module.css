@@ -1,0 +1,19 @@
+/*  project-root/src/components/OnboardingOverlay.css */
+
+@import '/../styles/theme.module.css';
+
+.onboarding-overlay {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #fff;
+  border: 2px solid #4caf50;
+  padding: 1rem;
+  animation: fadeInOut 3s ease-in-out;
+}
+@keyframes fadeInOut {
+  0% { opacity: 0 }
+  10% { opacity: 1 }
+  90% { opacity: 1 }
+  100% { opacity: 0 }
+}

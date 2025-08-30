@@ -1,0 +1,41 @@
+/* project-root/styles/themes/theme.tokens.module.css */
+
+:root {
+  /* 🎨 Color Tokens */
+  --color-primary: #1A1A1A;
+  --color-accent: #0066FF;
+  --color-background: #FFFFFF;
+  --color-border-muted: #E0E0E0;
+
+  /* Subject Identity (sample) */
+  --color-math: #4B0082;     /* Indigo */
+  --color-history: #B7410E;  /* Rust */
+  --color-science: #228B22;  /* Forest Green */
+  --color-literature: #8B0000; /* Deep Red */
+
+  /* Platform Identity (sample) */
+  --color-web: #2C3E50;
+  --color-mobile: #16A085;
+  --color-desktop: #34495E;
+
+  /* 🧱 Spacing Tokens */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --spacing-xl: 64px;
+
+  /* 🔠 Typography Tokens */
+  --font-primary: 'Inter', sans-serif;
+  --font-secondary: 'Georgia', serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+
+  /* 🎞️ Rhythm & Animation */
+  --transition-fast: 150ms ease-in-out;
+  --transition-medium: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+}

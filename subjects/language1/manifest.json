@@ -1,0 +1,17 @@
+/* project-root/subjects/language1/manifest.json */
+
+{
+  "id": "language1",
+  "subjectNumber": 9,
+  "title": "Igbo Language History",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo Language History – Origins, Ancient Scipt - Nsibidi",
+    "description": "Explore the rich historical roots of the Language, including scripting of nsibidi.",
+    "keywords": ["Igbo Language History and Evolution"],
+    "subject": "Language History"
+  }
+}

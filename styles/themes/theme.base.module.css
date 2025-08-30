@@ -1,0 +1,42 @@
+/* project-root/styles/themes/theme.base.module.css */
+
+@import './theme.tokens.module.css';
+
+:global(body) {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary);
+  font-size: var(--font-size-md);
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition-medium), color var(--transition-medium);
+}
+
+:global(a) {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+:global(a:hover) {
+  color: var(--color-primary);
+}
+
+:global(button),
+:global(input),
+:global(textarea) {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm);
+  border: 1px solid var(--color-border-muted);
+  background-color: var(--color-background);
+  color: var(--color-primary);
+  transition: border-color var(--transition-fast);
+}
+
+:global(input:focus),
+:global(textarea:focus) {
+  border-color: var(--color-accent);
+  outline: none;
+}
+

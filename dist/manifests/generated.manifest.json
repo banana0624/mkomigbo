@@ -1,0 +1,24 @@
+// project-root/manifests/generated.manifest.json 
+{
+    "/about": {
+        "transition": {
+            "visitor": { "type": "fade", "duration": 300, "direction": "vertical", "easing": "ease-in-out" },
+            "user": { "type": "fade", "duration": 400, "direction": "vertical", "easing": "ease-out" },
+            "developer": { "type": "fade", "duration": 150, "direction": "vertical", "easing": "linear" }
+        },
+        "lifecycle": {
+            "onEnter": "() => console.log('Entering route')",
+            "onExit": "() => console.log('Exiting route')"
+        },
+        "seo": {
+            "title": "ABOUT | Mkomigbo",
+            "description": "Auto-generated description for /about",
+            "keywords": ["about", "mkomigbo"]
+        },
+        "access": {
+            "visitor": true,
+            "user": true,
+            "developer": true
+        }
+    }
+}

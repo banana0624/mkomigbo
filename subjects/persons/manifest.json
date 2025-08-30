@@ -1,0 +1,17 @@
+/* project-root/subjects/persons/manifest.json */
+
+{
+  "id": "persons",
+  "subjectNumber": 4,
+  "title": "Igbo Persons",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo Motables - Ndi Igbo Notables and Celebrities.",
+    "description": "Igbo Persons, contributions to the world. ",
+    "keywords": ["Igbo Notables in all fields of endevour."],
+    "subject": "Igbo Persons"
+  }
+}

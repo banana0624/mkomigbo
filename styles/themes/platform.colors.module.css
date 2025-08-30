@@ -1,0 +1,31 @@
+/* project-root/styles/themes/platform.colors.module.css */
+
+:global(:root) {
+    --platform-fg: hsl(220 15% 18%);
+    --platform-bg: hsl(0 0% 100%);
+    --platform-muted: hsl(220 10% 40%);
+    --platform-border: hsl(220 12% 88%);
+
+    /* Link tokens: platform × subject */
+    --link-fg: var(--subject-accent-ink);
+    --link-underline: color-mix(in lch, var(--subject-accent), var(--platform-bg) 40%);
+    --link-hover: var(--subject-accent);
+    --link-active: color-mix(in lch, var(--subject-accent), black 12%);
+    --link-focus-ring: color-mix(in lch, var(--subject-accent), white 20%);
+}
+
+/* Platform scopes (attach data-platform on a root wrapper) */
+:global([data-platform="web"]) {
+    --platform-bg: hsl(0 0% 100%);
+    --platform-fg: hsl(220 15% 18%);
+}
+
+:global([data-platform="ios"]) {
+    --platform-bg: hsl(0 0% 98%);
+    --platform-fg: hsl(220 22% 12%);
+}
+
+:global([data-platform="android"]) {
+    --platform-bg: hsl(0 0% 100%);
+    --platform-fg: hsl(220 20% 14%);
+}

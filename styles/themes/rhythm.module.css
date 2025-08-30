@@ -1,0 +1,54 @@
+/* project-root/styles/themes/rhythm.module.css */
+
+:global(:root) {
+    --base-unit: 4px;
+    --rhythm-1: calc(var(--base-unit) * 1);
+    --rhythm-2: calc(var(--base-unit) * 2);
+    --rhythm-3: calc(var(--base-unit) * 3);
+    --rhythm-4: calc(var(--base-unit) * 4);
+    --rhythm-6: calc(var(--base-unit) * 6);
+    --rhythm-8: calc(var(--base-unit) * 8);
+
+    --motion-fast: 120ms;
+    --motion-medium: 220ms;
+    --motion-slow: 360ms;
+    --easing-emph: cubic-bezier(.2,.8,.2,1);
+}
+
+@layer utilities {
+    .pad-1 { padding: var(--rhythm-1); }
+    .pad-2 { padding: var(--rhythm-2); }
+    .pad-x-2 { padding-inline: var(--rhythm-2); }
+    .pad-y-2 { padding-block: var(--rhythm-2); }
+
+    .gap-1 { gap: var(--rhythm-1); }
+    .gap-2 { gap: var(--rhythm-2); }
+    .gap-4 { gap: var(--rhythm-4); }
+
+    .stack > * + * { margin-block-start: var(--rhythm-2); }
+
+    /* Celebration motion */
+    @keyframes celebrate-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+    }
+
+    @keyframes celebrate-rise {
+    0% { transform: translateY(6px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+    }
+
+    .celebratePulse {
+    animation: celebrate-pulse var(--motion-medium) var(--easing-emph);
+    }
+
+    .celebrateRise {
+    animation: celebrate-rise var(--motion-slow) var(--easing-emph);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+    .celebratePulse,
+    .celebrateRise { animation: none; }
+    }
+}

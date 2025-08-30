@@ -1,0 +1,17 @@
+/* project-root/subjects/language2/manifest.json */
+
+{
+  "id": "language2",
+  "subjectNumber": 10,
+  "title": "Igbo Language & Grammar",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Igbo Language & Grammar – Spoken and written Igbo language.",
+    "description": "Igbo language trend evolution and way forward.",
+    "keywords": ["Igbo Language History and Evolution"],
+    "subject": "Language Grammar"
+  }
+}

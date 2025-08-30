@@ -1,0 +1,17 @@
+/* project-root/subjects/religion/manifest.json */
+
+{
+  "id": "slavery",
+  "subjectNumber": 2,
+  "title": "Slavery",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Slavery - ",
+    "description": "Slavery - It was a scorch to Igboland. A lot of devastations. Ndi Igbo foound themselves in faraway places, many died.",
+    "keywords": ["Slavery, Slave Trade, Trans atlantic slave trade"],
+    "subject": "Slavery"
+  }
+}

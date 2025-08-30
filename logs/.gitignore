@@ -1,0 +1,4 @@
+## project-root/logs/.gitignore
+
+# Ignore all log files
+*.log

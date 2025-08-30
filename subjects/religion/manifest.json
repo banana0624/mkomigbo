@@ -1,0 +1,17 @@
+/* project-root/subjects/religion/manifest.json */
+
+{
+  "id": "religion",
+  "subjectNumber": 6,
+  "title": "Religion",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Religion - Ndi Igbo had their own mode of worship before the white man came with Christianity. Christianity is two about two generations old.",
+    "description": "Religion to Ndi Igbo is predominantly Christianity. Islam is just trying to enter Igboland. Jihad will make it uninteresting to Ndi Igbo.",
+    "keywords": ["Religion, Christianity, Islam."],
+    "subject": "Religion"
+  }
+}

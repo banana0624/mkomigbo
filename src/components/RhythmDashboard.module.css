@@ -1,0 +1,22 @@
+/* project-root/src/components/RhythmDashboard.css */
+
+@import '/../styles/theme.module.css';
+
+.rhythm-bar {
+  margin-bottom: 1rem;
+}
+.score-bar {
+  background: #eee;
+  height: 10px;
+  position: relative;
+}
+.score-fill {
+  background: #4caf50;
+  height: 100%;
+}
+.score-label {
+  position: absolute;
+  right: 0;
+  top: -20px;
+  font-size: 0.8rem;
+}

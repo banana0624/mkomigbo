@@ -1,0 +1,25 @@
+## 🏅 Badge System Overview
+
+This platform celebrates contributor milestones with dynamic badges. Each badge has:
+
+- **Tier**: Progression level (Newcomer → Visionary)
+- **Milestone**: Action that unlocks the badge
+- **Pulse Animation**: Visual feedback on unlock
+
+### 📦 Data Structure
+
+Badges are defined in `src/data/badgeData.ts` with fields:
+- `id`, `label`, `description`, `tier`, `icon`, `milestone`
+
+### 🎞️ Animation
+
+Unlocking a badge triggers a rhythm-based pulse via:
+- `useBadgePulse` hook
+- `pulseBadge` keyframes in `animations.module.css`
+
+### 🧩 Components
+
+- `BadgeDisplay`: Renders badges with unlock feedback
+- `BadgeLegend`: Visualizes tiers and badge descriptions
+
+Every badge is a moment of celebration. Keep the rhythm alive.

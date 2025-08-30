@@ -1,0 +1,17 @@
+/* project-root/subjects/uk/manifest.json */
+
+{
+  "id": "UK",
+  "subjectNumber": 8,
+  "title": "UK",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "UK Nigeria colonial nasters that hate Ndi Igbo with passion. They instigated the Biafra war.",
+    "description": "Nigeria's colonial master, who left Nigeria lopesided so much so that Nigeria will never no peace should equity b pursued.",
+    "keywords": ["Tradition, Social, marriage, birth, burial."],
+    "subject": "Tradition"
+  }
+}

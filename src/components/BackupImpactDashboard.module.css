@@ -1,0 +1,31 @@
+/*  project-root/src/components/BackupImpactDashboard.css */
+
+@import '/../styles/theme.module.css';
+
+/* Apply shared theme styling */
+.backupImpactDashboard {
+  background-color: var(--color-light);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Typography and layout */
+.backupImpactDashboard h2,
+.backupImpactDashboard h3 {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  margin-bottom: var(--spacing-sm);
+}
+
+.backupImpactDashboard ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.backupImpactDashboard li {
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-secondary);
+  font-size: var(--font-size-sm);
+}

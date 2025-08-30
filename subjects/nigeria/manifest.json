@@ -1,0 +1,17 @@
+/* project-root/subjects/nigeria/manifest.json */
+
+{
+  "id": "nigeria",
+  "subjectNumber": 14,
+  "title": "Nigeria a False Entity",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Nigeria, a geographical expression y the Britain for their eternal exploitation of the indegenous people",
+    "description": "Nigeria, a geographical expression for the British exploitative convinience",
+    "keywords": ["Nigeria, Anarchy, Corruption, Looting, Stealing, Mal administration."],
+    "subject": "Nigeria"
+  }
+}

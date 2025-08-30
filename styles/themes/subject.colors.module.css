@@ -1,0 +1,25 @@
+/* project-root/styles/themes/subject.colors.module.css */
+
+/* project-root/styles/themes/subject.colors.module.css */
+   :global(:root) {
+     --subject-hue-math: 48;
+     --subject-hue-science: 195;
+     --subject-hue-history: 12;
+     --subject-hue-language: 270;
+
+     --subject-sat: 82%;
+     --subject-light: 46%;
+
+     /* Default subject (can be overridden at the page/container level) */
+     --subject-hue: var(--subject-hue-math);
+     --subject-accent: hsl(var(--subject-hue) var(--subject-sat) var(--subject-light));
+     --subject-accent-ink: hsl(var(--subject-hue) 28% 18%);
+     --subject-accent-contrast: white;
+   }
+
+   /* Subject scopes (attach data-subject on a wrapping element) */
+   :global([data-subject="math"])    { --subject-hue: var(--subject-hue-math); }
+   :global([data-subject="science"]) { --subject-hue: var(--subject-hue-science); }
+   :global([data-subject="history"]) { --subject-hue: var(--subject-hue-history); }
+   :global([data-subject="language"]){ --subject-hue: var(--subject-hue-language); }
+   

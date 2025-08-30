@@ -1,0 +1,17 @@
+/* project-root/subjects/islam/manifest.json */
+
+{
+  "id": "islam",
+  "subjectNumber": 18,
+  "title": "Islam Intimidations",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Islam and Jihad",
+    "description": "Islam, Jihad incurssion into Igboland.",
+    "keywords": ["Islam, Kidnapings, Killing, Rape, Arson, Robbery, Land grapping, Destruction of farmland."],
+    "subject": "Islam"
+  }
+}

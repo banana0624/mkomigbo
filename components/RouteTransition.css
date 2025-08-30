@@ -1,0 +1,29 @@
+/* project-root/components/RouteTransition.css */
+
+.route-transition {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fade enter */
+.fade-enter {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Fade exit */
+.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 300ms, transform 300ms;
+}

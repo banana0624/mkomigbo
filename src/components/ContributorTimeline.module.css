@@ -1,0 +1,14 @@
+/* project-root/src/components/ContributorTimeline.css */ 
+
+@import '/../styles/theme.module.css';
+
+.contributor-timeline {
+  padding: var(--spacing-lg);
+  background: var(--color-light);
+  border-radius: var(--border-radius);
+}
+.timeline-entry {
+  margin-bottom: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  border-left: 4px solid var(--color-primary);
+}

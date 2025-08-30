@@ -1,0 +1,17 @@
+/* project-root/subjects/struggle/manifest.json */
+
+{
+  "id": "struggle",
+  "subjectNumber": 11,
+  "title": "Igbo Struggle",
+  "layout": "layout.tsx",
+  "hooks": ["onLoad", "onReveal"],
+  "overlays": ["lineageOverlay"],
+  "roles": ["visitor", "researcher", "admin"],
+  "meta": {
+    "pageTitle": "Struggle - Ndi Igbo had been and are a struggling race. This is wht the British have a pathological hatred on Ndi Igbo.",
+    "description": "Struggle - Ndi Igbo had been and is still struggling. At different time in history, they have been known to be a tough group to govern. They had Ekumeku before the Aba Women Riote.",
+    "keywords": ["Struggle, Ekumeku, Aba Womn Riot."],
+    "subject": "Struggle"
+  }
+}
