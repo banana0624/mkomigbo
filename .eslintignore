@@ -1,0 +1,6 @@
+// project-root/.eslintignore
+
+node_modules
+dist
+build
+.copilot

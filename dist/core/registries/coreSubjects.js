@@ -1,5 +1,5 @@
 // project-root/core/registeries/coreSubjects.ts
-import { registerSubject } from './manifestregistry';
+import { registerSubject } from './manifestRegistry';
 const coreSubjects = {
     about: {
         title: 'About',

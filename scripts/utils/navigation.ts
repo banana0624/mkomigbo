@@ -32,3 +32,4 @@ export function onRouteChange(cb: (route: string) => void): void {
   //   window.removeEventListener('pushstate', handler);
   // };
 }
+

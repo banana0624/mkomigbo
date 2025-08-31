@@ -1,9 +1,9 @@
 // src/components/BadgeLegend.tsx
 
-import { badgeData } from '../data/badgeData';
+import { badgeData } from '../../data/badgeData.js';
 
 export function BadgeLegend() {
-  const tiers = Array.from(new Set(badgeData.map((b) => b.tier)));
+  const tiers = Array.from(new Set<string>(badgeData.map((b) => b.tier)));
 
   return (
     <div className="legend-wrapper">

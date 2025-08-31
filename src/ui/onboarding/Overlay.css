@@ -1,0 +1,14 @@
+/* project-root/src/ui/onboarding/OnboardingOverlay.css */
+
+.overlay-root {
+  position: fixed; inset: 0; background: rgba(10, 12, 16, 0.66);
+  display: grid; place-items: center; z-index: 9999; backdrop-filter: blur(2px);
+}
+.overlay-card {
+  width: min(640px, 92vw); background: #0f172a; color: #e2e8f0;
+  border: 1px solid #334155; border-radius: 12px; padding: 20px 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35); animation: slideIn 300ms ease-out;
+}
+.overlay-links { display: flex; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+.overlay-links a { color: #60a5fa; text-decoration: none; }
+@keyframes slideIn { from { transform: translateY(8px); opacity: 0.75; } to { transform: translateY(0); opacity: 1; } }

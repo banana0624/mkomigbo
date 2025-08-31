@@ -15,7 +15,9 @@ export const routeManifest = {
     },
   },
   '/about': {
-    transition: { /* ... */ },
+    transition: { 
+      /* ... */
+     },
     seo: {
       title: 'About Us | Mkomigbo',
       description: 'Learn about our mission and team.',
@@ -25,6 +27,6 @@ export const routeManifest = {
       visitor: true,
       user: true,
       developer: true,
-    },
+    },    
   },
 }

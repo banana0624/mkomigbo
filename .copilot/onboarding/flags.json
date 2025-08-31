@@ -1,0 +1,10 @@
+{
+  "showOnboardingOverlay": true,
+  "badges": {
+    "jsExtensionCompliance": 6
+  },
+  "tips": [
+    "Add .js to all relative imports when using node16/nodenext.",
+    "Example: import { X } from './module.js';"
+  ]
+}

@@ -8,20 +8,26 @@
       "*": ["src/*", "scripts/*"]
     },
     "jsx": "react-jsx",
-    "moduleResolution": "node",
+    "moduleResolution": "Node16",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "module": "ESNext",
-    "target": "ESNext",
+    "allowImportingTsExtensions": true,      
+    "noEmit": true,                          
+    "module": "Node16",
+    "target": "ES2020",
     "types": ["react", "react-dom", "node", "mocha", "jest"],
     "lib": ["DOM", "ESNext"],
-    "rootDir": "./",               
-    "outDir": "dist",              
-    "noEmit": false                
+    "rootDir": "./",
+    "outDir": "dist"
   },
-  "exclude": ["webpack.config.js", "webpack.config.ts", "node_modules", "dist"],
+  "exclude": [
+    "webpack.config.js",
+    "webpack.config.ts",
+    "node_modules",
+    "dist"
+  ],
   "ts-node": {
     "compilerOptions": {
       "baseUrl": "./",

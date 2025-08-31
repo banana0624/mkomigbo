@@ -9,6 +9,10 @@ interface Props {
   entries: BackupEntry[];
 }
 
+const uniqueStages = Array.from(new Set(entries.map((e) => e.stage)));
+const animatedStage = useLifecycleAnimation(entry.stage);
+<span>{entry.stage}</span>
+
 const stateDescriptions: Record<string, string> = {
   INIT: 'Initial state',
   ACTIVE: 'Active backup',

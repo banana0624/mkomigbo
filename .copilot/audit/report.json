@@ -1,0 +1,882 @@
+{
+  "timestamp": "2025-08-31T07:14:52.538Z",
+  "totalFiles": 148,
+  "totalRelativeImports": 155,
+  "violations": [
+    {
+      "file": "src\\AppOverlayExample.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./ui/onboarding/OnboardingOverlay"
+    },
+    {
+      "file": "src\\AppOverlayExample.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "./ui/onboarding/useOnboardingFlags"
+    },
+    {
+      "file": "src\\AppOverlayExample.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "./ui/badges/Badge"
+    },
+    {
+      "file": "src\\cli.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../scripts/cli/utils/logger"
+    },
+    {
+      "file": "src\\cli.ts",
+      "line": 11,
+      "kind": "static",
+      "specifier": "../scripts/cli/utils/init-logger"
+    },
+    {
+      "file": "src\\cli.ts",
+      "line": 12,
+      "kind": "static",
+      "specifier": "../scripts/cli/utils/loadBackups"
+    },
+    {
+      "file": "src\\cli.ts",
+      "line": 13,
+      "kind": "static",
+      "specifier": "../scripts/cli/utils/backup-utils"
+    },
+    {
+      "file": "src\\cli.ts",
+      "line": 14,
+      "kind": "static",
+      "specifier": "../scripts/types/backup"
+    },
+    {
+      "file": "src\\main.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "./pages/Dashboard"
+    },
+    {
+      "file": "src\\main.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "./index.css"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../components/RatioMeter"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../components/AuditHeatmap"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../components/ContributorRhythm"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../components/Section"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 8,
+      "kind": "static",
+      "specifier": "../components/SectionLegend"
+    },
+    {
+      "file": "src\\wrappers\\ContributorInsightsWrapper.tsx",
+      "line": 9,
+      "kind": "static",
+      "specifier": "../models/AuditEntry"
+    },
+    {
+      "file": "src\\utils\\audit\\auditStore.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\utils\\audit\\generateAuditEntry.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./generateAuditId"
+    },
+    {
+      "file": "src\\utils\\audit\\generateAuditEntry.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\utils\\audit\\generateAuditId.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\utils\\audit\\logTransition.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/backup/backupTypes.ts"
+    },
+    {
+      "file": "src\\utils\\audit\\logTransition.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./auditStore.ts"
+    },
+    {
+      "file": "src\\utils\\audit\\logTransition.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../../hooks/useContributorToggles.ts"
+    },
+    {
+      "file": "src\\utils\\audit\\validateAuditEntry.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\utils\\audit\\validateUniqueIds.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\ui\\onboarding\\OnboardingOverlay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./Overlay.css"
+    },
+    {
+      "file": "src\\ui\\onboarding\\useOnboardingFlags.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./OnboardingOverlay"
+    },
+    {
+      "file": "src\\ui\\badges\\Badge.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./BadgePulse.css"
+    },
+    {
+      "file": "src\\types\\api\\responses.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../models/backupSummary"
+    },
+    {
+      "file": "src\\types\\api\\responses.ts",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../../backups/types"
+    },
+    {
+      "file": "src\\services\\hydrationService.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./hydrationService"
+    },
+    {
+      "file": "src\\services\\hydrationService.test.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../schemas/HydrationSchemas"
+    },
+    {
+      "file": "src\\services\\HydrationService.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../services/HydrationSchemas"
+    },
+    {
+      "file": "src\\server\\summaryServer.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../backups/summarizeBackups"
+    },
+    {
+      "file": "src\\server\\summaryServer.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../backups/summarizeDryRun"
+    },
+    {
+      "file": "src\\server\\summaryServer.ts",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../audit/toggleLogger"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../components/audit/AuditViewer.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../components/timeline/LifecycleTimeline.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../components/filters/AuditFilters.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../components/summary/ContributorSummary.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 8,
+      "kind": "static",
+      "specifier": "../components/DashboardSidebar.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 9,
+      "kind": "static",
+      "specifier": "../components/summary/FilteredCountIndicator.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 10,
+      "kind": "static",
+      "specifier": "../hooks/useAuditFilters.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 11,
+      "kind": "static",
+      "specifier": "../hooks/useFilteredAuditEntries.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 12,
+      "kind": "static",
+      "specifier": "../constants/backupStates.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 13,
+      "kind": "static",
+      "specifier": "../utils/audit/auditStore.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 14,
+      "kind": "static",
+      "specifier": "../components/filters/FilterSummaryChip.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 15,
+      "kind": "static",
+      "specifier": "../types/backup/backupTypes.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 16,
+      "kind": "static",
+      "specifier": "../types/audit/auditTypes.ts"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 17,
+      "kind": "static",
+      "specifier": "../components/summary/ContributorStreaks.tsx"
+    },
+    {
+      "file": "src\\routes\\Dashboard.tsx",
+      "line": 18,
+      "kind": "static",
+      "specifier": "../components/onboarding/OnboardingOverlay.tsx"
+    },
+    {
+      "file": "src\\hooks\\index.ts",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../hooks"
+    },
+    {
+      "file": "src\\hooks\\useAuditEntries.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../models/AuditEntry.ts"
+    },
+    {
+      "file": "src\\hooks\\useAuditEntries.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../models/Contributor.ts"
+    },
+    {
+      "file": "src\\hooks\\useAuditStats.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\hooks\\useFilteredAuditEntries.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\constants\\backupStates.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types/backup/backupTypes"
+    },
+    {
+      "file": "src\\components\\BackupImpactDashboard.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../backups/types"
+    },
+    {
+      "file": "src\\components\\BackupImpactDashboard.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./BackupImpactDashboard.css"
+    },
+    {
+      "file": "src\\components\\BackupSummaryCard.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../backups/types"
+    },
+    {
+      "file": "src\\components\\BackupSummaryOverlay.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./BackupSummaryOverlay.css"
+    },
+    {
+      "file": "src\\components\\BadgeDisplay.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../styles/animations.module.css"
+    },
+    {
+      "file": "src\\components\\BadgeDisplay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../data/badgeData"
+    },
+    {
+      "file": "src\\components\\BadgeDisplay.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../hooks/useBadgePulse"
+    },
+    {
+      "file": "src\\components\\ContributorHydration.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../schemas/HydrationSchemas"
+    },
+    {
+      "file": "src\\components\\DashboardSidebar.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../hooks/useAuditStats"
+    },
+    {
+      "file": "src\\components\\DashboardSidebar.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../components/visualization/DensityChart"
+    },
+    {
+      "file": "src\\components\\DashboardSidebar.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../components/visualization/RatioMeter"
+    },
+    {
+      "file": "src\\components\\DashboardSidebar.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../components/visualization/LifecycleStageList"
+    },
+    {
+      "file": "src\\components\\DashboardSidebar.tsx",
+      "line": 8,
+      "kind": "static",
+      "specifier": "../components/visualization/ContributorBadge"
+    },
+    {
+      "file": "src\\components\\OnboardingOverlay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./OnboardingOverlay.css"
+    },
+    {
+      "file": "src\\components\\RhythmDashboard.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./RhythmDashboard.css"
+    },
+    {
+      "file": "src\\components\\__tests__\\AuditOverlay.test.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../AuditOverlay"
+    },
+    {
+      "file": "src\\components\\__tests__\\Integration.test.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../RhythmDashboard"
+    },
+    {
+      "file": "src\\components\\__tests__\\Integration.test.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../OnboardingOverlay"
+    },
+    {
+      "file": "src\\components\\__tests__\\Integration.test.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../BackupImpactDashboard"
+    },
+    {
+      "file": "src\\components\\__tests__\\Integration.test.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../BackupSummaryOverlay"
+    },
+    {
+      "file": "src\\components\\visualization\\AuditDensityOverlay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\components\\visualization\\AuditHeatmap.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\components\\timeline\\LifecycleTimeline.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/backup/backupTypes"
+    },
+    {
+      "file": "src\\components\\timeline\\LifecycleTimeline.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "./LifecycleTimeline.module.css"
+    },
+    {
+      "file": "src\\components\\timeline\\LifecycleTimeline.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../../hooks/useLifecycleAnimation"
+    },
+    {
+      "file": "src\\components\\summary\\ContributorStreaks.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\components\\summary\\ContributorSummary.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\components\\summary\\ContributorSummary.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../visualization/ContributorBadge"
+    },
+    {
+      "file": "src\\components\\OnboardingOverlay\\OnboardingOverlay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\onboarding\\OnboardingOverlay.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../badges/ContributorBadge"
+    },
+    {
+      "file": "src\\components\\onboarding\\OnboardingOverlay.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../../utils/onboardingAudit"
+    },
+    {
+      "file": "src\\components\\LayoutWrapper\\LayoutWrapper.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\filters\\AuditFilters.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./AuditFilters.module.css"
+    },
+    {
+      "file": "src\\components\\dashboard\\ContributorInsights.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../wrappers/ContributorInsightsWrapper"
+    },
+    {
+      "file": "src\\components\\dashboard\\ContributorInsights.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../layout/Section"
+    },
+    {
+      "file": "src\\components\\dashboard\\ContributorInsights.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../layout/SectionLegend"
+    },
+    {
+      "file": "src\\components\\dashboard\\ContributorInsights.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../../routes/audit-trail"
+    },
+    {
+      "file": "src\\components\\dashboard\\ContributorInsights.tsx",
+      "line": 8,
+      "kind": "static",
+      "specifier": "../../models/AuditEntry"
+    },
+    {
+      "file": "src\\components\\dashboard\\Sidebar.tsx",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../visualization"
+    },
+    {
+      "file": "src\\components\\dashboard\\Sidebar.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../layout/Section"
+    },
+    {
+      "file": "src\\components\\ContributorTimeline\\ContributorTimeline.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\ContributorCard\\ContributorCard.rhythm.test.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./ContributorCard"
+    },
+    {
+      "file": "src\\components\\ContributorCard\\ContributorCard.styles.test.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./ContributorCard"
+    },
+    {
+      "file": "src\\components\\ContributorCard\\ContributorCard.test.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "./ContributorCard"
+    },
+    {
+      "file": "src\\components\\ContributorCard\\ContributorCard.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./ContributorCard.module.css"
+    },
+    {
+      "file": "src\\components\\ContributorCard\\ContributorCard.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\BadgeLegend\\BadgeLegend.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\BadgeDisplay\\__tests__\\BadgeDisplay.snapshot.test.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../BadgeDisplay"
+    },
+    {
+      "file": "src\\components\\AuditOverlay\\AuditOverlay.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\AuditHeatmap\\project-root\\src\\components\\AuditHeatmap\\AuditHeatmap.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../styles/theme.module.css"
+    },
+    {
+      "file": "src\\components\\audit\\AuditViewer.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../filters/DryRunToggle"
+    },
+    {
+      "file": "src\\components\\audit\\AuditViewer.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../visualization/AuditDensityOverlay"
+    },
+    {
+      "file": "src\\components\\audit\\AuditViewer.tsx",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../visualization/StateHopPath"
+    },
+    {
+      "file": "src\\components\\audit\\AuditViewer.tsx",
+      "line": 7,
+      "kind": "static",
+      "specifier": "../visualization/UnknownStatePulse"
+    },
+    {
+      "file": "src\\components\\audit\\AuditViewer.tsx",
+      "line": 8,
+      "kind": "static",
+      "specifier": "../../types/audit/auditTypes"
+    },
+    {
+      "file": "src\\components\\animations\\BackupTransition.tsx",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../types/backup/backupTypes"
+    },
+    {
+      "file": "src\\components\\animations\\BackupTransition.tsx",
+      "line": 5,
+      "kind": "static",
+      "specifier": "./BackupTransition.module.css"
+    },
+    {
+      "file": "src\\cli\\validate.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../scripts/validate-core"
+    },
+    {
+      "file": "src\\cli\\commands\\summarize.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../backups/summarizeBackups"
+    },
+    {
+      "file": "src\\cli\\commands\\summarize.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../backups/summarizeDryRun"
+    },
+    {
+      "file": "src\\cli\\commands\\summarize.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../../backups/types"
+    },
+    {
+      "file": "src\\browser\\index.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./components/BackupTimeline"
+    },
+    {
+      "file": "src\\backups\\backupService.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../models/backupEntry"
+    },
+    {
+      "file": "src\\backups\\backupService.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "./backupUtils"
+    },
+    {
+      "file": "src\\backups\\summarizeBackups.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../utils/logger"
+    },
+    {
+      "file": "src\\backups\\types.ts",
+      "line": 34,
+      "kind": "static",
+      "specifier": "./types"
+    },
+    {
+      "file": "src\\backups\\__tests__\\backupEntry.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../mockData"
+    },
+    {
+      "file": "src\\backups\\__tests__\\backupSummary.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../mockData"
+    },
+    {
+      "file": "src\\backups\\__tests__\\backupSummary.test.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../utils/validateBackupSummary"
+    },
+    {
+      "file": "src\\backups\\__tests__\\contributor.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../mockData"
+    },
+    {
+      "file": "src\\backups\\__tests__\\impact.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../mockData"
+    },
+    {
+      "file": "src\\backups\\utils\\analyzeRhythm.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\badgeAnalytics.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\filterContributors.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\generateHeatmap.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\generateMockBackup.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\generateMockBackupEntries.test.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "./generateMockBackup"
+    },
+    {
+      "file": "src\\backups\\utils\\simulateOnboarding.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\backups\\utils\\validateBackupSummary.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../types"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupEntries.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/api/responses"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupEntries.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../backups/mockData"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupEntries.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../../backups/backupUtils"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupEntries.ts",
+      "line": 6,
+      "kind": "static",
+      "specifier": "../../types/backup/backupTypes"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupSummary.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/api/responses"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupSummary.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../backups/mockData"
+    },
+    {
+      "file": "src\\api\\controllers\\getBackupSummary.ts",
+      "line": 5,
+      "kind": "static",
+      "specifier": "../../models/backupSummary"
+    },
+    {
+      "file": "src\\api\\controllers\\getContributors.ts",
+      "line": 3,
+      "kind": "static",
+      "specifier": "../../types/api/responses"
+    },
+    {
+      "file": "src\\api\\controllers\\getContributors.ts",
+      "line": 4,
+      "kind": "static",
+      "specifier": "../../backups/mockData"
+    }
+  ],
+  "summary": {
+    "filesWithViolations": 76,
+    "violationCount": 145,
+    "compliancePercent": 6
+  }
+}

@@ -1,7 +1,7 @@
 // project-root/src/components/ContributorCard/ContributorCard.styles.test.tsx
 
 import { render } from '@testing-library/react';
-import ContributorCard from './ContributorCard';
+import ContributorCard from './ContributorCard'; // ✅ Explicit extension for Node16
 
 describe('ContributorCard styles', () => {
   it('applies scoped styles without bleed-through', () => {

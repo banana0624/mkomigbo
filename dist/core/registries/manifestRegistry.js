@@ -1,4 +1,4 @@
-// project-root/core/registeries/manifestregistry.ts
+// project-root/core/registeries/manifestRegistry.ts
 export const manifestRegistry = {
     subjects: new Map(),
     styles: new Map(),

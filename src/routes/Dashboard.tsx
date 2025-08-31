@@ -1,21 +1,21 @@
 // project-root/src/pages/Dashboard.tsx
 
 import React, { useState } from 'react';
-import { AuditViewer } from '../components/audit/AuditViewer';
-import { LifecycleTimeline } from '../components/timeline/LifecycleTimeline';
-import { AuditFilters } from '../components/filters/AuditFilters';
-import { ContributorSummary } from '../components/summary/ContributorSummary';
-import { DashboardSidebar } from '../components/DashboardSidebar';
-import { FilteredCountIndicator } from '../components/summary/FilteredCountIndicator';
-import { useAuditFilters } from '../hooks/useAuditFilters';
-import { useFilteredAuditEntries } from '../hooks/useFilteredAuditEntries';
-import { validBackupStates } from '../constants/backupStates';
-import { getAuditLog } from '../utils/audit/auditStore';
-import { FilterSummaryChip } from '../components/filters/FilterSummaryChip';
-import type { BackupEntry, BackupState } from '../types/backup/backupTypes';
-import type { AuditEntry } from '../types/audit/auditTypes';
-import { ContributorStreaks } from '../components/summary/ContributorStreaks';
-import { OnboardingOverlay } from '../components/onboarding/OnboardingOverlay';
+import { AuditViewer } from '../components/audit/AuditViewer.tsx';
+import { LifecycleTimeline } from '../components/timeline/LifecycleTimeline.tsx';
+import { AuditFilters } from '../components/filters/AuditFilters.tsx';
+import { ContributorSummary } from '../components/summary/ContributorSummary.tsx';
+import { DashboardSidebar } from '../components/DashboardSidebar.tsx';
+import { FilteredCountIndicator } from '../components/summary/FilteredCountIndicator.tsx';
+import { useAuditFilters } from '../hooks/useAuditFilters.ts';
+import { useFilteredAuditEntries } from '../hooks/useFilteredAuditEntries.ts';
+import { validBackupStates } from '../constants/backupStates.ts';
+import { getAuditLog } from '../utils/audit/auditStore.ts';
+import { FilterSummaryChip } from '../components/filters/FilterSummaryChip.tsx';
+import type { BackupEntry, BackupState } from '../types/backup/backupTypes.ts';
+import type { AuditEntry } from '../types/audit/auditTypes.ts';
+import { ContributorStreaks } from '../components/summary/ContributorStreaks.tsx';
+import { OnboardingOverlay } from '../components/onboarding/OnboardingOverlay.tsx';
 
 const Dashboard: React.FC = () => {
   const auditEntries: AuditEntry[] = getAuditLog();
@@ -40,7 +40,11 @@ const Dashboard: React.FC = () => {
   const timelineEntries: BackupEntry[] = filteredEntries.map((entry) => ({
     id: entry.id,
     state: entry.to as BackupState,
-    timestamp: entry.timestamp,
+    timestamp: entry.timestamp.toString(), // ✅ Only one timestamp field
+    contributorId: 'c001', // or derive dynamically
+    size: '1.2 GB',
+    status: 'pending',
+    stage: entry.state,
   }));
 
   const exportJSON = () => {
@@ -76,75 +80,70 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-  <>
-    <OnboardingOverlay />
+    <>
+      <OnboardingOverlay />
 
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
-      <div style={{ flex: '2 1 600px' }}>
-        <FilterSummaryChip
-          contributor={contributor}
-          stage={stage}
-          startDate={startDate}
-          endDate={endDate}
-          dryRunOnly={dryRunOnly}
-          onReset={() => {
-            setContributor(null);
-            setStage(null);
-            setStartDate(null);
-            setEndDate(null);
-            setDryRunOnly(false);
-          }}
-        />
-
-        {/* Filters Section */}
-        <div id="filters">
-          <AuditFilters
-            contributors={contributors}
-            stages={validBackupStates}
-            selectedContributor={contributor}
-            selectedStage={stage}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem' }}>
+        <div style={{ flex: '2 1 600px' }}>
+          <FilterSummaryChip
+            contributor={contributor}
+            stage={stage}
             startDate={startDate}
             endDate={endDate}
-            onContributorChange={setContributor}
-            onStageChange={setStage}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
             dryRunOnly={dryRunOnly}
-            onDryRunToggle={setDryRunOnly}
+            onReset={() => {
+              setContributor(null);
+              setStage(null);
+              setStartDate(null);
+              setEndDate(null);
+              setDryRunOnly(false);
+            }}
           />
+
+          <div id="filters">
+            <AuditFilters
+              contributors={contributors}
+              stages={validBackupStates}
+              selectedContributor={contributor}
+              selectedStage={stage}
+              startDate={startDate}
+              endDate={endDate}
+              onContributorChange={setContributor}
+              onStageChange={setStage}
+              onStartDateChange={setStartDate}
+              onEndDateChange={setEndDate}
+              dryRunOnly={dryRunOnly}
+              onDryRunToggle={setDryRunOnly}
+            />
+          </div>
+
+          <FilteredCountIndicator count={filteredEntries.length} />
+
+          <div id="viewer">
+            <AuditViewer entries={filteredEntries} />
+          </div>
+
+          <div id="timeline">
+            <LifecycleTimeline entries={timelineEntries} />
+          </div>
+
+          <ContributorSummary entries={filteredEntries} />
+          <ContributorStreaks entries={filteredEntries} />
+
+          <div style={{ marginTop: '2rem' }}>
+            <button onClick={exportJSON}>Export JSON Snapshot</button>
+            <button onClick={exportCSV} style={{ marginLeft: '1rem' }}>
+              Export CSV Snapshot
+            </button>
+          </div>
         </div>
 
-        <FilteredCountIndicator count={filteredEntries.length} />
-
-        {/* Viewer Section */}
-        <div id="viewer">
-          <AuditViewer entries={filteredEntries} />
-        </div>
-
-        {/* Timeline Section */}
-        <div id="timeline">
-          <LifecycleTimeline entries={timelineEntries} />
-        </div>
-
-        <ContributorSummary entries={filteredEntries} />
-        <ContributorStreaks entries={filteredEntries} />
-
-        <div style={{ marginTop: '2rem' }}>
-          <button onClick={exportJSON}>Export JSON Snapshot</button>
-          <button onClick={exportCSV} style={{ marginLeft: '1rem' }}>
-            Export CSV Snapshot
-          </button>
+        <div id="sidebar" style={{ flex: '1 1 300px' }}>
+          <DashboardSidebar />
         </div>
       </div>
-
-      {/* Sidebar Section */}
-      <div id="sidebar" style={{ flex: '1 1 300px' }}>
-        <DashboardSidebar />
-      </div>
-    </div>
-  </>
-);
-
-}
+    </>
+  );
+};
 
 export default Dashboard;

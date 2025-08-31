@@ -1,0 +1,7 @@
+# project-root/.husky/pre-commit
+
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "Running lint-staged..."
+npx lint-staged

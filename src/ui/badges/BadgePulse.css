@@ -1,0 +1,27 @@
+/* project-root/src/ui/badges/BadgePulse.css */
+
+.badge {
+  display: inline-flex; gap: 8px; align-items: center;
+  padding: 6px 10px; border-radius: 999px; font-weight: 600;
+  background: #111827; color: #e5e7eb; border: 1px solid #1f2937;
+  animation: pulse 2s ease-in-out infinite;
+}
+.badge.good { background: #052e16; color: #bbf7d0; border-color: #14532d; }
+.badge.med { background: #1f2937; color: #fef9c3; border-color: #374151; }
+.badge.low { background: #3f1d1d; color: #fecaca; border-color: #7f1d1d; }
+.badge-label { opacity: 0.8; }
+.badge-value { font-variant-numeric: tabular-nums; }
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(59,130,246,0); }
+}
+
+/* Add-on styles for variants */
+.theme-pulse { animation: themePulse 2.4s ease-in-out infinite; }
+@keyframes themePulse {
+  0%,100% { filter: saturate(1) }
+  50% { filter: saturate(1.4) }
+}
+.clarity-glow { box-shadow: 0 0 0 2px rgba(16,185,129,0.35), 0 0 20px rgba(16,185,129,0.25); }
+.clarity-fade { opacity: 0.9; }
+

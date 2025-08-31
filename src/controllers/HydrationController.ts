@@ -1,8 +1,8 @@
 // project-root/src/controllers/HydrationController.ts
 
 import { Request, Response } from 'express'
-import { getHydrationPayload } from '../services/hydrationService' // ✅ Corrected casing
-import { HydrationResponseSchema } from '../schemas/HydrationSchemas'
+import { getHydrationPayload } from '../services/HydrationService.js'
+import { HydrationResponseSchema } from '../schemas/HydrationSchemas.js'
 
 export const hydratePlatform = async (req: Request, res: Response) => {
   try {
