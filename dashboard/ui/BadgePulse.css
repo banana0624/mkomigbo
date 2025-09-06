@@ -1,0 +1,34 @@
+/* project-root/dashboard/ui/BadgePulse.css */
+
+.badge-pulse {
+  position: relative;
+  display: inline-block;
+  padding: 1rem;
+  font-weight: bold;
+  color: #fff;
+  background-color: #4caf50;
+  border-radius: 50px;
+  animation: pulse 2s infinite;
+}
+
+.pulse-ring {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 100%;
+  height: 100%;
+  border: 2px solid #4caf50;
+  border-radius: 50%;
+  animation: ringPulse 2s infinite;
+}
+
+@keyframes ringPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}

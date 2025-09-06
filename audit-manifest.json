@@ -1,0 +1,13 @@
+{
+  "project": "mkomigbo",
+  "version": "0.1.0",
+  "audit": {
+    "lastSweep": "2025-09-06T12:00:00Z",
+    "traceEvents": [
+      "init",
+      "trace",
+      "config-restore"
+    ],
+    "status": "clean"
+  }
+}

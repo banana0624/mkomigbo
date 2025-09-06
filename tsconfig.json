@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2020", "DOM"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "forceConsistentCasingInFileNames": true,
+    "jsx": "react-jsx",                      
+    "jsxImportSource": "react",              
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@assets/*": ["assets/*"],
+      "@cli/*": ["cli/*"],
+      "@components/*": ["components/*"],
+      "@config/*": ["config/*"],
+      "@dashboard/*": ["dashboard/*"],
+      "@docs/*": ["docs/*"],
+      "@domains/*": ["domains/*"],
+      "@fixtures/*": ["fixtures/*"],
+      "@hooks/*": ["hooks/*"],
+      "@lib/*": ["lib/*"],
+      "@middleware/*": ["middleware/*"],
+      "@packages/*": ["packages/*"],
+      "@public/*": ["public/*"],
+      "@scripts/*": ["scripts/*"],
+      "@server/*": ["server/*"],
+      "@state/*": ["state/*"],
+      "@styles/*": ["styles/*"],
+      "@tests/*": ["tests/*"],
+      "@types/*": ["types/*"],
+      "@utils/*": ["utils/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
+}

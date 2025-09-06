@@ -1,0 +1,14 @@
+[
+  {
+    "id": "init",
+    "timestamp": "2025-09-06T09:00:00Z",
+    "source": "cli/init",
+    "status": "success"
+  },
+  {
+    "id": "trace",
+    "timestamp": "2025-09-06T09:10:00Z",
+    "source": "cli/trace",
+    "status": "success"
+  }
+]
