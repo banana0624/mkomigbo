@@ -1,0 +1,35 @@
+## project-root/.gitignore ##
+
+# === Composer dependencies ===
+/vendor/
+
+# === Node.js dependencies ===
+/node_modules/
+
+# === Environment & config ===
+/.env
+/.env.local
+/.env.*.local
+
+# === Database dumps and archives ===
+/private/db/*.zip
+/private/db/*.tgz
+/private/db/*.7z
+/private/db/*.sql
+
+# === Logs and cache ===
+/*.log
+/storage/logs/
+/tmp/
+/cache/
+
+# === IDE/editor files ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === OS system files ===
+.DS_Store
+Thumbs.db
+desktop.ini

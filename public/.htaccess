@@ -1,0 +1,41 @@
+## project-root/public/.htaccess ##
+
+RewriteEngine On
+RewriteBase /
+
+# Serve real files/directories as-is
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /history/ -> /subjects/show.php?slug=history
+RewriteRule ^([a-z0-9-]+)/?$ subjects/show.php?slug=$1 [L,QSA]
+
+# Custom 404
+ErrorDocument 404 /errors/404.php
+# project-root/public/.htaccess
+
+Options -MultiViews
+RewriteEngine On
+RewriteBase /
+
+# 0) Serve actual files/directories directly
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 1) Canonicalize direct PHP access:
+#    /subjects/show.php?slug=history  ->  /history/
+RewriteCond %{THE_REQUEST} \s/subjects/show\.php\?slug=([a-z0-9-]+) [NC]
+RewriteRule ^ %1/ [R=301,L]
+
+# 2) Support /subjects/{slug}/ as an alternate path:
+RewriteRule ^subjects/([a-z0-9-]+)/?$ subjects/show.php?slug=$1 [L,QSA,NC]
+
+# 3) Primary pretty URLs:
+#    /history/ -> /subjects/show.php?slug=history
+#    (Only if not a real file/dir due to rule 0)
+RewriteRule ^([a-z0-9-]+)/?$ subjects/show.php?slug=$1 [L,QSA,NC]
+
+# 4) Custom 404
+ErrorDocument 404 /errors/404.php
