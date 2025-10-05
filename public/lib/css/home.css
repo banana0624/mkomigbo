@@ -1,0 +1,83 @@
+/* project-root/lib/css/home.css */
+
+/* Strong, predictable grid for the Subjects landing */
+.subjects-landing .home-grid {
+  display: grid !important;
+  gap: 18px !important;
+}
+
+/* ≥1120px → 5 columns */
+@media (min-width: 1120px) {
+  .subjects-landing .home-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+}
+
+/* 800–1119px → 4 columns */
+@media (min-width: 800px) and (max-width: 1119.98px) {
+  .subjects-landing .home-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
+
+/* 520–799px → 2 columns */
+@media (min-width: 520px) and (max-width: 799.98px) {
+  .subjects-landing .home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+/* <520px → 1 column */
+@media (max-width: 519.98px) {
+  .subjects-landing .home-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Tile look (unchanged) */
+.subject-tile {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  min-height: 150px;
+}
+.subject-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.07);
+}
+.tile-figure {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+.tile-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+.tile-initial {
+  width: 72px;
+  height: 72px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #eef4ff;
+  color: #1f4fd1;
+  font-weight: 700;
+  font-size: 1.25rem;
+  border: 1px solid #d6e3ff;
+}
+.tile-caption {
+  margin: 0;
+}
+.tile-name {
+  font-weight: 700;
+}
+.hero {
+  margin-bottom: 18px;
+}

@@ -1,34 +1,47 @@
 <?php
 // project-root/public/index.php
 
-require_once(__DIR__ . '/../private/assets/initialize.php');
-$page_title = "Mkomigbo • Igbo Heritage Resource Center";
-$meta_description = "Mkomigbo is an online resource center for everything relating to Igbos and their cultural heritage.";
-$page_css = ['/lib/css/subjects.css'];
-include(__DIR__ . '/../private/shared/header.php');
+require_once __DIR__ . '/../private/assets/initialize.php';
 
-// Fetch subjects
+if (defined('APP_DEBUG') && APP_DEBUG) {
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
+}
+
+$page_title = 'Home';
+include_once SHARED_PATH . '/public_header.php';
+
 $subjects = [];
-if ($res = $db->query("SELECT id, name, slug, meta_description FROM subjects ORDER BY id ASC")) {
-  while ($r = $res->fetch_assoc()) { $subjects[] = $r; }
+if (function_exists('subject_registry_all')) {
+    $subjects = subject_registry_all();
+} else {
+    if (function_exists('find_all_subjects')) {
+        foreach (find_all_subjects() as $s) {
+            $subjects[$s['id']] = [
+                'name' => $s['name'] ?? '',
+                'slug' => $s['slug'] ?? '',
+                'icon' => ''
+            ];
+        }
+    }
 }
 ?>
-<section class="hero card">
-  <h1>Welcome to Mkomigbo</h1>
-  <p class="muted">Mkomigbo is an online resource center for everything relating to Igbos and their Cultural Heritage.</p>
-</section>
 
-<section class="home-subjects">
-  <h2>Explore Subjects</h2>
-  <div class="subjects-grid">
-    <?php foreach ($subjects as $s): ?>
-      <div class="subject-card card">
-        <a href="/<?= urlencode($s['slug']); ?>/"><?= htmlspecialchars($s['name']); ?></a>
-        <?php if (!empty($s['meta_description'])): ?>
-          <div class="desc"><?= htmlspecialchars($s['meta_description']); ?></div>
-        <?php endif; ?>
-      </div>
-    <?php endforeach; ?>
-  </div>
-</section>
-<?php include(__DIR__ . '/../private/shared/footer.php'); ?>
+<main class="home-subject-grid">
+  <?php foreach ($subjects as $id => $info):
+        $name = $info['name'];
+        $slug = $info['slug'];
+        $icon = $info['icon'] ?? '/lib/images/subjects/' . $slug . '.png';
+  ?>
+    <div class="subject-card">
+      <a href="<?php echo url_for('/subjects/show.php?id=' . u($id)); ?>">
+        <img src="<?php echo h($icon); ?>" alt="<?php echo h($name); ?> Logo">
+        <span><?php echo h($name); ?></span>
+      </a>
+    </div>
+  <?php endforeach; ?>
+</main>
+
+<?php
+include_once SHARED_PATH . '/public_footer.php';
+?>

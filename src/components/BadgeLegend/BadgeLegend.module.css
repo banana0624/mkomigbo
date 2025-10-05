@@ -1,0 +1,17 @@
+/* =====================================
+   Badge Legend Stylesheet (CSS Modules)
+   Styles for badge legend component
+   project-root/src/components/BadgeLegend/BadgeLegend.module.css
+   ===================================== */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}

@@ -1,0 +1,104 @@
+/* public/lib/css/public.css */
+
+/* === Homepage & global layout === */
+
+.home-subject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 24px;
+  padding: 24px;
+}
+
+.subject-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.subject-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.subject-card span {
+  display: block;
+  padding: 12px;
+  font-size: 1.1em;
+  color: #333;
+}
+
+.subject-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* === Header & nav baseline === */
+
+.site-header {
+  padding: 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #ddd;
+}
+
+.site-header .logo span {
+  font-size: 1.5em;
+}
+
+.header-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo img {
+  height: 48px;
+  vertical-align: middle;
+}
+
+.logo span {
+  margin-left: 8px;
+  vertical-align: middle;
+  color: #333;
+}
+
+.main-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.main-nav li {
+  margin-left: 20px;
+}
+
+.main-nav a {
+  text-decoration: none;
+  color: #555;
+  font-size: 1em;
+}
+
+.main-nav a:hover {
+  color: #000;
+}
+
+/* === Footer baseline === */
+
+.site-footer {
+  background: #f8f8f8;
+  padding: 16px 0;
+  margin-top: 40px;
+  border-top: 1px solid #ddd;
+}
+
+.footer-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}

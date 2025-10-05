@@ -1,0 +1,14 @@
+/* public/lib/css/staff.css */
+
+.staff-header .site-header {
+  background-color: #333;
+  color: #fff;
+}
+
+.staff-header .main-nav a {
+  color: #ddd;
+}
+
+.staff-header .main-nav a:hover {
+  color: #fff;
+}

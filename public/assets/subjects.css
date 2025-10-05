@@ -1,0 +1,25 @@
+/* =====================================
+   Subjects Stylesheet
+   Used for subjects pages (listings, details)
+   project-root/public/assets/subjects.css
+   ===================================== */
+
+.subject-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.subject-list li {
+  margin: 0.5rem 0;
+}
+
+.subject-title {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.subject-meta {
+  color: #555;
+  font-size: 0.9rem;
+}

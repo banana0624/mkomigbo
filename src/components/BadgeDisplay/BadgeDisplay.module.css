@@ -1,0 +1,13 @@
+/* =====================================
+   Badge Display Stylesheet (CSS Modules)
+   Styles for badge display component
+   project-root/src/components/BadgeDisplay/BadgeDisplay.module.css
+   ===================================== */
+
+.badge {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  margin: 0.25rem;
+}

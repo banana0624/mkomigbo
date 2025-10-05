@@ -1,0 +1,33 @@
+/* public/lib/css/subjects.css */
+
+.subjects-header .site-header {
+  background-color: #4a148c; /* example purple */
+  color: #ffffff;
+}
+
+.subjects-header .main-nav a {
+  color: #d1c4e9;
+}
+
+.subjects-header .main-nav a:hover {
+  color: #ffffff;
+}
+
+/* Content area styling */
+.subjects-content {
+  padding: 24px;
+  background: #f3e5f5;
+}
+
+/* Subject card style if listing inside staff or public */
+.subject-item {
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  padding: 12px;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.subject-item:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}

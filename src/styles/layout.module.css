@@ -1,0 +1,22 @@
+/* =====================================
+   Layout Stylesheet (CSS Modules)
+   Used for React/TSX components
+   project-root/src/styles/layout.module.css
+   ===================================== */
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin: -0.5rem;
+}
+
+.col {
+  flex: 1;
+  padding: 0.5rem;
+}

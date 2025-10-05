@@ -1,0 +1,32 @@
+/* public/lib/css/contributors.css */
+
+.contributors-header .site-header {
+  background-color: #005a8c;
+  color: #ffffff;
+}
+
+.contributors-header .main-nav a {
+  color: #e0e0e0;
+}
+
+.contributors-header .main-nav a:hover {
+  color: #ffffff;
+}
+
+/* Content section */
+.contributors-content {
+  padding: 24px;
+  background: #f4f9ff;
+}
+
+.contributor-card {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 16px;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.contributor-card:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}

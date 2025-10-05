@@ -1,0 +1,36 @@
+Here’s an improved version of your **root `.htaccess`** (in the project root) with tweaks and explanations so it works reliably.
+
+```apache
+# project-root/.htaccess
+
+RewriteEngine On
+
+# === Redirect /public/ in URL to root (so URLs don’t show “/public/”) ===
+RewriteCond %{THE_REQUEST} \s/public/ [NC]
+RewriteRule ^public/(.*)$ /$1 [L,R=301]
+
+# === If request is not already to /public/, and not an existing file/dir, rewrite it ===
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/$1 [L]
+
+# === Default index file when hitting root ===
+DirectoryIndex public/index.php
+```
+
+---
+
+## What was changed / improved & why
+
+| Change                                                   | Reason / Benefit                                                                                     |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `\s/public/ [NC]` in the THE_REQUEST condition           | Added `NC` (no case) so it matches case-insensitively; ensures matching “public/” in the raw request |
+| Simplified capture groups to `(.*)` instead of `(.\*)`   | Consistency and clarity                                                                              |
+| Kept the check that request is not already to `/public/` | Avoid infinite rewrite loops                                                                         |
+| Retained checks `!-f` and `!-d`                          | Ensures existing static files (CSS, images, etc.) are served directly and not passed to rewrite      |
+| Leaves `DirectoryIndex public/index.php`                 | So that hitting root loads the public index automatically                                            |
+
+---
+
+If you like, I can produce the **pair of `.htaccess` files** (root + public) fully tuned to your folder layout and test setup, ready for you to copy-paste. Do you want me to send that combined version next?

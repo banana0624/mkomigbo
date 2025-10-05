@@ -1,0 +1,32 @@
+/* public/lib/css/platforms.css */
+
+.platforms-header .site-header {
+  background-color: #2e7d32;
+  color: #ffffff;
+}
+
+.platforms-header .main-nav a {
+  color: #c8e6c9;
+}
+
+.platforms-header .main-nav a:hover {
+  color: #ffffff;
+}
+
+.platforms-content {
+  padding: 24px;
+  background: #f1f8e9;
+}
+
+.platform-card {
+  border: 1px solid #bbb;
+  border-radius: 6px;
+  padding: 16px;
+  background: #fafafa;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.platform-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}

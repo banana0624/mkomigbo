@@ -1,0 +1,21 @@
+/* =====================================
+   Contributors Stylesheet
+   Used for contributors profile, list
+   project-root/public/assets/contributors.css
+   ===================================== */
+
+.contributor-profile {
+  border: 1px solid #ccc;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.contributor-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.contributor-bio {
+  color: #444;
+  font-size: 0.95rem;
+}

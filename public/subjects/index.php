@@ -1,25 +1,70 @@
 <?php
 // project-root/public/subjects/index.php
-require_once(__DIR__ . '/../../private/assets/initialize.php');
-$page_title = "Subjects • Mkomigbo";
-$page_css = ['/lib/css/subjects.css'];
-include(__DIR__ . '/../../private/shared/header.php');
 
-// Fetch subjects
+require_once dirname(__DIR__, 2) . '/private/assets/initialize.php';
+
+// Get slug from URL
+$slug = $_GET['slug'] ?? null;
+
+// Load subject registry
 $subjects = [];
-if ($res = $db->query("SELECT id, name, slug, meta_description FROM subjects ORDER BY id ASC")) {
-  while ($r = $res->fetch_assoc()) { $subjects[] = $r; }
+$registry_file = PRIVATE_PATH . '/registry/subjects.php';
+if (file_exists($registry_file)) {
+    $subjects = include $registry_file;
 }
+
+// Find subject by slug
+$current_subject = null;
+if ($slug && isset($subjects)) {
+    foreach ($subjects as $subject) {
+        if ($subject['slug'] === $slug) {
+            $current_subject = $subject;
+            break;
+        }
+    }
+}
+
+// Page title
+$page_title = $current_subject ? $current_subject['name'] : 'Subjects';
+
+// Include header
+include_once PRIVATE_PATH . '/shared/public_header.php';
 ?>
-<h1>Subjects</h1>
-<div class="subjects-grid">
-  <?php foreach ($subjects as $s): ?>
-    <div class="subject-card card">
-      <a href="/<?= urlencode($s['slug']); ?>/"><?= htmlspecialchars($s['name']); ?></a>
-      <?php if (!empty($s['meta_description'])): ?>
-        <div class="desc"><?= htmlspecialchars($s['meta_description']); ?></div>
-      <?php endif; ?>
+
+<div class="subject-container">
+  <?php if ($current_subject): ?>
+    <h2><?php echo h($current_subject['name']); ?></h2>
+    <p><?php echo h($current_subject['meta_description']); ?></p>
+
+    <div class="subject-pages">
+      <h3>Pages under <?php echo h($current_subject['name']); ?></h3>
+      <ul>
+        <?php
+        // Example: fetch pages by subject_id (DB)
+        if (function_exists('find_pages_by_subject_id')) {
+            $pages = find_pages_by_subject_id($current_subject['id']);
+            foreach ($pages as $page) {
+                echo '<li><a href="' . url_for('/pages/show.php?id=' . h($page['id'])) . '">' . h($page['title']) . '</a></li>';
+            }
+        } else {
+            echo '<li>No pages available yet.</li>';
+        }
+        ?>
+      </ul>
     </div>
-  <?php endforeach; ?>
+
+  <?php else: ?>
+    <h2>All Subjects</h2>
+    <ul>
+      <?php foreach ($subjects as $s): ?>
+        <li>
+          <a href="<?php echo url_for('/subjects/' . h($s['slug']) . '/'); ?>">
+            <?php echo h($s['name']); ?>
+          </a>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  <?php endif; ?>
 </div>
-<?php include(__DIR__ . '/../../private/shared/footer.php'); ?>
+
+<?php include_once PRIVATE_PATH . '/shared/public_footer.php'; ?>
