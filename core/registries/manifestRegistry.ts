@@ -1,7 +1,7 @@
-// project-root/core/registeries/manifestRegistry.ts
+// project-root/core/registries/manifestRegistry.ts
 
 // Central registry for module manifests
-import { SubjectManifest, StyleManifest, MediaManifest } from './types.js';
+import { MediaManifest, StyleManifest, SubjectManifest } from "./types.js";
 
 export const manifestRegistry = {
   subjects: new Map(),
@@ -11,7 +11,6 @@ export const manifestRegistry = {
     manifestRegistry.subjects.set(key, manifest);
   },
 };
-
 
 // Register functions
 export function registerSubject(id: string, manifest: SubjectManifest) {

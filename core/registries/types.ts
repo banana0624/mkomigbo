@@ -1,4 +1,4 @@
-// project-root/core/registeries/types.ts
+// project-root/core/registries/types.ts
 
 // types.ts or wherever SubjectManifest is defined
 export interface SubjectManifest {
@@ -26,7 +26,7 @@ export interface StyleManifest {
 
 export interface MediaManifest {
   id: string;
-  type: 'image' | 'video' | 'audio';
+  type: "image" | "video" | "audio";
   sourcePath: string;
   altText?: string;
   linkedSubjects?: string[];
