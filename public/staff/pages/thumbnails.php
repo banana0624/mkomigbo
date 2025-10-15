@@ -1,94 +1,71 @@
 <?php
 // project-root/public/staff/pages/thumbnails.php
+declare(strict_types=1);
 
-require_once(dirname(__DIR__, 3) . '/private/assets/initialize.php');
-require_login(); // from auth_functions.php
+// Self-check: resolve and load init (depth = 3)
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-$errors = [];
-$notice = '';
+$page_title    = 'Page Thumbnails';
+$stylesheets[] = '/lib/css/ui.css';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete') {
+require PRIVATE_PATH . '/shared/staff_header.php';
+
+function column_exists(PDO $pdo, string $table, string $column): bool {
+  try { $st = $pdo->prepare("SHOW COLUMNS FROM {$table} LIKE :col"); $st->execute([':col' => $column]); return (bool)$st->fetch(PDO::FETCH_ASSOC); }
+  catch (Throwable $e) { return false; }
+}
+$pdo   = function_exists('db') ? db() : (function_exists('db_connect') ? db_connect() : null);
+$table = function_exists('page_table') ? page_table() : ($_ENV['PAGES_TABLE'] ?? 'pages');
+
+$notice = null; $error  = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $page_id = (int)($_POST['page_id'] ?? 0);
-  if ($page_id <= 0) {
-    $errors[] = 'Invalid page id.';
-  } else {
-    if (delete_page_thumbnail($page_id)) {
-      $notice = 'Thumbnail deleted.';
+  if ($page_id <= 0)        $error = 'Valid Page ID is required.';
+  elseif (!isset($_FILES['thumb']) || ($_FILES['thumb']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK)
+                            $error = 'No image uploaded.';
+  else {
+    $res = process_image_upload($_FILES['thumb'], [
+      'dest_subdir'    => 'thumbnails',
+      'basename_prefix'=> 'page-thumb',
+      'auto_resize'    => true,
+      'max_w'          => 1200,
+      'max_h'          => 1200,
+    ]);
+    if (!$res['ok']) {
+      $error = $res['error'] ?? 'Upload failed.';
     } else {
-      $errors[] = 'Delete failed (page not found or DB error).';
+      $url = (string)($res['url'] ?? '');
+      if ($pdo instanceof PDO && column_exists($pdo, $table, 'thumbnail')) {
+        try { $st = $pdo->prepare("UPDATE {$table} SET thumbnail = :url WHERE id = :id"); $st->execute([':url'=>$url, ':id'=>$page_id]); $notice = "Thumbnail set for page #{$page_id}. URL: " . h($url); }
+        catch (Throwable $e) { $notice = "Uploaded: " . h($url) . " (DB update skipped: " . h($e->getMessage()) . ")"; }
+      } else {
+        $notice = "Uploaded: " . h($url) . " (no 'thumbnail' column on {$table}; DB not updated)";
+      }
     }
   }
 }
-
-// Fetch all pages
-$pages = find_all_pages();
-
-$page_title = 'Page Thumbnails';
-include_once(dirname(__DIR__, 3) . '/private/shared/staff_header.php');
 ?>
+<div class="container" style="padding:1rem 0">
+  <h1>Page Thumbnails</h1>
+  <?php if ($error): ?><div class="alert danger"><?= h($error) ?></div><?php endif; ?>
+  <?php if ($notice): ?><div class="alert success"><?= $notice ?></div><?php endif; ?>
 
-<div class="admin-upload-wrap" style="max-width:1100px;margin:20px auto;">
-  <h2>Page Thumbnails</h2>
+  <form class="form" method="post" enctype="multipart/form-data">
+    <div class="form-grid">
+      <div class="field"><label for="page_id" class="req">Page ID</label></div>
+      <div><input class="input" type="number" name="page_id" id="page_id" min="1" required></div>
 
-  <?php if (!empty($notice)) { ?>
-    <div style="background:#e6ffed;border:1px solid #b7eb8f;padding:10px;border-radius:8px;margin-bottom:10px;">
-      <?php echo h($notice); ?>
+      <div class="field"><label for="thumb" class="req">Thumbnail image</label></div>
+      <div><input class="input" type="file" name="thumb" id="thumb" accept="image/*" required></div>
     </div>
-  <?php } ?>
 
-  <?php if (!empty($errors)) { ?>
-    <div style="background:#fff1f0;border:1px solid #ffa39e;padding:10px;border-radius:8px;margin-bottom:10px;">
-      <ul style="margin:0;padding-left:18px;">
-        <?php foreach($errors as $e) { echo '<li>' . h($e) . '</li>'; } ?>
-      </ul>
+    <div style="margin-top:1rem">
+      <button class="btn btn-primary" type="submit">Upload</button>
+      <a class="btn" href="<?= h(url_for('/staff/')) ?>">Back</a>
     </div>
-  <?php } ?>
-
-  <div style="overflow:auto;">
-    <table style="width:100%;border-collapse:collapse;">
-      <thead>
-        <tr>
-          <th style="text-align:left;border-bottom:1px solid #ddd;padding:8px;">ID</th>
-          <th style="text-align:left;border-bottom:1px solid #ddd;padding:8px;">Title</th>
-          <th style="text-align:left;border-bottom:1px solid #ddd;padding:8px;">Subject</th>
-          <th style="text-align:left;border-bottom:1px solid #ddd;padding:8px;">Thumbnail</th>
-          <th style="text-align:left;border-bottom:1px solid #ddd;padding:8px;">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach($pages as $p) { 
-          $subject = !empty($p['subject_id']) ? find_subject_by_id($p['subject_id']) : null;
-          $thumb   = page_thumbnail_url($p);
-          $hasThumb = !empty($p['thumbnail']);
-          $upload_url = url_for('/staff/pages/upload_thumbnail.php?page_id=' . (int)$p['id']);
-        ?>
-          <tr>
-            <td style="border-bottom:1px solid #eee;padding:8px;"><?php echo (int)$p['id']; ?></td>
-            <td style="border-bottom:1px solid #eee;padding:8px;"><?php echo h($p['title']); ?></td>
-            <td style="border-bottom:1px solid #eee;padding:8px;"><?php echo $subject ? h($subject['name']) : '—'; ?></td>
-            <td style="border-bottom:1px solid #eee;padding:8px;">
-              <img src="<?php echo $thumb; ?>" alt="" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #ddd;">
-              <?php if(!$hasThumb) { echo '<div style="font-size:12px;opacity:.7;">(placeholder)</div>'; } ?>
-            </td>
-            <td style="border-bottom:1px solid #eee;padding:8px;">
-              <a href="<?php echo $upload_url; ?>">Upload/Replace</a>
-              <?php if($hasThumb) { ?>
-                <form method="post" style="display:inline-block;margin-left:10px;" onsubmit="return confirm('Delete this thumbnail?');">
-                  <input type="hidden" name="action" value="delete">
-                  <input type="hidden" name="page_id" value="<?php echo (int)$p['id']; ?>">
-                  <button type="submit" style="background:#fff;border:1px solid #d33;color:#d33;border-radius:6px;padding:4px 8px;cursor:pointer;">Delete</button>
-                </form>
-              <?php } ?>
-            </td>
-          </tr>
-        <?php } ?>
-      </tbody>
-    </table>
-  </div>
-
-  <p style="margin-top:14px;">
-    <a href="<?php echo url_for('/staff/pages/upload_thumbnail.php'); ?>">Upload a new thumbnail</a>
-  </p>
+  </form>
 </div>
-
-<?php include_once(dirname(__DIR__, 3) . '/private/shared/staff_footer.php'); ?>
+<?php require PRIVATE_PATH . '/shared/staff_footer.php'; ?>

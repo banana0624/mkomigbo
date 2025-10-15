@@ -1,0 +1,40 @@
+{
+  "name": "mkomigbo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mkomigbo website project.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest --watch"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/banana0624/mkomigbo.git"
+  },
+  "bugs": {
+    "url": "https://github.com/banana0624/mkomigbo/issues"
+  },
+  "homepage": "https://github.com/banana0624/mkomigbo#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.20",
+    "jsdom": "^24.1.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "vitest": {
+    "environment": "node",
+    "include": [
+      "tests/**/*.test.{ts,js}"
+    ],
+    "globals": true
+  }
+}

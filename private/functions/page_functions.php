@@ -1,6 +1,8 @@
 <?php
 // project-root/private/functions/page_functions.php
 
+declare(strict_types=1);
+
 function find_all_pages() {
   global $db;
   $sql = "SELECT * FROM pages ORDER BY subject_id ASC, position ASC";
@@ -22,16 +24,33 @@ function count_pages_by_subject_id($subject_id) {
   return (int)($row['c'] ?? 0);
 }
 
-function find_pages_by_subject_id($subject_id) {
-  global $db;
-  $sql = "SELECT * FROM pages WHERE subject_id='" . db_escape($db, $subject_id) . "' ORDER BY position ASC";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $rows = [];
-  while($r = mysqli_fetch_assoc($result)) { $rows[] = $r; }
-  mysqli_free_result($result);
-  return $rows;
+
+/** Canonical page helpers */
+if (!function_exists('page_table')) {
+    function page_table(): string {
+        return $_ENV['PAGES_TABLE'] ?? 'pages';
+    }
 }
+
+if (!function_exists('page_find_all_by_subject_id')) {
+    function page_find_all_by_subject_id(int $subject_id): array {
+        $pdo = function_exists('db') ? db() : (function_exists('db_connect') ? db_connect() : null);
+        if (!$pdo) return [];
+        $sql = "SELECT * FROM " . page_table() . " WHERE subject_id = :sid ORDER BY id DESC";
+        $st  = $pdo->prepare($sql);
+        $st->bindValue(':sid', $subject_id, PDO::PARAM_INT);
+        $st->execute();
+        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+}
+
+/** Back-compat alias (ONLY HERE) */
+if (!function_exists('find_pages_by_subject_id')) {
+    function find_pages_by_subject_id(int $subject_id): array {
+        return page_find_all_by_subject_id($subject_id);
+    }
+}
+
 
 function find_pages_by_subject_id_paginated($subject_id, $limit, $offset) {
   global $db;

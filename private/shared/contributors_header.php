@@ -1,20 +1,16 @@
 <?php
-// private/shared/contributors_header.php
+declare(strict_types=1);
 
+if (!isset($require_login) || $require_login !== false) {
+    if (function_exists('require_contributor_login')) { require_contributor_login(); }
+}
+
+$body_class = trim(($body_class ?? '') . ' layout-contributors');
 $page_title = $page_title ?? 'Contributors';
-$meta_description = $meta_description ?? '';
-$meta_keywords = $meta_keywords ?? 'contributors';
+require __DIR__ . '/header.php';
 
-// CSS specific to contributors section
-$extra_head_css = [
-    url_for('/lib/css/contributors.css')
-];
-
-include_once __DIR__ . '/public_header.php';
-?>
-<nav class="contributors-nav" style="margin-bottom:16px;">
-  <ul>
-    <li><a href="<?php echo url_for('/'); ?>">Home</a></li>
-    <li><a href="<?php echo url_for('/staff/contributors/'); ?>">Contributors Area</a></li>
-  </ul>
-</nav>
+echo '<div class="container contributors-subnav"><nav aria-label="Contributors"><ul>'
+   . '<li><a href="' . h(url_for('/contributors/')) . '">Home</a></li>'
+   . '<li><a href="' . h(url_for('/contributors/new')) . '">New Submission</a></li>'
+   . '<li><a href="' . h(url_for('/contributors/my')) . '">My Submissions</a></li>'
+   . '</ul></nav></div>';

@@ -1,0 +1,18 @@
+### project-root/.htaccess ###
+
+RewriteEngine On
+
+# Redirect requests explicitly asking for /public/ in URL to hide it
+RewriteCond %{THE_REQUEST} \s/public/ [NC]
+RewriteRule ^public/(.*)$ /$1 [L,R=301]
+
+# If the request isn't already to /public/, and target is not an existing file or directory
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Rewrite everything else into public/
+RewriteRule ^(.*)$ public/$1 [L]
+
+# Use public/index.php as default for root
+DirectoryIndex public/index.php

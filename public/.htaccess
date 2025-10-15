@@ -1,32 +1,32 @@
-## project-root/public/.htaccess ##
+# project-root/public/.htaccess
 
-RewriteEngine On
+# 1) Default index file for directories
 
-# Prevent directory listing
-Options -Indexes
+DirectoryIndex index.php index.html
 
-# Security headers (optional)
-<IfModule mod_headers.c>
-  Header always set X-Frame-Options "SAMEORIGIN"
-  Header always set X-Content-Type-Options "nosniff"
-  Header always set Referrer-Policy "strict-origin-when-cross-origin"
-  Header always set X-XSS-Protection "1; mode=block"
-</IfModule>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
 
-# Default index files in this folder
-DirectoryIndex test_index.php index.php
+# 2) Redirect any public /subjects URLs to the staff area
 
-# Block direct access to private folder
-RewriteRule ^private/ - [F,L]
+# /subjects -> /staff/subjects/
 
-# If the request points to an existing file or directory, serve it directly
+# /subjects/{slug}/ -> /staff/subjects/{slug}/
+
+RewriteRule ^subjects/?$ staff/subjects/ [R=302,L]
+RewriteRule ^subjects/([A-Za-z0-9_-]+)/?$ staff/subjects/$1/ [R=302,L]
+
+# 3) Serve existing files/directories as-is
+
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-# Pretty URLs: subjects and pages routing
-RewriteRule ^subjects/([^/]+)/?$ subjects/index.php?slug=$1 [L,QSA]
-RewriteRule ^pages/([^/]+)/?$ pages/index.php?slug=$1 [L,QSA]
+# 4) (Optional) Clean URLs: map "/path" to "/path.php" if the PHP file exists.
 
-# Fallback: route all remaining requests to index.php
-RewriteRule ^(.*)$ index.php [L,QSA]
+# Example: /staff/login -> /staff/login.php
+
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.+)$ $1.php [L]
+</IfModule>

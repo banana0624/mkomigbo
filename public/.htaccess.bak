@@ -1,0 +1,51 @@
+# ------------------------------
+# Public web root for mkomigbo
+# ------------------------------
+
+# Safer defaults
+Options -Indexes -MultiViews
+
+# Security headers (optional)
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  # X-XSS-Protection is obsolete in modern browsers, but harmless if you want it:
+  # Header always set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# Default index order (your test_index first)
+DirectoryIndex test_index.php index.php
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # If this site is mounted at vhost root, RewriteBase can be omitted.
+  # If you ever host under a subfolder, uncomment and set it.
+  # RewriteBase /
+
+  # 1) Hard block web access to /private
+  RewriteRule ^private/ - [F,L]
+
+  # 2) DO NOT rewrite existing files/symlinks/dirs (static assets pass through)
+  RewriteCond %{REQUEST_FILENAME} -s [OR]
+  RewriteCond %{REQUEST_FILENAME} -l [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # 3) (Defensive) Explicitly allow asset tree if any upstream .htaccess interferes
+  RewriteRule ^lib/ - [L]
+
+  # 4) Pretty public routes (adjust to your actual public controllers)
+  RewriteRule ^subjects/([^/]+)/?$ subjects/index.php?slug=$1 [L,QSA]
+  RewriteRule ^pages/([^/]+)/?$    pages/index.php?slug=$1    [L,QSA]
+
+  # 5) Staff area: let requests hit files/dirs under /staff/ as-is.
+  #    If someone hits /staff with no trailing slash, route to /staff/index.php
+  RewriteRule ^staff/?$ staff/index.php [L,QSA]
+  #    For deeper paths (e.g., staff/subjects/pgs/...), just drop through:
+  #    our earlier -f/-d rule already serves real files; anything else
+  #    like staff/foo.php will resolve normally without rewriting here.
+
+  # 6) Final fallback: front controller for public root
+  RewriteRule ^ index.php [L,QSA]
+</IfModule>

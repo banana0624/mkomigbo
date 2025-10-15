@@ -1,47 +1,51 @@
 <?php
 // project-root/public/staff/admins/index.php
 
-require_once __DIR__ . '/../../../private/assets/initialize.php';
+declare(strict_types=1);
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php'; // ← 3 levels up
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-$page_title = 'Admins';
-include_once PRIVATE_PATH . '/shared/staff_header.php';
 
-$admins = [];
-if (function_exists('find_all_admins')) {
-    $admins = find_all_admins();
-}
+$page_title    = 'Admins';
+$active_nav    = 'staff';
+$body_class    = 'role--staff role--admin';
+$page_logo     = '/lib/images/icons/shield.svg'; // optional small icon
+$stylesheets[] = '/lib/css/ui.css';
+$stylesheets[] = '/lib/css/landing.css';
+
+$breadcrumbs = [
+  ['label'=>'Home',   'url'=>'/'],
+  ['label'=>'Staff',  'url'=>'/staff/'],
+  ['label'=>'Admins'],
+];
+
+require PRIVATE_PATH . '/shared/staff_header.php';
 ?>
+<main class="container" style="padding:1.25rem 0">
+  <h1>Admins</h1>
+  <p class="muted">Manage users, roles/permissions, and site settings.</p>
 
-<h2>All Admins</h2>
-<p><a href="<?php echo url_for('/staff/admins/new.php'); ?>">+ Add Admin</a></p>
-
-<table>
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Username</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    <?php foreach ($admins as $admin): ?>
-      <tr>
-        <td><?php echo h($admin['id']); ?></td>
-        <td>
-          <a href="<?php echo url_for('/staff/admins/show.php?id=' . u($admin['id'])); ?>">
-            <?php echo h($admin['username']); ?>
-          </a>
-        </td>
-        <td>
-          <a href="<?php echo url_for('/staff/admins/edit.php?id=' . u($admin['id'])); ?>">Edit</a> |
-          <a href="<?php echo url_for('/staff/admins/delete.php?id=' . u($admin['id'])); ?>"
-             onclick="return confirm('Delete this admin?');">Delete</a>
-        </td>
-      </tr>
-    <?php endforeach; ?>
-  </tbody>
-</table>
-
-<?php
-include_once PRIVATE_PATH . '/shared/staff_footer.php';
-?>
+  <ul class="home-links"
+      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;list-style:none;padding:0;margin:0;">
+    <li>
+      <a class="card" href="<?= h(url_for('/staff/admins/users/')) ?>"
+         style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
+        <strong>Users</strong><br><span class="muted">Accounts & access</span>
+      </a>
+    </li>
+    <li>
+      <a class="card" href="<?= h(url_for('/staff/admins/roles/')) ?>"
+         style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
+        <strong>Roles</strong><br><span class="muted">Roles & permissions</span>
+      </a>
+    </li>
+    <li>
+      <a class="card" href="<?= h(url_for('/staff/admins/settings/')) ?>"
+         style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
+        <strong>Settings</strong><br><span class="muted">Site configuration</span>
+      </a>
+    </li>
+  </ul>
+</main>
+<?php require PRIVATE_PATH . '/shared/staff_footer.php'; ?>

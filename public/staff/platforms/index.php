@@ -1,52 +1,52 @@
 <?php
 // project-root/public/staff/platforms/index.php
+declare(strict_types=1);
 
-require_once __DIR__ . '/../../../private/assets/initialize.php';
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-if (defined('APP_DEBUG') && APP_DEBUG) {
-    ini_set('display_errors', 1);
-    error_reporting(E_ALL);
-}
+$page_title   = 'Platforms';
+$active_nav   = 'staff';
+$body_class   = 'role--staff';
+$page_logo    = '/lib/images/icons/grid.svg';
+$stylesheets[] = '/lib/css/ui.css';
 
-$page_title = 'Platforms';
-include_once SHARED_PATH . '/staff_header.php';
+require PRIVATE_PATH . '/shared/staff_header.php';
 
-$platforms = [];
-if (function_exists('find_all_platforms')) {
-    $platforms = find_all_platforms();
-}
-?>
+/** Define all platforms here (add/remove to change tiles) */
+$platforms = [
+  ['slug'=>'audios',        'name'=>'Audios',        'icon'=>'/lib/images/icons/audio.svg',      'desc'=>'Podcasts & tracks'],
+  ['slug'=>'blogs',         'name'=>'Blogs',         'icon'=>'/lib/images/icons/book.svg',       'desc'=>'Articles and posts'],
+  ['slug'=>'communities',   'name'=>'Communities',   'icon'=>'/lib/images/icons/users.svg',      'desc'=>'Groups & spaces'],
+  ['slug'=>'contributions', 'name'=>'Contributions', 'icon'=>'/lib/images/icons/hand-heart.svg', 'desc'=>'Submissions & help'],
+  ['slug'=>'forums',        'name'=>'Forums',        'icon'=>'/lib/images/icons/messages.svg',   'desc'=>'Discussions & threads'],
+  ['slug'=>'logs',          'name'=>'Logs',          'icon'=>'/lib/images/icons/note.svg',       'desc'=>'Activity & audit logs'], // ⬅ NEW
+  ['slug'=>'posts',         'name'=>'Posts',         'icon'=>'/lib/images/icons/note.svg',       'desc'=>'Short updates'],
+  ['slug'=>'reels',         'name'=>'Reels',         'icon'=>'/lib/images/icons/reel.svg',       'desc'=>'Short verticals'],
+  ['slug'=>'tags',          'name'=>'Tags',          'icon'=>'/lib/images/icons/tag.svg',        'desc'=>'Taxonomy'],
+  ['slug'=>'videos',        'name'=>'Videos',        'icon'=>'/lib/images/icons/video.svg',      'desc'=>'Clips & streams'],
+];
 
-<h2>All Platforms</h2>
-<p><a href="<?php echo url_for('/staff/platforms/new.php'); ?>">+ Add New Platform</a></p>
+$tiles = array_map(function($p){
+  return [
+    'href'  => "/staff/platforms/{$p['slug']}/",
+    'title' => $p['name'],
+    'desc'  => $p['desc'],
+    'class' => "platform--{$p['slug']}",
+    'img'   => $p['icon'],
+  ];
+}, $platforms);
 
-<?php if (empty($platforms)): ?>
-  <p>No platforms found.</p>
-<?php else: ?>
-  <table>
-    <thead>
-      <tr><th>ID</th><th>Name</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-      <?php foreach ($platforms as $p): ?>
-        <tr>
-          <td><?php echo h($p['id']); ?></td>
-          <td>
-            <a href="<?php echo url_for('/staff/platforms/show.php?id=' . u($p['id'])); ?>">
-              <?php echo h($p['name']); ?>
-            </a>
-          </td>
-          <td>
-            <a href="<?php echo url_for('/staff/platforms/edit.php?id=' . u($p['id'])); ?>">Edit</a> |
-            <a href="<?php echo url_for('/staff/platforms/delete.php?id=' . u($p['id'])); ?>"
-               onclick="return confirm('Delete this platform?');">Delete</a>
-          </td>
-        </tr>
-      <?php endforeach; ?>
-    </tbody>
-  </table>
-<?php endif; ?>
+// Optional hero
+$hero = [
+  'title' => 'Platforms',
+  'intro' => 'Manage content types and their settings.',
+  'class' => 'role--staff'
+];
+require PRIVATE_PATH . '/common/ui/hero.php';
 
-<?php
-include_once SHARED_PATH . '/staff_footer.php';
-?>
+// Grid of tiles
+require PRIVATE_PATH . '/common/ui/tiles.php';
+
+require PRIVATE_PATH . '/shared/staff_footer.php';

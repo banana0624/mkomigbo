@@ -1,0 +1,418 @@
+/* ==========================================================================
+   CRUD UI (public/lib/css/ui.css)
+   Forms, buttons, tables, alerts, pagination, toolbars, cards
+   ========================================================================== */
+
+/* ---------- Buttons ---------- */
+.btn {
+  --btn-bg: var(--surface-2);
+  --btn-fg: var(--text);
+  --btn-bd: var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--btn-bd);
+  background: var(--btn-bg);
+  color: var(--btn-fg);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease,
+    box-shadow 0.15s ease;
+  user-select: none;
+}
+.btn:hover {
+  background: color-mix(in srgb, var(--btn-bg) 80%, var(--brand) 20%);
+  text-decoration: none;
+}
+.btn:active {
+  transform: translateY(1px);
+}
+.btn:disabled,
+.btn[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  --btn-bg: var(--brand);
+  --btn-fg: var(--brand-contrast);
+  --btn-bd: var(--brand);
+}
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--brand) 88%, black 12%);
+}
+
+.btn-accent {
+  --btn-bg: var(--accent);
+  --btn-fg: var(--brand-contrast);
+  --btn-bd: var(--accent);
+}
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+}
+.btn-outline {
+  background: transparent;
+}
+.btn-danger {
+  --btn-bg: #e5484d;
+  --btn-fg: #fff;
+  --btn-bd: #e5484d;
+}
+.btn-warning {
+  --btn-bg: #f7b84b;
+  --btn-fg: #2b2b2b;
+  --btn-bd: #f7b84b;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.875rem;
+}
+.btn-lg {
+  padding: 0.75rem 1.1rem;
+  font-size: 1.05rem;
+}
+.btn + .btn {
+  margin-left: 0.5rem;
+}
+
+/* Icon buttons */
+.btn .icon {
+  width: 1.1em;
+  height: 1.1em;
+}
+
+/* ---------- Forms ---------- */
+.form {
+  max-width: 960px;
+}
+.form-grid {
+  display: grid;
+  gap: 1rem 1.25rem;
+  grid-template-columns: 1fr 2fr;
+}
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: contents;
+} /* label + control align to grid columns */
+
+label {
+  align-self: start;
+  padding-top: 0.55rem;
+  font-weight: 600;
+}
+
+.input,
+.select,
+.textarea,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="url"],
+input[type="date"],
+select,
+textarea {
+  appearance: none;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  line-height: 1.35;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+input[type="file"] {
+  border: 1px dashed var(--border);
+  padding: 0.7rem;
+  background: var(--surface-2);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--brand) 70%, var(--border) 30%);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 15%, transparent);
+}
+textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+/* Inline fields */
+.field.inline {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  grid-column: 1 / -1;
+}
+.field.inline > label {
+  padding: 0;
+  font-weight: 500;
+}
+
+/* Hints / errors */
+.help {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+.error {
+  color: #e5484d;
+  font-size: 0.9rem;
+  margin-top: 0.35rem;
+}
+
+.form-errors,
+.session-message {
+  margin: 0.75rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.form-errors {
+  border-color: #e5484d66;
+  background: color-mix(in srgb, #e5484d 10%, var(--surface));
+}
+.form-errors li {
+  margin-left: 1rem;
+}
+
+/* Required marker utility */
+.req::after {
+  content: " *";
+  color: #e5484d;
+}
+
+/* Switches / checkboxes */
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.check input[type="checkbox"],
+.check input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ---------- Tables ---------- */
+.table-wrap {
+  width: 100%;
+  overflow: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--surface);
+  min-width: 680px;
+}
+.table thead th {
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0.75rem;
+}
+.table tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.table tbody tr:hover {
+  background: color-mix(in srgb, var(--surface) 90%, var(--surface-2) 10%);
+}
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.table .muted {
+  color: var(--muted);
+}
+.table .actions {
+  white-space: nowrap;
+}
+
+/* Badges/chips */
+.badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.badge.success {
+  background: color-mix(in srgb, #16a34a 15%, var(--surface));
+  border-color: #16a34a40;
+  color: #065f46;
+}
+.badge.warn {
+  background: color-mix(in srgb, #f59e0b 18%, var(--surface));
+  border-color: #f59e0b44;
+  color: #7c3e00;
+}
+.badge.danger {
+  background: color-mix(in srgb, #e5484d 15%, var(--surface));
+  border-color: #e5484d44;
+  color: #7a1417;
+}
+
+/* ---------- Alerts ---------- */
+.alert {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  background: var(--surface-2);
+  margin: 1rem 0;
+}
+.alert.info {
+  border-color: color-mix(in srgb, var(--brand) 40%, var(--border));
+  background: color-mix(in srgb, var(--brand) 10%, var(--surface));
+}
+.alert.success {
+  border-color: #16a34a66;
+  background: color-mix(in srgb, #16a34a 10%, var(--surface));
+}
+.alert.warn {
+  border-color: #f59e0b66;
+  background: color-mix(in srgb, #f59e0b 12%, var(--surface));
+}
+.alert.danger {
+  border-color: #e5484d66;
+  background: color-mix(in srgb, #e5484d 10%, var(--surface));
+}
+
+/* ---------- Toolbar / Filters ---------- */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+.toolbar .left,
+.toolbar .right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ---------- Cards (for quick stats/empty states) ---------- */
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 1rem;
+}
+.card + .card {
+  margin-top: 0.75rem;
+}
+.card .title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.card .muted {
+  color: var(--muted);
+}
+
+/* ---------- Pagination ---------- */
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.pagination a,
+.pagination span {
+  display: inline-block;
+  padding: 0.4rem 0.6rem;
+  color: var(--text);
+  text-decoration: none;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+}
+.pagination a:hover {
+  background: var(--surface-2);
+}
+.pagination .active,
+.pagination span[aria-current="page"] {
+  background: var(--brand);
+  color: var(--brand-contrast);
+}
+.pagination :last-child {
+  border-right: 0;
+}
+
+/* ---------- Modal (optional utility) ---------- */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, black 45%, transparent);
+  display: none;
+}
+.modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  display: none;
+}
+.modal.open,
+.modal-backdrop.open {
+  display: block;
+}
+.modal .panel {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  max-width: 640px;
+  width: 100%;
+  padding: 1rem;
+  box-shadow: 0 10px 30px color-mix(in srgb, black 25%, transparent);
+}
+.modal .panel .title {
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* ---------- Tables: compact variant ---------- */
+.table.compact thead th,
+.table.compact tbody td {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.92rem;
+}

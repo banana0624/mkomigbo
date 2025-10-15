@@ -1,20 +1,10 @@
 <?php
-// private/shared/platforms_header.php
+declare(strict_types=1);
 
+$body_class = trim(($body_class ?? '') . ' layout-platforms');
 $page_title = $page_title ?? 'Platforms';
-$meta_description = $meta_description ?? '';
-$meta_keywords = $meta_keywords ?? 'platforms';
+require __DIR__ . '/header.php';
 
-// CSS for platforms section
-$extra_head_css = [
-    url_for('/lib/css/platforms.css')
-];
-
-include_once __DIR__ . '/public_header.php';
-?>
-<nav class="platforms-nav" style="margin-bottom:16px;">
-  <ul>
-    <li><a href="<?php echo url_for('/'); ?>">Home</a></li>
-    <li><a href="<?php echo url_for('/staff/platforms/'); ?>">Platforms Area</a></li>
-  </ul>
-</nav>
+// Platforms sub-nav from registry
+require_once __DIR__ . '/nav.php';
+echo render_platforms_subnav($active_nav ?? null);

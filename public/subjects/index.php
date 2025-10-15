@@ -1,70 +1,73 @@
 <?php
 // project-root/public/subjects/index.php
 
-require_once dirname(__DIR__, 2) . '/private/assets/initialize.php';
+declare(strict_types=1);
 
-// Get slug from URL
-$slug = $_GET['slug'] ?? null;
+$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-// Load subject registry
-$subjects = [];
-$registry_file = PRIVATE_PATH . '/registry/subjects.php';
-if (file_exists($registry_file)) {
-    $subjects = include $registry_file;
+$page_title    = 'Subjects';
+$active_nav    = null; // public nav, if you have one
+$body_class    = 'hub--subjects public';
+$page_logo     = '/lib/images/logo/subjects-hub.png'; // optional
+$stylesheets[] = '/lib/css/ui.css';
+$stylesheets[] = '/lib/css/landing.css';
+
+$breadcrumbs = [
+  ['label'=>'Home','url'=>'/'],
+  ['label'=>'Subjects'],
+];
+
+require_once PRIVATE_PATH . '/shared/header.php';
+
+/** Load only public subjects from DB (fallback to all if helper missing) */
+if (!function_exists('subjects_public')) {
+  function subjects_public(): array {
+    global $db;
+    if (!isset($db)) return [];
+    $sql = "SELECT slug, name, COALESCE(meta_description,'') AS meta_description,
+                   COALESCE(nav_order,0) AS nav_order,
+                   COALESCE(is_public,1) AS is_public
+            FROM subjects
+            WHERE COALESCE(is_public,1) = 1
+            ORDER BY nav_order ASC, name ASC";
+    return $db->query($sql)->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  }
 }
-
-// Find subject by slug
-$current_subject = null;
-if ($slug && isset($subjects)) {
-    foreach ($subjects as $subject) {
-        if ($subject['slug'] === $slug) {
-            $current_subject = $subject;
-            break;
-        }
-    }
-}
-
-// Page title
-$page_title = $current_subject ? $current_subject['name'] : 'Subjects';
-
-// Include header
-include_once PRIVATE_PATH . '/shared/public_header.php';
+$subjects = subjects_public();
 ?>
+<main class="container" style="padding:1.25rem 0">
+  <header class="hero" style="margin-bottom:1rem;">
+    <h1 style="margin:0 0 .25rem 0;">Subjects</h1>
+    <p class="muted" style="margin:0">Browse the subject hubs.</p>
+  </header>
 
-<div class="subject-container">
-  <?php if ($current_subject): ?>
-    <h2><?php echo h($current_subject['name']); ?></h2>
-    <p><?php echo h($current_subject['meta_description']); ?></p>
-
-    <div class="subject-pages">
-      <h3>Pages under <?php echo h($current_subject['name']); ?></h3>
-      <ul>
-        <?php
-        // Example: fetch pages by subject_id (DB)
-        if (function_exists('find_pages_by_subject_id')) {
-            $pages = find_pages_by_subject_id($current_subject['id']);
-            foreach ($pages as $page) {
-                echo '<li><a href="' . url_for('/pages/show.php?id=' . h($page['id'])) . '">' . h($page['title']) . '</a></li>';
-            }
-        } else {
-            echo '<li>No pages available yet.</li>';
-        }
-        ?>
-      </ul>
-    </div>
-
+  <?php if (!$subjects): ?>
+    <p class="muted">No public subjects yet.</p>
   <?php else: ?>
-    <h2>All Subjects</h2>
-    <ul>
-      <?php foreach ($subjects as $s): ?>
-        <li>
-          <a href="<?php echo url_for('/subjects/' . h($s['slug']) . '/'); ?>">
-            <?php echo h($s['name']); ?>
-          </a>
-        </li>
+    <div class="card-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+      <?php foreach ($subjects as $s):
+        $slug = (string)$s['slug'];
+        $name = (string)$s['name'];
+        $desc = (string)$s['meta_description'];
+        $href = url_for("/subjects/{$slug}/");
+        $icon = url_for("/lib/images/subjects/{$slug}.svg");
+      ?>
+      <a class="card subject-card subject--<?= h($slug) ?>" href="<?= h($href) ?>"
+         style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;text-decoration:none;background:#fff;">
+        <div style="display:flex;gap:10px;align-items:flex-start;">
+          <img src="<?= h($icon) ?>" alt="" width="32" height="32" style="flex:0 0 auto;">
+          <div style="min-width:0;">
+            <div style="font-weight:600;"><?= h($name) ?></div>
+            <?php if ($desc !== ''): ?>
+              <div class="muted" style="font-size:.85rem;"><?= h($desc) ?></div>
+            <?php endif; ?>
+          </div>
+        </div>
+      </a>
       <?php endforeach; ?>
-    </ul>
+    </div>
   <?php endif; ?>
-</div>
-
-<?php include_once PRIVATE_PATH . '/shared/public_footer.php'; ?>
+</main>
+<?php require PRIVATE_PATH . '/shared/footer.php'; ?>

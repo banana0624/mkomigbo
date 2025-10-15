@@ -1,21 +1,10 @@
 <?php
-// private/shared/subjects_header.php
+declare(strict_types=1);
 
+$body_class = trim(($body_class ?? '') . ' layout-subjects');
 $page_title = $page_title ?? 'Subjects';
-$meta_description = $meta_description ?? '';
-$meta_keywords = $meta_keywords ?? 'subjects';
+require __DIR__ . '/header.php';
 
-// CSS for subjects section
-$extra_head_css = [
-    url_for('/lib/css/subjects.css')
-];
-
-include_once __DIR__ . '/public_header.php';
-?>
-<nav class="subjects-nav" style="margin-bottom:16px;">
-  <ul>
-    <li><a href="<?php echo url_for('/'); ?>">Home</a></li>
-    <li><a href="<?php echo url_for('/staff/subjects/'); ?>">Subjects Management</a></li>
-    <li><a href="<?php echo url_for('/subjects/'); ?>">Public Subjects</a></li>
-  </ul>
-</nav>
+// Subjects sub-nav from registry
+require_once __DIR__ . '/nav.php';
+echo render_subjects_nav($active_subject ?? null); // caller may set $active_subject = 'history'

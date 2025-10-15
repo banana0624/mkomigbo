@@ -1,42 +1,46 @@
 <?php
-// project-root/private/functions/registry_functions.php
+declare(strict_types=1);
 
 /**
- * Return all subjects sorted by nav_order.
- * @return array<int,array>
+ * project-root/private/functions/registry_functions.php
+ *
+ * Back-compat wrappers that delegate to the new Registry API.
+ * New registry (in /private/registry/subjects_register.php) defines:
+ *  - subjects_all(), subjects_sorted(), subject_by_id(), subject_by_slug()
  */
+
 function subject_registry_all(): array {
-    global $SUBJECTS;
-    if (!isset($SUBJECTS) || !is_array($SUBJECTS)) {
-        return [];
+    if (function_exists('subjects_sorted')) {
+        // preferred: sorted by nav_order
+        return subjects_sorted();
     }
-    uasort($SUBJECTS, function($a, $b) {
-        return ($a['nav_order'] <=> $b['nav_order']);
-    });
-    return $SUBJECTS;
+    if (function_exists('subjects_all')) {
+        return subjects_all();
+    }
+    return [];
 }
 
-/**
- * Get subject metadata by ID.
- * @param int $id
- * @return array|null
- */
 function subject_registry_get(int $id): ?array {
-    global $SUBJECTS;
-    return $SUBJECTS[$id] ?? null;
+    if (function_exists('subject_by_id')) {
+        return subject_by_id($id);
+    }
+    // fallback for extremely old code paths:
+    global $SUBJECTS_REGISTRY, $SUBJECTS;
+    if (isset($SUBJECTS_REGISTRY[$id])) return $SUBJECTS_REGISTRY[$id];
+    if (isset($SUBJECTS[$id])) return $SUBJECTS[$id];
+    return null;
 }
 
-/**
- * Find subject ID by slug.
- * @param string $slug
- * @return int|null
- */
 function subject_registry_find_id_by_slug(string $slug): ?int {
-    global $SUBJECTS;
-    foreach ($SUBJECTS as $id => $info) {
-        if (isset($info['slug']) && $info['slug'] === $slug) {
-            return $id;
-        }
+    if (function_exists('subject_by_slug')) {
+        $row = subject_by_slug($slug);
+        return $row['id'] ?? null;
+    }
+    // fallback
+    global $SUBJECTS_REGISTRY, $SUBJECTS;
+    $arr = $SUBJECTS_REGISTRY ?? ($SUBJECTS ?? []);
+    foreach ($arr as $id => $info) {
+        if (($info['slug'] ?? null) === $slug) return (int)$id;
     }
     return null;
 }

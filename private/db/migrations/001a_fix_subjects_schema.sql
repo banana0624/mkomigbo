@@ -1,0 +1,14 @@
+-- Ensure subjects table has the columns our seed expects.
+-- MySQL 8+: IF NOT EXISTS is supported on ADD COLUMN / ADD INDEX.
+
+CREATE TABLE IF NOT EXISTS subjects (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(64) NOT NULL UNIQUE,
+  name VARCHAR(120) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE subjects
+  ADD COLUMN IF NOT EXISTS is_public TINYINT(1) NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS nav_order INT NOT NULL DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS meta_description VARCHAR(255) NULL,
+  ADD UNIQUE KEY IF NOT EXISTS uniq_subject_slug (slug);

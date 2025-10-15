@@ -1,58 +1,61 @@
 <?php
-// project-root/private/functions/platform_functions.php
+declare(strict_types=1);
 
-function find_all_platforms(): array {
-    $pdo = db_connect();
-    $sql = "SELECT id, name FROM platforms ORDER BY id ASC";
-    $stmt = $pdo->query($sql);
-    return $stmt->fetchAll();
+/**
+ * Helpers around the Platforms Registry:
+ * - building nav arrays
+ * - resolving routes by slug or key
+ * - legacy redirect helpers
+ */
+
+require_once __DIR__ . '/registry_functions.php'; // generic registry utilities
+
+function platforms_nav_items(bool $onlyVisible = true): array {
+    if (!function_exists('platforms_all')) { return []; }
+    $all = platforms_all();
+
+    // filter by enabled/visible (optional)
+    $items = array_filter($all, function($p) use ($onlyVisible) {
+        if (!($p['enabled'] ?? false)) return false;
+        if ($onlyVisible && !($p['visible_in_nav'] ?? false)) return false;
+        return true;
+    });
+
+    // sort by nav_order then name
+    uasort($items, function($a, $b) {
+        $oa = $a['nav_order'] ?? PHP_INT_MAX;
+        $ob = $b['nav_order'] ?? PHP_INT_MAX;
+        if ($oa === $ob) return strcmp($a['name'] ?? '', $b['name'] ?? '');
+        return $oa <=> $ob;
+    });
+
+    // normalize to minimal menu shape
+    return array_map(function($p) {
+        return [
+            'name'  => $p['name'] ?? '',
+            'slug'  => $p['slug'] ?? '',
+            'url'   => platform_route($p['slug'] ?? ''), // route() accepts key; key==slug in our registry
+            'icon'  => $p['icon'] ?? null,
+            'meta'  => $p['meta'] ?? [],
+        ];
+    }, $items);
 }
 
-function find_platform_by_id($id): ?array {
-    $pdo = db_connect();
-    $sql = "SELECT id, name FROM platforms WHERE id = :id LIMIT 1";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-    $stmt->execute();
-    $row = $stmt->fetch();
-    return $row === false ? null : $row;
+function platform_url_by_slug(string $slug, ?string $child = null): string {
+    // our registry keys == slugs; safe to call directly
+    return platform_route($slug, $child);
 }
 
-function create_platform(array $args) {
-    $pdo = db_connect();
-    $sql = "INSERT INTO platforms (name, created_at) VALUES (:name, :created_at)";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':name', $args['name']);
-    $stmt->bindValue(':created_at', date('Y-m-d H:i:s'));
-    $success = $stmt->execute();
-    if ($success) {
-        return (int)$pdo->lastInsertId();
-    }
-    return false;
+/** Return 301 redirect target for a legacy slug (or null). */
+function platform_redirect_target(string $legacySlug): ?string {
+    return function_exists('platform_redirect_for')
+        ? platform_redirect_for($legacySlug)
+        : null;
 }
 
-function update_platform($id, array $args): bool {
-    $pdo = db_connect();
-    $fields = [];
-    $params = [':id' => $id];
-
-    if (isset($args['name'])) {
-        $fields[] = "name = :name";
-        $params[':name'] = $args['name'];
-    }
-    if (empty($fields)) {
-        return false;
-    }
-
-    $sql = "UPDATE platforms SET " . implode(", ", $fields) . " WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    return $stmt->execute($params);
-}
-
-function delete_platform($id): bool {
-    $pdo = db_connect();
-    $sql = "DELETE FROM platforms WHERE id = :id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->bindValue(':id', $id, PDO::PARAM_INT);
-    return $stmt->execute();
+/** Quick helper for active-state checks in nav UIs. */
+function platform_is_active(string $slug, ?string $currentPath = null): bool {
+    $currentPath ??= ($_SERVER['REQUEST_URI'] ?? '');
+    $route = platform_url_by_slug($slug);
+    return $route !== '' && str_starts_with($currentPath, rtrim($route, '/').'/');
 }

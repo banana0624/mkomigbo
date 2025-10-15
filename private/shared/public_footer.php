@@ -1,11 +1,10 @@
 <?php
-// project-root/private/shared/public_footer.php
-?>
-  </div> <!-- /.content -->
-  <footer class="site-footer">
-    <div class="footer-wrapper">
-      <p>&copy; <?php echo date('Y'); ?> MKOMIGBO. All rights reserved.</p>
-    </div>
-  </footer>
-</body>
-</html>
+declare(strict_types=1);
+/**
+ * Public footer wrapper.
+ * Optionally set $scripts_foot, $footer_note, $footer_extra_html before requiring.
+ */
+if (!isset($footer_note)) {
+  $footer_note = ''; // keep public footer minimal by default
+}
+require __DIR__ . '/footer.php';

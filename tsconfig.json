@@ -1,0 +1,56 @@
+{
+  /* TypeScript config for a PHP-first project with some front-end/utility TS. */
+  /* Save as: project-root/tsconfig.json */
+
+  "compileOnSave": false,
+  "compilerOptions": {
+    /* Target & module system */
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+
+    /* Interop & bundler friendliness */
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    /* Type checking strictness */
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false, // set true if you want unused param errors
+    "noFallthroughCasesInSwitch": true,
+    "useUnknownInCatchVariables": true,
+    "skipLibCheck": true,
+
+    /* Output / build behavior */
+    "noEmit": true, // let your bundler (Vite/Webpack/Rollup) handle emitting
+
+    /* Paths (adjust if you add src/) */
+    "baseUrl": ".",
+    "paths": {
+      // Example aliases (uncomment & adjust if you use them)
+      // "@/*": ["public/lib/js/*"],
+      // "~/*": ["*"]
+    },
+
+    /* Test environments (remove "vitest" if you’re not using it) */
+    "types": ["node", "vitest"]
+  },
+
+  /* Which files to type-check */
+  "include": [
+    "public/**/*.ts",
+    "public/**/*.tsx",
+    "assets/**/*.ts",
+    "assets/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx"
+    // If you keep plain JS and want TS to type-check it too:
+    // "public/**/*.js",
+    // "assets/**/*.js"
+  ],
+  "exclude": ["node_modules", "vendor", "dist", "build", "**/*.d.ts"]
+}

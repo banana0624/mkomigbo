@@ -1,25 +1,32 @@
 <?php
 // project-root/public/staff/index.php
 
-// Bootstrap
-require_once __DIR__ . '/../../private/assets/initialize.php';
+declare(strict_types=1);
+$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-if (defined('APP_DEBUG') && APP_DEBUG) {
-    ini_set('display_errors', 1);
-    error_reporting(E_ALL);
-}
+$page_title = 'Staff Console';
+$active_nav = 'staff';
+$body_class = 'role--staff';
+$page_logo  = '/lib/images/logo/staff-logo.png';
+$stylesheets[] = '/lib/css/ui.css';
 
-$page_title = 'Staff Dashboard';
-include_once SHARED_PATH . '/staff_header.php';
-?>
+require_once PRIVATE_PATH . '/shared/header.php';
 
-<h2>Staff Dashboard</h2>
-<ul>
-  <li><a href="<?php echo url_for('/staff/subjects/'); ?>">Manage Subjects</a></li>
-  <li><a href="<?php echo url_for('/staff/pages.php'); ?>">All Pages / Resources</a></li>
-  <!-- More links to contributors, platforms, admins -->
-</ul>
+$hero = [
+  'title'=>'Staff Console',
+  'intro'=>'Administrative tools for subjects, platforms, contributors, and more.',
+  'class'=>'role--staff'
+];
+require PRIVATE_PATH . '/common/ui/hero.php';
 
-<?php
-include_once SHARED_PATH . '/staff_footer.php';
-?>
+$tiles = [
+  ['href'=>'/staff/subjects/','title'=>'Subjects','desc'=>'Manage all subjects','class'=>'subject--history','img'=>'/lib/images/subjects/history.svg'],
+  ['href'=>'/staff/platforms/','title'=>'Platforms','desc'=>'Blogs, forums, reels…','class'=>'platform--blogs','img'=>'/lib/images/icons/book.svg'],
+  ['href'=>'/staff/contributors/','title'=>'Contributors','desc'=>'Manage contributors','class'=>'role--contrib','img'=>'/lib/images/icons/users.svg'],
+  ['href'=>'/staff/admins/','title'=>'Admins','desc'=>'Admin accounts & roles','class'=>'role--admin','img'=>'/lib/images/subjects/about.svg'],
+];
+require PRIVATE_PATH . '/common/ui/tiles.php';
+
+require_once PRIVATE_PATH . '/shared/footer.php';

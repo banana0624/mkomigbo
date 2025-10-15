@@ -12,7 +12,8 @@
       "App\\": "private/"
     },
     "files": [
-      "private/functions/helper_functions.php"
+      "private/functions/helper_functions.php",
+      "": "src/"
     ]
   },
   "config": {
