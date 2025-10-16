@@ -6,7 +6,6 @@ if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
 require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
-require_once PRIVATE_PATH . '/common/contributors/contrib_common.php';
 
 $id  = (string)($_GET['id'] ?? $_POST['id'] ?? '');
 $row = $id ? contrib_find($id) : null;

@@ -1,0 +1,10 @@
+-- users table
+CREATE TABLE IF NOT EXISTS users (
+  id             BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  email          VARCHAR(190)    NOT NULL UNIQUE,
+  name           VARCHAR(190)    NOT NULL,
+  password_hash  VARCHAR(255)    NULL,
+  is_active      TINYINT(1)      NOT NULL DEFAULT 1,
+  created_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

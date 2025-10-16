@@ -1,7 +1,9 @@
 <?php
 // project-root/private/common/staff_subject_pages/show.php
-
 declare(strict_types=1);
+/**
+ * Requires: $subject_slug, $subject_name
+ */
 $init = dirname(__DIR__, 2) . '/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
@@ -9,45 +11,45 @@ require_once $init;
 if (empty($subject_slug)) { die('show.php: $subject_slug required'); }
 if (empty($subject_name)) { $subject_name = ucfirst(str_replace('-', ' ', $subject_slug)); }
 
-$id = (int)($_GET['id'] ?? 0);
-$page_title = "View Page #{$id} • {$subject_name}";
-$active_nav = 'staff';
-$body_class = "role--staff subject--{$subject_slug}";
-$page_logo  = "/lib/images/subjects/{$subject_slug}.svg";
+$id  = (int)($_GET['id'] ?? 0);
+if ($id <= 0) { http_response_code(404); die('Page not found'); }
+
+// ✅ correct argument order: (id, subject_slug)
+$row = page_find($id, $subject_slug);
+if (!$row) { http_response_code(404); die('Page not found'); }
+
+$page_title    = "View Page • {$subject_name}";
+$active_nav    = 'staff';
+$body_class    = "role--staff subject--{$subject_slug}";
 $stylesheets[] = '/lib/css/ui.css';
-$stylesheets[] = '/lib/css/landing.css';
-
-$p = page_find($subject_slug, $id);
-$title = $p['title'] ?? "Page {$id}";
-$slug  = $p['slug'] ?? "page-{$id}";
-$body  = $p['body'] ?? "No content yet.";
-
-$breadcrumbs = [
+$breadcrumbs   = [
   ['label'=>'Home','url'=>'/'],
   ['label'=>'Staff','url'=>'/staff/'],
   ['label'=>'Subjects','url'=>'/staff/subjects/'],
   ['label'=>$subject_name,'url'=>"/staff/subjects/{$subject_slug}/"],
   ['label'=>'Pages','url'=>"/staff/subjects/{$subject_slug}/pages/"],
-  ['label'=>"Show #{$id}"],
+  ['label'=>'Show'],
 ];
 
-require_once PRIVATE_PATH . '/shared/header.php';
-
-// Placeholder — swap with DB fetch
-$title = "Sample Page {$id}";
-$slug  = "sample-page-{$id}";
-$body  = "Long body…";
+require PRIVATE_PATH . '/shared/header.php';
 ?>
-<main id="main" class="container" style="max-width:800px;margin:1.25rem auto;padding:0 1rem;">
-  <h1><?= h($title) ?> <span class="muted">(#<?= $id ?>)</span></h1>
-  <p class="muted">Slug: <code><?= h($slug) ?></code></p>
+<main class="container" style="max-width:880px;padding:1.25rem 0">
+  <h1><?= h($row['title'] ?? '') ?></h1>
+  <p class="muted">Slug: <code><?= h($row['slug'] ?? '') ?></code>
+     • Status: <?= !empty($row['is_published']) ? 'Published' : 'Draft' ?>
+     • ID: <?= (int)$row['id'] ?></p>
+
+  <hr style="margin:.75rem 0 1rem">
+
+  <!-- Staff preview: render stored HTML as-is so your Heredoc/HTML shows correctly -->
   <article class="prose">
-    <p><?= nl2br(h($body)) ?></p>
+    <?= $row['body'] ?? '' ?>
   </article>
-  <p style="margin-top:1rem;">
-    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/edit.php?id={$id}")) ?>">Edit</a>
-    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Back</a>
+
+  <p style="margin-top:1.25rem">
+    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/edit.php?id=" . (int)$row['id'])) ?>">Edit</a>
+    <a class="btn btn-danger" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/delete.php?id=" . (int)$row['id'])) ?>">Delete</a>
+    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">&larr; Back to Pages</a>
   </p>
 </main>
-<?php require_once PRIVATE_PATH . '/shared/footer.php'; ?>
-
+<?php require PRIVATE_PATH . '/shared/footer.php'; ?>

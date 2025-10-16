@@ -1,57 +1,102 @@
 <?php
 // project-root/private/common/contributors/contributors_common.php
-declare(strict_types=1);
+/* =========================
+   Find / Update / Delete
+   ========================= */
 
-/**
- * Compatibility shim for legacy includes.
- * Canonical implementations live in:
- *   private/common/contributors/contrib_common.php
- *
- * This file only loads the canonical module and, if needed,
- * provides tiny wrapper functions to maintain backward compatibility.
- */
-
-if (!defined('PRIVATE_PATH')) {
-  define('PRIVATE_PATH', dirname(__DIR__, 2));
-}
-
-/* Load the canonical contributor helpers (JSON-backed storage) */
-require_once PRIVATE_PATH . '/common/contributors/contrib_common.php';
-
-/* ---- Optional wrappers to preserve older call sites ----
-   Old code may call *_update($id, $data). Our new API uses *_upsert($rec).
-   These wrappers map the old signature to the new one.
-*/
-
-if (!function_exists('contrib_update')) {
-  function contrib_update(string $id, array $data): bool {
-    $data['id'] = $id;
-    return function_exists('contrib_upsert')
-      ? contrib_upsert($data)
-      : false;
+/** ---- Directory ---- */
+function contrib_find(string $id): ?array {
+  foreach (contrib_all() as $r) {
+    if (($r['id'] ?? '') === $id) return $r;
   }
+  return null;
 }
-
-if (!function_exists('review_update')) {
-  function review_update(string $id, array $data): bool {
-    $data['id'] = $id;
-    return function_exists('review_upsert')
-      ? review_upsert($data)
-      : false;
+function contrib_update(string $id, array $data): bool {
+  $list = contrib_all();
+  $ok   = false;
+  foreach ($list as &$r) {
+    if (($r['id'] ?? '') === $id) {
+      $r['name']   = trim((string)($data['name'] ?? $r['name'] ?? ''));
+      $r['email']  = trim((string)($data['email'] ?? $r['email'] ?? ''));
+      $r['handle'] = trim((string)($data['handle'] ?? $r['handle'] ?? ''));
+      $ok = true;
+      break;
+    }
   }
+  if ($ok) contributors_save('directory', $list);
+  return $ok;
 }
-
-if (!function_exists('credit_update')) {
-  function credit_update(string $id, array $data): bool {
-    $data['id'] = $id;
-    return function_exists('credit_upsert')
-      ? credit_upsert($data)
-      : false;
+function contrib_delete(string $id): bool {
+  $list = contrib_all();
+  $orig = count($list);
+  $list = array_values(array_filter($list, fn($r) => ($r['id'] ?? '') !== $id));
+  if (count($list) !== $orig) {
+    return contributors_save('directory', $list);
   }
+  return false;
 }
 
-/* Note:
-   We intentionally do NOT redeclare contrib_find(), contrib_delete(),
-   review_find(), review_delete(), credit_find(), credit_delete()
-   since they are already provided by contrib_common.php.
-*/
+/** ---- Reviews ---- */
+function review_find(string $id): ?array {
+  foreach (review_all() as $r) {
+    if (($r['id'] ?? '') === $id) return $r;
+  }
+  return null;
+}
+function review_update(string $id, array $data): bool {
+  $list = review_all();
+  $ok   = false;
+  foreach ($list as &$r) {
+    if (($r['id'] ?? '') === $id) {
+      $r['subject'] = trim((string)($data['subject'] ?? $r['subject'] ?? ''));
+      $r['rating']  = (int)($data['rating'] ?? $r['rating'] ?? 0);
+      $r['comment'] = trim((string)($data['comment'] ?? $r['comment'] ?? ''));
+      $ok = true;
+      break;
+    }
+  }
+  if ($ok) contributors_save('reviews', $list);
+  return $ok;
+}
+function review_delete(string $id): bool {
+  $list = review_all();
+  $orig = count($list);
+  $list = array_values(array_filter($list, fn($r) => ($r['id'] ?? '') !== $id));
+  if (count($list) !== $orig) {
+    return contributors_save('reviews', $list);
+  }
+  return false;
+}
+
+/** ---- Credits ---- */
+function credit_find(string $id): ?array {
+  foreach (credit_all() as $r) {
+    if (($r['id'] ?? '') === $id) return $r;
+  }
+  return null;
+}
+function credit_update(string $id, array $data): bool {
+  $list = credit_all();
+  $ok   = false;
+  foreach ($list as &$r) {
+    if (($r['id'] ?? '') === $id) {
+      $r['title']       = trim((string)($data['title'] ?? $r['title'] ?? ''));
+      $r['url']         = trim((string)($data['url'] ?? $r['url'] ?? ''));
+      $r['contributor'] = trim((string)($data['contributor'] ?? $r['contributor'] ?? ''));
+      $r['role']        = trim((string)($data['role'] ?? $r['role'] ?? ''));
+      $ok = true;
+      break;
+    }
+  }
+  if ($ok) contributors_save('credits', $list);
+  return $ok;
+}
+function credit_delete(string $id): bool {
+  $list = credit_all();
+  $orig = count($list);
+  $list = array_values(array_filter($list, fn($r) => ($r['id'] ?? '') !== $id));
+  if (count($list) !== $orig) {
+    return contributors_save('credits', $list);
+  }
+  return false;
+}

@@ -1,7 +1,9 @@
 <?php
 // project-root/private/common/staff_subject_pages/delete.php
-
 declare(strict_types=1);
+/**
+ * Requires: $subject_slug, $subject_name
+ */
 $init = dirname(__DIR__, 2) . '/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
@@ -9,48 +11,48 @@ require_once $init;
 if (empty($subject_slug)) { die('delete.php: $subject_slug required'); }
 if (empty($subject_name)) { $subject_name = ucfirst(str_replace('-', ' ', $subject_slug)); }
 
-$id = (int)($_GET['id'] ?? 0);
-$page_title = "Delete Page #{$id} • {$subject_name}";
-$active_nav = 'staff';
-$body_class = "role--staff subject--{$subject_slug}";
-$page_logo  = "/lib/images/subjects/{$subject_slug}.svg";
-$stylesheets[] = '/lib/css/ui.css';
-$stylesheets[] = '/lib/css/landing.css';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  page_delete($subject_slug, $id);
-  header('Location: ' . url_for("/staff/subjects/{$subject_slug}/pages/"));
-  exit;
-}
+$id  = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
+$row = $id ? page_find($id, $subject_slug) : null;
+if (!$row) { http_response_code(404); die('Page not found'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
-  page_delete($subject_slug, $id);
-  flash('success', 'Page deleted.');
-  header('Location: ' . url_for("/staff/subjects/{$subject_slug}/pages/"));
-  exit;
+  if (isset($_POST['confirm']) && $_POST['confirm'] === '1') {
+    if (page_delete($id, $subject_slug)) {
+      flash('success', 'Page deleted.');
+    } else {
+      flash('error', 'Delete failed.');
+    }
+    header('Location: ' . url_for("/staff/subjects/{$subject_slug}/pages/")); exit;
+  }
+  header('Location: ' . url_for("/staff/subjects/{$subject_slug}/pages/")); exit;
 }
 
+$page_title = "Delete Page • {$subject_name}";
+$active_nav = 'staff';
+$body_class = "role--staff subject--{$subject_slug}";
+$stylesheets[] = '/lib/css/ui.css';
 $breadcrumbs = [
   ['label'=>'Home','url'=>'/'],
   ['label'=>'Staff','url'=>'/staff/'],
   ['label'=>'Subjects','url'=>'/staff/subjects/'],
   ['label'=>$subject_name,'url'=>"/staff/subjects/{$subject_slug}/"],
   ['label'=>'Pages','url'=>"/staff/subjects/{$subject_slug}/pages/"],
-  ['label'=>"Delete #{$id}"],
+  ['label'=>'Delete'],
 ];
 
-require_once PRIVATE_PATH . '/shared/header.php';
+require PRIVATE_PATH . '/shared/header.php';
 ?>
-<main id="main" class="container" style="max-width:700px;margin:1.25rem auto;padding:0 1rem;">
-  <h1>Delete Page #<?= $id ?> — <?= h($subject_name) ?></h1>
-  <p class="muted">This is a stub. Hook this into your deletion handler.</p>
-  <form method="post" action="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/delete.php?id={$id}")) ?>">
-  <?= csrf_field() ?>
-    <p>Are you sure you want to delete this page?</p>
-    <button class="btn btn-danger" type="submit">Delete</button>
-    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Cancel</a>
+<main class="container" style="max-width:680px;padding:1.25rem 0">
+  <h1>Delete Page</h1>
+  <p>Delete <strong><?= h($row['title'] ?? '') ?></strong>?</p>
+  <form method="post">
+    <?= function_exists('csrf_field') ? csrf_field() : '' ?>
+    <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
+    <div class="actions">
+      <button class="btn btn-danger" type="submit" name="confirm" value="1">Yes, delete</button>
+      <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Cancel</a>
+    </div>
   </form>
 </main>
-<?php require_once PRIVATE_PATH . '/shared/footer.php'; ?>
-
+<?php require PRIVATE_PATH . '/shared/footer.php'; ?>

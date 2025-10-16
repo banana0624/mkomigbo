@@ -1,17 +1,17 @@
 <?php
 // project-root/public/staff/contributors/reviews/index.php
 declare(strict_types=1);
+
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
-require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
-require_once PRIVATE_PATH . '/common/contributors/contrib_common.php';
+require_once PRIVATE_PATH . '/common/contributors/contributors_common.php'; // single source
 
-$page_title = 'Contributor Reviews';
-$active_nav = 'contributors';
-$body_class = 'role--staff role--contrib';
-$page_logo  = '/lib/images/icons/messages.svg';
+$page_title   = 'Contributor Reviews';
+$active_nav   = 'contributors';
+$body_class   = 'role--staff role--contrib';
+$page_logo    = '/lib/images/icons/messages.svg';
 $stylesheets[] = '/lib/css/ui.css';
 
 $breadcrumbs = [
@@ -40,28 +40,27 @@ require PRIVATE_PATH . '/shared/header.php';
             <th>Subject</th>
             <th>Rating</th>
             <th>Comment</th>
+            <!-- header -->
             <th class="actions" style="width:160px">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <?php if (empty($rows)): ?>
-            <tr><td colspan="5" class="muted">No reviews yet.</td></tr>
-          <?php else: foreach ($rows as $i => $r): ?>
+          <?php foreach ($rows as $i => $r): ?>
             <tr>
               <td><?= (int)($i+1) ?></td>
               <td><?= h($r['subject'] ?? '') ?></td>
               <td><?= (int)($r['rating'] ?? 0) ?></td>
               <td class="muted"><?= h($r['comment'] ?? '') ?></td>
+              <!-- each row -->
               <td class="actions">
                 <a class="btn btn-sm" href="<?= h(url_for('/staff/contributors/reviews/edit.php?id=' . urlencode($r['id'] ?? ''))) ?>">Edit</a>
                 <a class="btn btn-sm btn-danger" href="<?= h(url_for('/staff/contributors/reviews/delete.php?id=' . urlencode($r['id'] ?? ''))) ?>">Delete</a>
               </td>
             </tr>
-          <?php endforeach; endif; ?>
+          <?php endforeach; ?>
         </tbody>
       </table>
     </div>
-
   <?php endif; ?>
 
   <p style="margin-top:1rem">

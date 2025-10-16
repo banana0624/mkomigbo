@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
-$tpl = dirname(__DIR__, 5) . '/private/common/staff_subject_pages/new.php';
-if (!is_file($tpl)) { die('Template not found at: ' . $tpl); }
+$init = dirname(__DIR__, 5) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
+
 $subject_slug = 'persons'; $subject_name = 'Persons';
-require $tpl;
+require PRIVATE_PATH . '/common/staff_subject_pages/new.php';

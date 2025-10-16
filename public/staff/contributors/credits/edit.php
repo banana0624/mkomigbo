@@ -1,12 +1,11 @@
 <?php
-// public/staff/contributors/credits/edit.php
+// project-root/public/staff/contributors/credits/edit.php
 declare(strict_types=1);
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
 require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
-require_once PRIVATE_PATH . '/common/contributors/contrib_common.php';
 
 $id  = (string)($_GET['id'] ?? $_POST['id'] ?? '');
 $row = $id ? credit_find($id) : null;

@@ -6,6 +6,10 @@ $init = dirname(__DIR__, 3) . '/private/assets/initialize.php'; // up: contribut
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
+require_once PRIVATE_PATH . '/functions/auth.php';
+require_staff();     // for staff-only areas
+// require_admin();  // use this on admins-only pages
+
 $page_title = 'Contributors';
 $active_nav = 'contributors';
 $body_class = 'role--staff role--contrib';
