@@ -98,6 +98,12 @@ if (!function_exists('subject_update_settings')) {
   }
 }
 
+if (!function_exists('subject_pages_new_url')) {
+  function subject_pages_new_url(string $subjectSlug): string {
+    return url_for("/staff/subjects/{$subjectSlug}/pages/new.php");
+  }
+}
+
 if (!function_exists('subject_set_visibility')) {
   /** Set visibility explicitly; returns true on success. */
   function subject_set_visibility(string $slug, bool $visible): bool {

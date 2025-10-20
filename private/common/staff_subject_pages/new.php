@@ -4,19 +4,31 @@ declare(strict_types=1);
 
 /**
  * Requires: $subject_slug, $subject_name
- * Assumes sanitize_text(), slugify(), csrf_check(), flash(), url_for() are loaded by initialize.php
  */
 $init = dirname(__DIR__, 2) . '/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
+/** ---- Permission gate (tolerant if wrapper already defined) ---- */
+$__need_guard = (!defined('REQUIRE_LOGIN') || !defined('REQUIRE_PERMS'));
+if (!defined('REQUIRE_LOGIN')) {
+  define('REQUIRE_LOGIN', true);
+}
+if (!defined('REQUIRE_PERMS')) {
+  define('REQUIRE_PERMS', ['pages.create']);
+}
+if ($__need_guard) {
+  require PRIVATE_PATH . '/middleware/guard.php';
+}
+
 if (empty($subject_slug)) { die('new.php: $subject_slug required'); }
 if (empty($subject_name)) { $subject_name = ucfirst(str_replace('-', ' ', $subject_slug)); }
 
+// DRY logo
+require_once __DIR__ . '/_prelude.php';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
-
-  // Normalize inputs: decode HTML entities, trim/compress whitespace, and create a URL-safe slug
   $title   = sanitize_text($_POST['title'] ?? '');
   $slug_in = sanitize_text($_POST['slug'] ?? '');
   $body    = (string)($_POST['body'] ?? '');
@@ -25,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $data = [
     'title'        => $title,
     'slug'         => $slug,
-    'body'         => $body,             // store raw; escape on render
+    'body'         => $body,
     'subject_slug' => $subject_slug,
     'is_published' => isset($_POST['is_published']) ? 1 : 0,
   ];
@@ -39,11 +51,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   flash('error', 'Create failed. Title & Slug are required.');
 }
 
-$page_title   = "New Page • {$subject_name}";
-$active_nav   = 'staff';
-$body_class   = "role--staff subject--{$subject_slug}";
-$stylesheets[] = '/lib/css/ui.css';
-$breadcrumbs  = [
+$page_title     = "New Page • {$subject_name}";
+$active_nav     = 'staff';
+$body_class     = "role--staff subject--{$subject_slug}";
+$stylesheets[]  = '/lib/css/ui.css';
+$breadcrumbs    = [
   ['label'=>'Home','url'=>'/'],
   ['label'=>'Staff','url'=>'/staff/'],
   ['label'=>'Subjects','url'=>'/staff/subjects/'],
@@ -57,31 +69,23 @@ require PRIVATE_PATH . '/shared/header.php';
 <main class="container" style="max-width:780px;padding:1.25rem 0">
   <h1>New Page — <?= h($subject_name) ?></h1>
   <?= function_exists('display_session_message') ? display_session_message() : '' ?>
-
   <form method="post">
     <?= function_exists('csrf_field') ? csrf_field() : '' ?>
 
-    <div class="field">
-      <label>Title</label>
-      <input class="input" type="text" name="title" required
-             value="<?= h($_POST['title'] ?? '') ?>">
+    <div class="field"><label>Title</label>
+      <input class="input" type="text" name="title" required value="<?= h($_POST['title'] ?? '') ?>">
     </div>
 
-    <div class="field">
-      <label>Slug</label>
-      <input class="input" type="text" name="slug"
-             placeholder="(auto from title if left blank)"
-             value="<?= h($_POST['slug'] ?? '') ?>">
+    <div class="field"><label>Slug</label>
+      <input class="input" type="text" name="slug" placeholder="(auto from title if left blank)" value="<?= h($_POST['slug'] ?? '') ?>">
     </div>
 
-    <div class="field">
-      <label>Body</label>
+    <div class="field"><label>Body</label>
       <textarea class="input" name="body" rows="10"><?= h($_POST['body'] ?? '') ?></textarea>
     </div>
 
     <div class="field">
-      <label><input type="checkbox" name="is_published" value="1"
-        <?= !empty($_POST['is_published']) ? 'checked' : '' ?>> Published</label>
+      <label><input type="checkbox" name="is_published" value="1" <?= !empty($_POST['is_published']) ? 'checked' : '' ?>> Published</label>
     </div>
 
     <div class="actions">
@@ -89,5 +93,54 @@ require PRIVATE_PATH . '/shared/header.php';
       <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Cancel</a>
     </div>
   </form>
+
+  <?php /* Simple URL-based media inserter */ ?>
+  <section style="margin:1rem 0;border-top:1px solid #eee;padding-top:.75rem">
+    <div class="muted" style="margin-bottom:.5rem">Insert media (by URL):</div>
+    <div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
+      <button class="btn btn-sm" type="button" onclick="insImg()">Image</button>
+      <button class="btn btn-sm" type="button" onclick="insVideo()">Video</button>
+      <button class="btn btn-sm" type="button" onclick="insAudio()">Audio</button>
+      <button class="btn btn-sm" type="button" onclick="insLink()">Link</button>
+    </div>
+  </section>
+
+  <script>
+  (function(){
+    const ta = document.querySelector('textarea[name="body"]');
+    function insertAtCaret(openTag, closeTag, placeholder='') {
+      if (!ta) return;
+      ta.focus();
+      const start = ta.selectionStart ?? ta.value.length;
+      const end   = ta.selectionEnd ?? ta.value.length;
+      const sel   = ta.value.substring(start, end) || placeholder;
+      const before = ta.value.substring(0, start);
+      const after  = ta.value.substring(end);
+      ta.value = before + openTag + sel + closeTag + after;
+      const caret = (before + openTag + sel + closeTag).length;
+      ta.setSelectionRange(caret, caret);
+    }
+    window.insImg = function() {
+      const url = prompt('Image URL (http/https):');
+      if (!url) return;
+      insertAtCaret('<img src="'+url+'" alt="','" />','alt text');
+    };
+    window.insVideo = function() {
+      const url = prompt('Video URL (mp4/webm/ogg):');
+      if (!url) return;
+      insertAtCaret('<video controls src="','"></video>');
+    };
+    window.insAudio = function() {
+      const url = prompt('Audio URL (mp3/ogg/wav):');
+      if (!url) return;
+      insertAtCaret('<audio controls src="','"></audio>');
+    };
+    window.insLink = function() {
+      const url = prompt('Link URL:');
+      if (!url) return;
+      insertAtCaret('<a href="'+url+'" target="_blank" rel="noopener">','</a>','link text');
+    };
+  })();
+  </script>
 </main>
 <?php require PRIVATE_PATH . '/shared/footer.php'; ?>

@@ -9,7 +9,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 echo "<div style='background:#ffe;border:1px solid #cc0;padding:8px;margin:8px 0'>A) Top of staff/_render_test.php (before init)</div>";
 
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
 if (!is_file($init)) {
   echo "<div style='background:#fee;border:1px solid #e11;padding:8px'>Init NOT FOUND at: ".htmlspecialchars($init, ENT_QUOTES)."</div>";
   exit;

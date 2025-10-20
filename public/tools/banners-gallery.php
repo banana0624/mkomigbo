@@ -4,7 +4,7 @@
 declare(strict_types=1);
 
 // /public/tools/ → up 2 → /project-root
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 

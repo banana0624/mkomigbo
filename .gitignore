@@ -5,3 +5,8 @@
 /.idea/
 /.vscode/
 /node_modules/
+/vendor/
+/storage/*
+.env
+/.idea/
+/.vscode/

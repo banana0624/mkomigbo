@@ -1,32 +1,44 @@
 # project-root/public/.htaccess
 
 # 1) Default index file for directories
-
 DirectoryIndex index.php index.html
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+
+  # If your site is at the web root, keep "/".
+  # If it’s under a folder (e.g., http://host/mkomigbo/), set RewriteBase to "/mkomigbo/"
   RewriteBase /
 
-# 2) Redirect any public /subjects URLs to the staff area
+  # Prevent Multiviews from hijacking clean URLs on some Apache setups
+  Options -Multiviews
 
-# /subjects -> /staff/subjects/
+  # 2) Serve existing files/directories as-is (ALWAYS first)
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
 
-# /subjects/{slug}/ -> /staff/subjects/{slug}/
+  # 3) Public Subjects Router  (/subjects, /subjects/{subject}, /subjects/{subject}/{page})
+  RewriteRule ^subjects/?$ staff/subjects/router.php [L,QSA]
+  RewriteRule ^subjects/(.+)$ staff/subjects/router.php?path=$1 [L,QSA]
 
-RewriteRule ^subjects/?$ staff/subjects/ [R=302,L]
-RewriteRule ^subjects/([A-Za-z0-9_-]+)/?$ staff/subjects/$1/ [R=302,L]
+  # 4) Public Contributors Router
+  RewriteRule ^contributors/?$ staff/contributors/router.php [L,QSA]
+  RewriteRule ^contributors/(.+)$ staff/contributors/router.php?path=$1 [L,QSA]
 
-# 3) Serve existing files/directories as-is
+  # 5) Public Platforms Router
+  RewriteRule ^platforms/?$ staff/platforms/router.php [L,QSA]
+  RewriteRule ^platforms/(.+)$ staff/platforms/router.php?path=$1 [L,QSA]
 
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
-RewriteRule ^ - [L]
+  # 6) Sitemaps + Robots (PHP handlers)
+  RewriteRule ^sitemap-subjects\.xml$ sitemap-subjects.php [L]
+  RewriteRule ^sitemap-contributors\.xml$ sitemap-contributors.php [L]
+  RewriteRule ^sitemap-index\.xml$ sitemap-index.php [L]
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+  RewriteRule ^robots\.txt$ robots.php [L]
 
-# 4) (Optional) Clean URLs: map "/path" to "/path.php" if the PHP file exists.
-
-# Example: /staff/login -> /staff/login.php
-
-RewriteCond %{REQUEST_FILENAME}.php -f
-RewriteRule ^(.+)$ $1.php [L]
+  # 7) Optional clean URLs: map "/path" => "/path.php" (only if the PHP file exists)
+  #    Example: /staff/login -> /staff/login.php
+  RewriteCond %{REQUEST_FILENAME}.php -f
+  RewriteRule ^(.+)$ $1.php [L]
 </IfModule>

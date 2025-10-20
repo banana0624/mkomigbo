@@ -215,6 +215,13 @@ textarea {
   height: 1rem;
 }
 
+/* Permission greyed-out buttons */
+.btn.is-disabled[aria-disabled="true"] {
+  pointer-events: none;
+  opacity: 0.55;
+  filter: grayscale(0.1);
+}
+
 /* ---------- Tables ---------- */
 .table-wrap {
   width: 100%;

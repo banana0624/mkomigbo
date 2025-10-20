@@ -5,8 +5,7 @@ declare(strict_types=1);
  * project-root/private/assets/initialize.php
  * Development bootstrap with strong error surfacing + consistent paths.
  * Loads: env, DB, sessions, helpers, CSRF/flash, domain functions, registries.
- *
- * Idempotent: safe to require_once many times.
+ * Idempotent (safe to require_once many times).
  */
 
 /* =========================================
@@ -71,7 +70,7 @@ if (!defined('UPLOADS_PATH'))   define('UPLOADS_PATH',  STORAGE_PATH. DIRECTORY_
 /* =========================================
    2) URL base
    ========================================= */
-if (!defined('WWW_ROOT')) define('WWW_ROOT', ''); // vhost points to /public
+if (!defined('WWW_ROOT')) define('WWW_ROOT', ''); // vhost should point to /public
 if (!defined('SITE_URL')) {
     $https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
     $host  = $_SERVER['HTTP_HOST'] ?? 'localhost';
@@ -98,7 +97,6 @@ date_default_timezone_set($_ENV['APP_TZ'] ?? 'UTC');
    4) Session & small debug header
    ========================================= */
 if (session_status() !== PHP_SESSION_ACTIVE) {
-    // session_set_cookie_params([...]) // tweak as needed
     session_start();
 }
 if (!headers_sent()) {
@@ -117,6 +115,28 @@ if (!function_exists('url_for')) {
         if ($script_path === '' || $script_path[0] !== '/') $script_path = '/' . $script_path;
         return rtrim(defined('WWW_ROOT') ? WWW_ROOT : '', '/') . $script_path;
     }
+}
+if (!function_exists('asset_exists')) {
+  function asset_exists(string $webPath): bool {
+    $webPath = '/' . ltrim($webPath, '/');
+    $abs = rtrim(PUBLIC_PATH, DIRECTORY_SEPARATOR) . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+    return is_file($abs);
+  }
+}
+if (!function_exists('asset_url')) {
+  function asset_url(string $webPath): string {
+    $webPath = '/' . ltrim($webPath, '/');
+    $abs = rtrim(PUBLIC_PATH, DIRECTORY_SEPARATOR) . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+    $url = url_for($webPath);
+    if (is_file($abs)) {
+      $ts = @filemtime($abs);
+      if ($ts) {
+        $sep = (strpos($url, '?') === false) ? '?' : '&';
+        $url .= $sep . 'v=' . $ts;
+      }
+    }
+    return $url;
+  }
 }
 
 
@@ -140,39 +160,46 @@ if (!isset($db) || !($db instanceof PDO)) {
 
 
 /* =========================================
-   8) Core helpers: helper_functions + csrf + flash
+   8) Core helpers: helper_functions + csrf + flash + auth + asset/seo
    ========================================= */
-$helpers = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'helper_functions.php';
-if (is_file($helpers)) require_once $helpers;
+$helpers    = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'helper_functions.php';
+$assets_fn  = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'asset_functions.php';
+$csrf       = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'csrf.php';
+$flash      = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'flash.php';
+$auth       = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'auth.php';
+$seo        = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'seo_functions.php';
 
-$csrf   = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'csrf.php';
-$flash  = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'flash.php';
-if (is_file($csrf))  require_once $csrf;
-if (is_file($flash)) require_once $flash;
+if (is_file($helpers))   require_once $helpers;
+if (is_file($assets_fn)) require_once $assets_fn;
+if (is_file($csrf))      require_once $csrf;
+if (is_file($flash))     require_once $flash;
+if (is_file($auth))      require_once $auth;
+if (is_file($seo))       require_once $seo;
 
 
 /* =========================================
    9) Domain helpers (explicit includes first)
    ========================================= */
-// Subject pages CRUD
 $pages_fn = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'subject_page_functions.php';
 if (is_file($pages_fn)) require_once $pages_fn;
 
-// Subjects CRUD
 $subjects_fn = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'subject_functions.php';
 if (is_file($subjects_fn)) require_once $subjects_fn;
 
-// Uploads (renamed file as per your note)
 $uploads_fn = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'uploads_functions.php';
 if (is_file($uploads_fn)) require_once $uploads_fn;
 
-// Contributors JSON helpers (single canonical file)
 $contrib_fn = COMMON_PATH . DIRECTORY_SEPARATOR . 'contributors' . DIRECTORY_SEPARATOR . 'contributors_common.php';
 if (is_file($contrib_fn)) require_once $contrib_fn;
 
-// Platforms common (JSON-backed items/settings/media)
 $platform_common = COMMON_PATH . DIRECTORY_SEPARATOR . 'platforms' . DIRECTORY_SEPARATOR . 'platform_common.php';
 if (is_file($platform_common)) require_once $platform_common;
+
+$audit_log_fn = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'audit_log_functions.php';
+if (is_file($audit_log_fn)) require_once $audit_log_fn;
+
+$roles_fn = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'roles_functions.php';
+if (is_file($roles_fn)) require_once $roles_fn;
 
 
 /* =========================================
@@ -180,16 +207,23 @@ if (is_file($platform_common)) require_once $platform_common;
    ========================================= */
 if (is_dir(FUNCTIONS_PATH)) {
     foreach (glob(FUNCTIONS_PATH . DIRECTORY_SEPARATOR . '*.php') as $f) {
-        if (isset($helpers)    && $f === $helpers)    continue;
-        if (isset($csrf)       && $f === $csrf)       continue;
-        if (isset($flash)      && $f === $flash)      continue;
-        if (isset($pages_fn)   && $f === $pages_fn)   continue;
-        if (isset($subjects_fn)&& $f === $subjects_fn)continue;
-        if (isset($uploads_fn) && $f === $uploads_fn) continue;
+        if (isset($helpers)     && $f === $helpers)     continue;
+        if (isset($assets_fn)   && $f === $assets_fn)   continue;
+        if (isset($csrf)        && $f === $csrf)        continue;
+        if (isset($flash)       && $f === $flash)       continue;
+        if (isset($auth)        && $f === $auth)        continue;
+        if (isset($seo)         && $f === $seo)         continue;
+        if (isset($pages_fn)    && $f === $pages_fn)    continue;
+        if (isset($subjects_fn) && $f === $subjects_fn) continue;
+        if (isset($uploads_fn)  && $f === $uploads_fn)  continue;
+        if (isset($contrib_fn)  && $f === $contrib_fn)  continue;
+        if (isset($platform_common) && $f === $platform_common) continue;
+        if (isset($audit_log_fn) && $f === $audit_log_fn) continue;
+        if (isset($roles_fn)     && $f === $roles_fn)     continue;
         require_once $f;
     }
 }
-
+//**-- */
 
 /* =========================================
    11) Registries (runtime + static)

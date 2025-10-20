@@ -1,7 +1,7 @@
 <?php
 // project-root/public/subjects/index.php
 
-require_once dirname(__DIR__, 2) . '/private/assets/initialize.php';
+require_once dirname(__DIR__, 3) . '/private/assets/initialize.php';
 
 // Get slug from URL
 $slug = $_GET['slug'] ?? null;

@@ -2,7 +2,7 @@
 // project-root/public/staff/hello.php
 
 declare(strict_types=1);
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found: ' . $init); }
 require_once $init;
 

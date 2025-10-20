@@ -1,0 +1,34 @@
+<?php
+declare(strict_types=1);
+$hub = dirname(__DIR__, 4) . '/private/common/staff_subject_hub.php';
+if (!is_file($hub)) { die('Hub template not found at: ' . $hub); }
+$subject_slug = 'religion'; $subject_name = 'Religion';
+require $hub;
+
+$canView   = function_exists('auth_has_permission') ? auth_has_permission('pages.view')   : true;
+$canCreate = function_exists('auth_has_permission') ? auth_has_permission('pages.create') : true;
+$canEdit   = function_exists('auth_has_permission') ? auth_has_permission('pages.edit')   : true;
+?>
+
+<div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
+  <?php if ($canView): ?>
+    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">View Pages</a>
+  <?php else: ?>
+    <a class="btn is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">View Pages</a>
+  <?php endif; ?>
+
+  <?php if ($canEdit): ?>
+    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Edit Pages</a>
+  <?php else: ?>
+    <a class="btn is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">Edit Pages</a>
+  <?php endif; ?>
+
+  <?php if ($canCreate): ?>
+    <a class="btn btn-primary" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/new.php")) ?>">Add New Page</a>
+  <?php else: ?>
+    <a class="btn btn-primary is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">Add New Page</a>
+  <?php endif; ?>
+
+  <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/media/")) ?>">Manage Media</a>
+  <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/settings/")) ?>">Subject Settings</a>
+</div>

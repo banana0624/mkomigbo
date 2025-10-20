@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // Calculate init path (depth = 2)
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+$init = dirname(__DIR__, 3) . '/private/assets/initialize.php';
 header('Content-Type: text/html; charset=utf-8');
 
 echo "<pre style='background:#f7fafc;padding:.75rem;border:1px solid #ddd'>INIT PATH: {$init}</pre>";

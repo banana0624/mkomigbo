@@ -1,19 +1,18 @@
 <?php
 // project-root/public/staff/admins/index.php
-
 declare(strict_types=1);
+
 $init = dirname(__DIR__, 3) . '/private/assets/initialize.php'; // ← 3 levels up
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
 require_once PRIVATE_PATH . '/functions/auth.php';
-require_staff();     // for staff-only areas
-// require_admin();  // use this on admins-only pages
+require_admin();;     // staff-only area; use require_admin() if you want to lock this whole page to admins
 
 $page_title    = 'Admins';
 $active_nav    = 'staff';
 $body_class    = 'role--staff role--admin';
-$page_logo     = '/lib/images/icons/shield.svg'; // optional small icon
+$page_logo     = '/lib/images/icons/shield.svg'; // optional small icon shown in header if present
 $stylesheets[] = '/lib/css/ui.css';
 $stylesheets[] = '/lib/css/landing.css';
 
@@ -23,7 +22,10 @@ $breadcrumbs = [
   ['label'=>'Admins'],
 ];
 
-require PRIVATE_PATH . '/shared/staff_header.php';
+require PRIVATE_PATH . '/shared/header.php';
+
+// Permission checks (graceful if auth helpers aren’t present)
+$canViewAudit = function_exists('auth_has_permission') ? auth_has_permission('audit.view') : true;
 ?>
 <main class="container" style="padding:1.25rem 0">
   <h1>Admins</h1>
@@ -37,18 +39,38 @@ require PRIVATE_PATH . '/shared/staff_header.php';
         <strong>Users</strong><br><span class="muted">Accounts & access</span>
       </a>
     </li>
+
     <li>
       <a class="card" href="<?= h(url_for('/staff/admins/roles/')) ?>"
          style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
         <strong>Roles</strong><br><span class="muted">Roles & permissions</span>
       </a>
     </li>
+
     <li>
       <a class="card" href="<?= h(url_for('/staff/admins/settings/')) ?>"
          style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
         <strong>Settings</strong><br><span class="muted">Site configuration</span>
       </a>
     </li>
+
+    <?php if ($canViewAudit): ?>
+      <li>
+        <a class="card" href="<?= h(url_for('/staff/admins/audit/')) ?>"
+           style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;text-decoration:none;">
+          <strong>Audit Log</strong><br><span class="muted">Who did what, when</span>
+        </a>
+      </li>
+    <?php else: ?>
+      <!-- Nice UX: show disabled card if user lacks permission -->
+      <li>
+        <a class="card is-disabled" role="button" aria-disabled="true" tabindex="-1"
+           title="You don’t have permission to view the audit log"
+           style="display:block;padding:14px;border:1px solid #e5e7eb;border-radius:12px;background:#fafafa;text-decoration:none;pointer-events:none;opacity:.6;">
+          <strong>Audit Log</strong><br><span class="muted">Who did what, when</span>
+        </a>
+      </li>
+    <?php endif; ?>
   </ul>
 </main>
-<?php require PRIVATE_PATH . '/shared/staff_footer.php'; ?>
+<?php require PRIVATE_PATH . '/shared/footer.php'; ?>
