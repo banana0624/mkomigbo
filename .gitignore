@@ -10,3 +10,8 @@
 .env
 /.idea/
 /.vscode/
+/vendor/
+/storage/*
+.env
+/.idea/
+/.vscode/
