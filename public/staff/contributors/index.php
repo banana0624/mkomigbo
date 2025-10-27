@@ -32,3 +32,5 @@ $tiles = [
 require PRIVATE_PATH . '/common/ui/tiles.php';
 
 require PRIVATE_PATH . '/shared/footer.php';
+
+

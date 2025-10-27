@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/nigeria.css */
+/* Theme for “Nigeria” */
+body.subject-nigeria {
+  --accent-color: #006400;
+  --card-bg: #f1faf1;
+}
+
+body.subject-nigeria .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-nigeria .subject-card span {
+  color: var(--accent-color);
+}

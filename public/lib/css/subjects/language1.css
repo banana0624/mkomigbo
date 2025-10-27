@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/language1.css */
+/* Theme for “Language1” */
+body.subject-language1 {
+  --accent-color: #205072;
+  --card-bg: #e7f6f9;
+}
+
+body.subject-language1 .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-language1 .subject-card span {
+  color: var(--accent-color);
+}

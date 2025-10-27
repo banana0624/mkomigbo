@@ -62,8 +62,8 @@ if (count($segments) === 0) {
     <?php endif; ?>
 
     <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
-      <a class="btn" href="<?= h(url_for('/contributors/reviews/')) ?>">Reviews</a>
-      <a class="btn" href="<?= h(url_for('/contributors/credits/')) ?>">Credits</a>
+      <a class="btn" href="<?= h(url_for('/staff/contributors/reviews/')) ?>">Reviews</a>
+      <a class="btn" href="<?= h(url_for('/staff/contributors/credits/')) ?>">Credits</a>
     </div>
   </main>
   <?php require PRIVATE_PATH . '/shared/footer.php'; exit;
@@ -195,3 +195,5 @@ require PRIVATE_PATH . '/shared/header.php'; ?>
   <?php endif; ?>
 </main>
 <?php require PRIVATE_PATH . '/shared/footer.php'; exit;
+
+

@@ -70,6 +70,9 @@ if (!defined('APP_TZ'))        define('APP_TZ',        env('APP_TZ', 'UTC'));
 if (!defined('APP_DEBUG'))     define('APP_DEBUG',     (bool)env('APP_DEBUG', APP_ENV !== 'prod'));
 if (!defined('APP_DEBUG_BAR')) define('APP_DEBUG_BAR', (bool)env('APP_DEBUG_BAR', false)); // header/top bar toggle
 
+/* Show detailed DB errors locally by default */
+if (!defined('DEV_ERROR_OUTPUT')) define('DEV_ERROR_OUTPUT', (bool)env('DEV_ERROR_OUTPUT', APP_ENV !== 'prod'));
+
 /* Cache-busting for static assets (append ?v=ASSET_VERSION) */
 if (!defined('ASSET_VERSION')) define('ASSET_VERSION', env('ASSET_VERSION', date('Ymd')));
 
@@ -89,29 +92,34 @@ if (!defined('BANNERS_URL')) define('BANNERS_URL', PUBLIC_LIB_URL . '/images/ban
 if (!defined('BANNERS_DIR')) define('BANNERS_DIR', PUBLIC_LIB_PATH . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'banners');
 
 /* ================================
-   5) Database (fallbacks only)
+   5) Database (defaults for local XAMPP)
    Prefer using .env:
-     - DB_DSN="mysql:host=127.0.0.1;dbname=mkomigbo;charset=utf8mb4"
+     - DB_DSN="mysql:host=127.0.0.1;port=3306;dbname=mkomigbo;charset=utf8mb4"
      - DB_USER, DB_PASS
    These guards fill sane defaults for local XAMPP if not provided.
    ================================ */
-if (!defined('DB_USER')) define('DB_USER', env('DB_USER', 'root'));
-if (!defined('DB_PASS')) define('DB_PASS', env('DB_PASS', ''));
 if (!defined('DB_HOST')) define('DB_HOST', env('DB_HOST', '127.0.0.1'));
 if (!defined('DB_PORT')) define('DB_PORT', (int)env('DB_PORT', 3306));
 if (!defined('DB_NAME')) define('DB_NAME', env('DB_NAME', 'mkomigbo'));
 
+/* After an "initialize-insecure" init, MySQL root has NO password.
+   Default to root / empty for local unless overridden in .env. */
+if (!defined('DB_USER')) define('DB_USER', env('DB_USER', 'root'));
+if (!defined('DB_PASS')) define('DB_PASS', env('DB_PASS', ''));
+
 if (!defined('DB_DSN')) {
-    // Honor .env DB_DSN if present; else compose a MySQL DSN.
-    $dsn = env('DB_DSN', '');
-    if ($dsn) {
-        define('DB_DSN', $dsn);
+    $dsnFromEnv = env('DB_DSN', '');
+    if ($dsnFromEnv) {
+        define('DB_DSN', $dsnFromEnv);
     } else {
-        define('DB_DSN', sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', DB_HOST, DB_PORT, DB_NAME));
+        define('DB_DSN', sprintf(
+            'mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4',
+            DB_HOST, DB_PORT, DB_NAME
+        ));
     }
 }
 
-/* PDO options (can be used by your database bootstrap) */
+/* PDO options (used by private/assets/database.php) */
 if (!defined('DB_PDO_OPTIONS')) {
     define('DB_PDO_OPTIONS', [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -150,7 +158,6 @@ if (!defined('SESSION_HTTPONLY'))  define('SESSION_HTTPONLY',  (bool)env('SESSIO
 /* ================================
    9) Feature flags (opt-in)
    ================================ */
-// Example: enable subject banners globally
 if (!defined('FEATURE_SUBJECT_BANNERS')) define('FEATURE_SUBJECT_BANNERS', (bool)env('FEATURE_SUBJECT_BANNERS', true));
 
 /* Purposefully no closing PHP tag */

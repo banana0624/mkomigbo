@@ -69,3 +69,5 @@ require PRIVATE_PATH . '/shared/header.php';
   </p>
 </main>
 <?php require PRIVATE_PATH . '/shared/footer.php'; ?>
+
+

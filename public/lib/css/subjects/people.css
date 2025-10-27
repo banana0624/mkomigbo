@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/people.css */
+/* Theme for “People” */
+body.subject-people {
+  --accent-color: #3a6f5f;
+  --card-bg: #e8f6f0;
+}
+
+body.subject-people .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-people .subject-card span {
+  color: var(--accent-color);
+}

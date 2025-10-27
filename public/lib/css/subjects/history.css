@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/history.css */
+/* Theme for “History” */
+body.subject-history {
+  --accent-color: #5a4d41;
+  --card-bg: #f7f2ec;
+}
+
+body.subject-history .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-history .subject-card span {
+  color: var(--accent-color);
+}

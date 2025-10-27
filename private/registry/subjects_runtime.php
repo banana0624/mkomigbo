@@ -39,7 +39,7 @@ if (!function_exists('subjects_catalog')) {
       'tradition'   => ['name' => 'Tradition',    'nav_order' => 8],
       'language1'   => ['name' => 'Language 1',   'nav_order' => 9],
       'language2'   => ['name' => 'Language 2',   'nav_order' => 10],
-      'struggle'    => ['name' => 'Struggle',     'nav_order' => 11],
+      'struggles'    => ['name' => 'Struggles',     'nav_order' => 11],
       'biafra'      => ['name' => 'Biafra',       'nav_order' => 12],
       'nigeria'     => ['name' => 'Nigeria',      'nav_order' => 13],
       'ipob'        => ['name' => 'IPOB',         'nav_order' => 14],

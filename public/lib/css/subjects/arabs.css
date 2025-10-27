@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/arabs.css */
+/* Theme for “Arabs” */
+body.subject-arabs {
+  --accent-color: #8b4513;
+  --card-bg: #f9f4ed;
+}
+
+body.subject-arabs .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-arabs .subject-card span {
+  color: var(--accent-color);
+}

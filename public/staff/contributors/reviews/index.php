@@ -2,16 +2,24 @@
 // project-root/public/staff/contributors/reviews/index.php
 declare(strict_types=1);
 
+// Boot
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
-require_once PRIVATE_PATH . '/common/contributors/contributors_common.php'; // single source
+// Permissions (optional; file exists in your project)
+if (is_file(PRIVATE_PATH . '/middleware/guard.php')) {
+  define('REQUIRE_LOGIN', true);
+  define('REQUIRE_PERMS', ['contributors.reviews.view']);
+  require PRIVATE_PATH . '/middleware/guard.php';
+}
 
-$page_title   = 'Contributor Reviews';
-$active_nav   = 'contributors';
-$body_class   = 'role--staff role--contrib';
-$page_logo    = '/lib/images/icons/messages.svg';
+require_once PRIVATE_PATH . '/common/contributors/contributors_common.php'; // single source of review_*()
+
+$page_title    = 'Contributor Reviews';
+$active_nav    = 'contributors';
+$body_class    = 'role--staff role--contrib';
+$page_logo     = '/lib/images/icons/messages.svg';
 $stylesheets[] = '/lib/css/ui.css';
 
 $breadcrumbs = [
@@ -21,7 +29,8 @@ $breadcrumbs = [
   ['label'=>'Reviews'],
 ];
 
-$rows = review_all();
+// Data
+$rows = function_exists('review_all') ? review_all() : []; // your common file provides this
 
 require PRIVATE_PATH . '/shared/header.php';
 ?>
@@ -40,7 +49,6 @@ require PRIVATE_PATH . '/shared/header.php';
             <th>Subject</th>
             <th>Rating</th>
             <th>Comment</th>
-            <!-- header -->
             <th class="actions" style="width:160px">Actions</th>
           </tr>
         </thead>
@@ -51,10 +59,9 @@ require PRIVATE_PATH . '/shared/header.php';
               <td><?= h($r['subject'] ?? '') ?></td>
               <td><?= (int)($r['rating'] ?? 0) ?></td>
               <td class="muted"><?= h($r['comment'] ?? '') ?></td>
-              <!-- each row -->
               <td class="actions">
-                <a class="btn btn-sm" href="<?= h(url_for('/staff/contributors/reviews/edit.php?id=' . urlencode($r['id'] ?? ''))) ?>">Edit</a>
-                <a class="btn btn-sm btn-danger" href="<?= h(url_for('/staff/contributors/reviews/delete.php?id=' . urlencode($r['id'] ?? ''))) ?>">Delete</a>
+                <a class="btn btn-sm" href="<?= h(url_for('/staff/contributors/reviews/edit.php?id=' . urlencode((string)($r['id'] ?? '')))) ?>">Edit</a>
+                <a class="btn btn-sm btn-danger" href="<?= h(url_for('/staff/contributors/reviews/delete.php?id=' . urlencode((string)($r['id'] ?? '')))) ?>">Delete</a>
               </td>
             </tr>
           <?php endforeach; ?>

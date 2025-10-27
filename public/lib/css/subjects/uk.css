@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/uk.css */
+/* Theme for “UK” */
+body.subject-uk {
+  --accent-color: #00247d;
+  --card-bg: #f4f7ff;
+}
+
+body.subject-uk .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-uk .subject-card span {
+  color: var(--accent-color);
+}

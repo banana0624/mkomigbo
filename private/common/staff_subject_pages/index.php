@@ -64,6 +64,13 @@ require PRIVATE_PATH . '/shared/header.php';
   <header style="display:flex;justify-content:space-between;align-items:center;margin:.25rem 0 1rem;">
     <div>
       <h1 style="margin:0;">Pages — <?= h($subject_name) ?></h1>
+      <!-- actions: subject pages -->
+      <div class="actions" style="margin:.75rem 0; display:flex; gap:.5rem; flex-wrap:wrap">
+        <!-- your existing buttons, e.g. Add New Page, Back, etc. -->
+
+        <!-- Export Pages CSV for current subject -->
+        <a class="btn" href="<?= h(url_for('/staff/subjects/_pages_export.csv.php?subject=' . urlencode($subject_slug))) ?>">Export CSV</a>
+      </div>
       <p class="muted" style="margin:.25rem 0 0;">
         <?= count($pages) ?> <?= count($pages) === 1 ? 'page' : 'pages' ?> in this subject
       </p>

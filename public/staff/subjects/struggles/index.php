@@ -1,35 +1,20 @@
 <?php
 declare(strict_types=1);
-$hub = dirname(__DIR__, 4) . '/private/common/staff_subject_hub.php';
-if (!is_file($hub)) { die('Hub template not found at: ' . $hub); }
-$subject_slug = 'struggles'; $subject_name = 'Struggles';
-require $hub;
 
-$canView   = function_exists('auth_has_permission') ? auth_has_permission('pages.view')   : true;
-$canCreate = function_exists('auth_has_permission') ? auth_has_permission('pages.create') : true;
-$canEdit   = function_exists('auth_has_permission') ? auth_has_permission('pages.edit')   : true;
-?>
+// From /public/staff/subjects/struggles
+$init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
+if (!is_file($init)) { die('Init not found at: ' . $init); }
+require_once $init;
 
-<div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
-  <?php if ($canView): ?>
-    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">View Pages</a>
-  <?php else: ?>
-    <a class="btn is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">View Pages</a>
-  <?php endif; ?>
+require_once PRIVATE_PATH . '/functions/auth.php';
+require_staff();
 
-  <?php if ($canEdit): ?>
-    <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Edit Pages</a>
-  <?php else: ?>
-    <a class="btn is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">Edit Pages</a>
-  <?php endif; ?>
+// Compute from folder name so this can be copied to other subjects too
+$subject_slug = basename(__DIR__);
+$subject_name = function_exists('subject_human_name')
+  ? subject_human_name($subject_slug)
+  : ucfirst(str_replace('-', ' ', $subject_slug));
 
-  <?php if ($canCreate): ?>
-    <a class="btn btn-primary" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/new.php")) ?>">Add New Page</a>
-  <?php else: ?>
-    <a class="btn btn-primary is-disabled" role="button" aria-disabled="true" tabindex="-1" style="pointer-events:none;opacity:.55;">Add New Page</a>
-  <?php endif; ?>
-
-  <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/media/")) ?>">Manage Media</a>
-  <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/settings/")) ?>">Subject Settings</a>
-</div>
-
+// Render the standard staff subject hub (handles actions/links/layout)
+require PRIVATE_PATH . '/common/staff_subjects/hub.php';
+?><!---- hub-wrapper-ok ---->

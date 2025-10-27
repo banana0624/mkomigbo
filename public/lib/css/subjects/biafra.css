@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/biafra.css */
+/* Theme for “Biafra” */
+body.subject-biafra {
+  --accent-color: #004e64;
+  --card-bg: #e8f7fb;
+}
+
+body.subject-biafra .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-biafra .subject-card span {
+  color: var(--accent-color);
+}

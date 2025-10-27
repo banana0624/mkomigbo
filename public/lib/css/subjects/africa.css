@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/africa.css */
+/* Theme for “Africa” */
+body.subject-africa {
+  --accent-color: #daa520;
+  --card-bg: #fffae6;
+}
+
+body.subject-africa .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-africa .subject-card span {
+  color: var(--accent-color);
+}

@@ -31,3 +31,95 @@
 .subject-item:hover {
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
 }
+
+/* === Subject Accent System =============================================== */
+/* Each subject gets a class on the wrapper: .subject.<slug>
+   Choose colors freely; these are tasteful defaults. */
+
+:root {
+  --accent-history: #6d28d9;
+  --accent-slavery: #b91c1c;
+  --accent-people: #2563eb;
+  --accent-persons: #0ea5e9;
+  --accent-culture: #059669;
+  --accent-religion: #1f2937;
+  --accent-spirituality: #10b981;
+  --accent-tradition: #d97706;
+  --accent-language1: #9333ea;
+  --accent-language2: #7c3aed;
+  --accent-struggles: #dc2626;
+  --accent-biafra: #111827;
+  --accent-nigeria: #16a34a;
+  --accent-ipob: #ef4444;
+  --accent-africa: #0f766e;
+  --accent-uk: #1d4ed8;
+  --accent-europe: #0284c7;
+  --accent-arabs: #a16207;
+  --accent-about: #475569;
+}
+
+/* Title accent + subtle table emphasis */
+.subject.history .subject-article h1 {
+  color: var(--accent-history);
+}
+.subject.slavery .subject-article h1 {
+  color: var(--accent-slavery);
+}
+.subject.people .subject-article h1 {
+  color: var(--accent-people);
+}
+.subject.persons .subject-article h1 {
+  color: var(--accent-persons);
+}
+.subject.culture .subject-article h1 {
+  color: var(--accent-culture);
+}
+.subject.religion .subject-article h1 {
+  color: var(--accent-religion);
+}
+.subject.spirituality .subject-article h1 {
+  color: var(--accent-spirituality);
+}
+.subject.tradition .subject-article h1 {
+  color: var(--accent-tradition);
+}
+.subject.language1 .subject-article h1 {
+  color: var(--accent-language1);
+}
+.subject.language2 .subject-article h1 {
+  color: var(--accent-language2);
+}
+.subject.struggles .subject-article h1 {
+  color: var(--accent-struggles);
+}
+.subject.biafra .subject-article h1 {
+  color: var(--accent-biafra);
+}
+.subject.nigeria .subject-article h1 {
+  color: var(--accent-nigeria);
+}
+.subject.ipob .subject-article h1 {
+  color: var(--accent-ipob);
+}
+.subject.africa .subject-article h1 {
+  color: var(--accent-africa);
+}
+.subject.uk .subject-article h1 {
+  color: var(--accent-uk);
+}
+.subject.europe .subject-article h1 {
+  color: var(--accent-europe);
+}
+.subject.arabs .subject-article h1 {
+  color: var(--accent-arabs);
+}
+.subject.about .subject-article h1 {
+  color: var(--accent-about);
+}
+
+/* Optional: light accent on table headers within a subject */
+.subject .subject-article table th {
+  background: #f8fafc;
+  color: #0f172a;
+  border-bottom: 2px solid #e2e8f0;
+}

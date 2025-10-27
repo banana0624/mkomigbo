@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/europe.css */
+/* Theme for “Europe” */
+body.subject-europe {
+  --accent-color: #003366;
+  --card-bg: #ebf4ff;
+}
+
+body.subject-europe .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-europe .subject-card span {
+  color: var(--accent-color);
+}

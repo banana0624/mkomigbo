@@ -36,5 +36,9 @@
       "tests/**/*.test.{ts,js}"
     ],
     "globals": true
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
   }
 }

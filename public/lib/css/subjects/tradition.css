@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/tradition.css */
+/* Theme for “Tradition” */
+body.subject-tradition {
+  --accent-color: #916b41;
+  --card-bg: #fff8f1;
+}
+
+body.subject-tradition .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-tradition .subject-card span {
+  color: var(--accent-color);
+}

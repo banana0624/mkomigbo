@@ -1,9 +1,18 @@
 <?php
-// public/staff/contributors/reviews/delete.php
+// project-root/public/staff/contributors/reviews/delete.php
 declare(strict_types=1);
+
+// Boot
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
+
+// Permissions (optional; file exists in your project)
+if (is_file(PRIVATE_PATH . '/middleware/guard.php')) {
+  define('REQUIRE_LOGIN', true);
+  define('REQUIRE_PERMS', ['contributors.reviews.delete']);
+  require PRIVATE_PATH . '/middleware/guard.php';
+}
 
 require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
 
@@ -12,23 +21,23 @@ $row = $id ? review_find($id) : null;
 if (!$row) { http_response_code(404); die('Review not found'); }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  csrf_check();
+  if (function_exists('csrf_check')) csrf_check();
   if (isset($_POST['confirm']) && $_POST['confirm'] === '1') {
-    if (review_delete($id)) {
-      flash('success', 'Review deleted.');
-    } else {
-      flash('error', 'Delete failed.');
+    $ok = review_delete($id);
+    if (function_exists('flash')) {
+      flash($ok ? 'success' : 'error', $ok ? 'Review deleted.' : 'Delete failed.');
     }
     header('Location: ' . url_for('/staff/contributors/reviews/')); exit;
   }
   header('Location: ' . url_for('/staff/contributors/reviews/')); exit;
 }
 
-$page_title = 'Delete Review';
-$active_nav = 'contributors';
-$body_class = 'role--staff role--contrib';
-$page_logo  = '/lib/images/icons/messages.svg';
+$page_title    = 'Delete Review';
+$active_nav    = 'contributors';
+$body_class    = 'role--staff role--contrib';
+$page_logo     = '/lib/images/icons/messages.svg';
 $stylesheets[] = '/lib/css/ui.css';
+
 $breadcrumbs = [
   ['label'=>'Home','url'=>'/'],
   ['label'=>'Staff','url'=>'/staff/'],
@@ -36,12 +45,13 @@ $breadcrumbs = [
   ['label'=>'Reviews','url'=>'/staff/contributors/reviews/'],
   ['label'=>'Delete'],
 ];
+
 require PRIVATE_PATH . '/shared/header.php';
 ?>
 <main class="container" style="max-width:720px;padding:1.25rem 0">
   <h1>Delete Review</h1>
   <p>Delete review for <strong><?= h($row['subject'] ?? '') ?></strong>?</p>
-  <form method="post">
+  <form method="post" action="">
     <?= function_exists('csrf_field') ? csrf_field() : '' ?>
     <input type="hidden" name="id" value="<?= h($id) ?>">
     <div class="actions">

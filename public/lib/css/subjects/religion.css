@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/religion.css */
+/* Theme for “Religion” */
+body.subject-religion {
+  --accent-color: #2f4f4f;
+  --card-bg: #eff9f9;
+}
+
+body.subject-religion .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-religion .subject-card span {
+  color: var(--accent-color);
+}

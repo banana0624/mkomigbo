@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/ipob.css */
+/* Theme for “IPOB” */
+body.subject-ipob {
+  --accent-color: #7f0000;
+  --card-bg: #fff0f0;
+}
+
+body.subject-ipob .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-ipob .subject-card span {
+  color: var(--accent-color);
+}

@@ -5,20 +5,20 @@ declare(strict_types=1);
 /**
  * Unified authentication & authorization helpers.
  *
- * Features
  * - Username OR email login
  * - COALESCE(is_active, 1) — works even if column not present yet
  * - Minimal session payload; regenerates session on login
- * - Role helpers: auth_is_admin(), auth_has_role(), require_admin(), require_staff()
+ * - Roles via user_roles/roles (multi-role) + legacy users.role fallback
  * - Permissions via roles.permissions_json (JSON array of strings)
- * - Back-compat shims: require_login()
+ * - Wildcards in permissions: section.* and *
+ * - Back-compat shims: require_login(), require_staff(), require_admin()
  *
  * Requires global $db (PDO), usually via initialize.php
  */
 
-/////////////////////////////
-// Session bootstrap
-/////////////////////////////
+/* ==============================
+   Session bootstrap
+   ============================== */
 if (!function_exists('auth__session_start')) {
   function auth__session_start(): void {
     if (session_status() !== PHP_SESSION_ACTIVE) {
@@ -27,13 +27,12 @@ if (!function_exists('auth__session_start')) {
   }
 }
 
-/////////////////////////////
-// DB access
-/////////////////////////////
+/* ==============================
+   DB access
+   ============================== */
 if (!function_exists('auth__find_user')) {
   /**
-   * Find a user by username OR email.
-   * Returns assoc or null.
+   * Find a user by username OR email. Returns assoc or null.
    */
   function auth__find_user(string $identifier): ?array {
     global $db;
@@ -41,9 +40,9 @@ if (!function_exists('auth__find_user')) {
 
     $sql = $isEmail
       ? "SELECT id, username, email, password_hash, role, COALESCE(is_active,1) AS is_active
-         FROM users WHERE email = :id LIMIT 1"
+           FROM users WHERE email = :id LIMIT 1"
       : "SELECT id, username, email, password_hash, role, COALESCE(is_active,1) AS is_active
-         FROM users WHERE username = :id LIMIT 1";
+           FROM users WHERE username = :id LIMIT 1";
 
     $stmt = $db->prepare($sql);
     $stmt->execute([':id' => $identifier]);
@@ -53,9 +52,9 @@ if (!function_exists('auth__find_user')) {
   }
 }
 
-/////////////////////////////
-// Current user
-/////////////////////////////
+/* ==============================
+   Current user
+   ============================== */
 if (!function_exists('current_user')) {
   function current_user(): ?array {
     auth__session_start();
@@ -64,11 +63,14 @@ if (!function_exists('current_user')) {
   }
 }
 
-/////////////////////////////
-// Roles / Permissions (DB)
-/////////////////////////////
+/* ==============================
+   Roles & Permissions (DB)
+   ============================== */
 
-/** Return role slugs for a user from user_roles/roles. Fallback to single users.role. */
+/**
+ * Return role slugs for a user from user_roles/roles.
+ * Falls back to a single legacy role from users.role if join table is absent.
+ */
 if (!function_exists('auth_user_role_slugs')) {
   function auth_user_role_slugs(int $userId, ?string $fallbackSingleRole = null): array {
     global $db;
@@ -91,7 +93,7 @@ if (!function_exists('auth_user_role_slugs')) {
 
 /**
  * Merge permissions from all roles (roles.permissions_json as JSON array of strings).
- * Returns array of unique strings.
+ * Returns a unique array of lowercased strings.
  */
 if (!function_exists('auth_user_permissions')) {
   function auth_user_permissions(int $userId): array {
@@ -106,7 +108,7 @@ if (!function_exists('auth_user_permissions')) {
       $st->execute([':uid' => $userId]);
       foreach ($st->fetchAll(PDO::FETCH_COLUMN, 0) as $js) {
         if ($js) {
-          $arr = json_decode($js, true);
+          $arr = json_decode((string)$js, true);
           if (is_array($arr)) {
             foreach ($arr as $p) {
               if (is_string($p) && $p !== '') {
@@ -123,25 +125,32 @@ if (!function_exists('auth_user_permissions')) {
   }
 }
 
-// Refresh the logged-in user's roles + permissions from DB (no re-login needed)
+/**
+ * Refresh the logged-in user's roles + permissions from DB (no re-login needed).
+ */
 if (!function_exists('auth_reload_permissions')) {
   function auth_reload_permissions(): void {
     $u = current_user();
     if (!$u) return;
 
-    $userId = (int)$u['id'];
-    $fallbackRole = (string)($u['role'] ?? 'viewer');
+    $userId      = (int)$u['id'];
+    $fallbackRole= (string)($u['role'] ?? 'viewer');
 
     $multiRoles = auth_user_role_slugs($userId, $fallbackRole);
     $_SESSION['user']['roles'] = $multiRoles ?: [$fallbackRole];
     $_SESSION['user']['perms'] = auth_user_permissions($userId);
+
+    // Admin legacy fallback: if users.role is 'admin', grant * as a safety net
+    if (in_array('admin', array_map('strtolower', $_SESSION['user']['roles']), true)) {
+      $_SESSION['user']['perms'][] = '*';
+      $_SESSION['user']['perms']   = array_values(array_unique(array_map('strtolower', $_SESSION['user']['perms'])));
+    }
   }
 }
 
-
-/////////////////////////////
-// Core auth API
-/////////////////////////////
+/* ==============================
+   Core auth API
+   ============================== */
 if (!function_exists('auth_login')) {
   /**
    * Attempt login.
@@ -176,17 +185,13 @@ if (!function_exists('auth_login')) {
       'id'        => (int)$user['id'],
       'username'  => (string)$user['username'],
       'email'     => (string)$user['email'],
-      'role'      => (string)($user['role'] ?? 'viewer'),
+      'role'      => (string)($user['role'] ?? 'viewer'), // legacy single role
       'is_active' => $active,
       'logged_in' => time(),
     ];
 
-    // ---- Cache roles and permissions in the session (requested change) ----
-    $multiRoles = auth_user_role_slugs((int)$user['id'], (string)($user['role'] ?? 'viewer'));
-    $_SESSION['user']['roles'] = $multiRoles ?: [(string)($user['role'] ?? 'viewer')];
-
-    $_SESSION['user']['perms'] = auth_user_permissions((int)$user['id']);
-    // ----------------------------------------------------------------------
+    // Cache roles and permissions in the session
+    auth_reload_permissions();
 
     if (function_exists('flash')) {
       $name = $_SESSION['user']['username'] ?? '';
@@ -211,9 +216,9 @@ if (!function_exists('auth_logout')) {
   }
 }
 
-/////////////////////////////
-// Guards & role helpers
-/////////////////////////////
+/* ==============================
+   Guards & role/perm helpers
+   ============================== */
 if (!function_exists('auth_require_login')) {
   function auth_require_login(): void {
     auth__session_start();
@@ -227,7 +232,7 @@ if (!function_exists('auth_require_login')) {
 }
 
 /**
- * Updated to use the cached multi-role array from session.
+ * Check whether the current user has ANY of the given roles.
  * @param string|array<int,string> $roles
  */
 if (!function_exists('auth_has_role')) {
@@ -240,48 +245,64 @@ if (!function_exists('auth_has_role')) {
   }
 }
 
-/** Permission check against cached merged perms */
+/**
+ * Permission check against cached merged perms; supports wildcards.
+ * Examples:
+ *   - 'contributors.reviews.view'
+ *   - 'contributors.*'
+ *   - '*'
+ */
 if (!function_exists('auth_has_permission')) {
   function auth_has_permission(string $perm): bool {
+    // If the page explicitly allows anonymous access, allow
+    if (defined('REQUIRE_LOGIN') && REQUIRE_LOGIN === false) return true;
+
     $u = current_user();
     if (!$u) return false;
 
-    // Superuser override:
-  if (!empty($u['roles']) && is_array($u['roles'])) {
-    foreach ($u['roles'] as $r) {
-      if (isset($r['slug']) && $r['slug'] === 'admin') return true;
-    }
-  }
-    // Admin bypass
+    // Admin shortcuts
     $roleSet = array_map('strtolower', (array)($u['roles'] ?? [$u['role'] ?? '']));
     if (in_array('admin', $roleSet, true)) return true;
 
-    $perm = strtolower($perm);
+    // Cached perms (lowercased)
     $have = array_map('strtolower', (array)($u['perms'] ?? []));
-    return in_array($perm, $have, true);
+    $perm = strtolower($perm);
+
+    // Global wildcard
+    if (in_array('*', $have, true)) return true;
+
+    // Exact
+    if (in_array($perm, $have, true)) return true;
+
+    // section.* wildcard
+    $dot = strpos($perm, '.');
+    if ($dot !== false) {
+      $prefix = substr($perm, 0, $dot); // e.g. 'contributors'
+      if (in_array($prefix . '.*', $have, true)) return true;
+    }
+    return false;
   }
 }
 
 // At least ONE of the given permissions
-  if (!function_exists('auth_can_any')) {
-    function auth_can_any(array $perms): bool {
-      foreach ($perms as $p) {
-        if (auth_has_permission((string)$p)) return true;
-      }
-      return false;
+if (!function_exists('auth_can_any')) {
+  function auth_can_any(array $perms): bool {
+    foreach ($perms as $p) {
+      if (auth_has_permission((string)$p)) return true;
     }
+    return false;
   }
+}
 
-  // Must have ALL of the given permissions
-  if (!function_exists('auth_can_all')) {
-    function auth_can_all(array $perms): bool {
-      foreach ($perms as $p) {
-        if (!auth_has_permission((string)$p)) return false;
-      }
-      return true;
+// Must have ALL of the given permissions
+if (!function_exists('auth_can_all')) {
+  function auth_can_all(array $perms): bool {
+    foreach ($perms as $p) {
+      if (!auth_has_permission((string)$p)) return false;
     }
+    return true;
   }
-
+}
 
 if (!function_exists('auth_is_admin')) {
   function auth_is_admin(): bool {
@@ -293,13 +314,12 @@ if (!function_exists('can')) {
   function can(string $perm): bool { return auth_has_permission($perm); }
 }
 
-/////////////////////////////
-// Compatibility shims
-/////////////////////////////
+/* ==============================
+   Compatibility shims
+   ============================== */
 
 /**
- * Many legacy pages call require_staff(); interpret as:
- *   - Must be signed in (any role).
+ * Many legacy pages call require_staff(); interpret as: must be signed in.
  */
 if (!function_exists('require_staff')) {
   function require_staff(): void {
@@ -315,8 +335,6 @@ if (!function_exists('require_admin')) {
     auth_require_login();
     if (!auth_is_admin()) {
       if (function_exists('flash')) flash('error','Admin access required.');
-      // 403 if you prefer:
-      // http_response_code(403); die('Forbidden');
       $dest = function_exists('url_for') ? url_for('/staff/') : '/staff/';
       header('Location: ' . $dest);
       exit;

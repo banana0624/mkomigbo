@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/slavery.css */
+/* Theme for “Slavery” */
+body.subject-slavery {
+  --accent-color: #8b2f2f;
+  --card-bg: #fbeaea;
+}
+
+body.subject-slavery .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-slavery .subject-card span {
+  color: var(--accent-color);
+}

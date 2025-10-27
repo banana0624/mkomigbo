@@ -1,0 +1,23 @@
+/* project-root/scripts/012_contributors_extras.sql */
+-- Reviews
+CREATE TABLE IF NOT EXISTS contributors_reviews (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  subject     VARCHAR(191) NOT NULL,
+  rating      TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  comment     TEXT NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Credits
+CREATE TABLE IF NOT EXISTS contributors_credits (
+  id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title       VARCHAR(191) NOT NULL,
+  url         VARCHAR(255) NULL,
+  contributor VARCHAR(191) NULL,
+  role        VARCHAR(128) NULL,
+  created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

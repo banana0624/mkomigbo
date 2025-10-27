@@ -47,8 +47,10 @@ require PRIVATE_PATH . '/shared/header.php';
           <td><?= h($u['username']) ?></td>
           <td><?= h($u['email']) ?></td>
           <td><code><?= h($u['role'] ?? '') ?></code></td>
-          <td class="actions">
-            <a class="btn btn-sm" href="<?= h(url_for('/staff/admins/users/edit_roles.php?id='.(int)$u['id'])) ?>">Edit Roles</a>
+          <td class="actions" style="white-space:nowrap">
+            <a class="btn btn-sm" href="<?= h(url_for('/staff/admins/users/edit.php?id='.(int)$row['id'])) ?>">Edit</a>
+            <a class="btn btn-sm" href="<?= h(url_for('/staff/admins/users/password.php?id='.(int)$row['id'])) ?>">Change Password</a>
+            <a class="btn btn-sm btn-danger" href="<?= h(url_for('/staff/admins/users/delete.php?id='.(int)$row['id'])) ?>">Delete</a>
           </td>
         </tr>
       <?php endforeach; endif; ?>

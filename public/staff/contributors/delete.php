@@ -13,3 +13,5 @@ if (function_exists('delete_contributor')) {
 }
 
 redirect_to(url_for('/staff/contributors/'));
+
+

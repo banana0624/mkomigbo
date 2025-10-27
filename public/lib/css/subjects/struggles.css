@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/struggles.css */
+/* Theme for “Struggles” */
+body.subject-struggles {
+  --accent-color: #8b0000;
+  --card-bg: #ffecec;
+}
+
+body.subject-struggles .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-struggles .subject-card span {
+  color: var(--accent-color);
+}

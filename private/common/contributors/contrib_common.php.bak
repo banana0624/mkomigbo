@@ -1,0 +1,58 @@
+<?php
+// project-root/private/common/contributors/contrib_common.php
+declare(strict_types=1);
+
+/**
+ * Shared bootstrap for staff/contributors/* pages:
+ * - loads initialize.php (once)
+ * - asserts staff login
+ * - exposes helper functions + tiny UI shell
+ */
+
+if (!defined('CONTRIB_COMMON_INIT')) {
+  define('CONTRIB_COMMON_INIT', 1);
+
+  $init = dirname(__DIR__, 2) . '/assets/initialize.php';
+  if (!is_file($init)) { die('Init not found at: ' . $init); }
+  require_once $init;
+
+  require_once PRIVATE_PATH . '/functions/auth.php';
+  require_staff(); // staff-only area
+
+  // Helper: tolerant permission gate; wrapper can predefine REQUIRE_LOGIN/REQUIRE_PERMS.
+  if (!defined('REQUIRE_LOGIN')) define('REQUIRE_LOGIN', true);
+  if (!defined('REQUIRE_PERMS')) define('REQUIRE_PERMS', []); // wrapper can set
+  if (REQUIRE_LOGIN || REQUIRE_PERMS) {
+    require PRIVATE_PATH . '/middleware/guard.php';
+  }
+
+  // Small helpers
+  if (!function_exists('contrib_breadcrumbs')) {
+    function contrib_breadcrumbs(array $tail = []): array {
+      $crumbs = [
+        ['label'=>'Home','url'=>'/'],
+        ['label'=>'Staff','url'=>'/staff/'],
+        ['label'=>'Contributors','url'=>'/staff/contributors/'],
+      ];
+      foreach ($tail as $c) $crumbs[] = $c;
+      return $crumbs;
+    }
+  }
+
+  if (!function_exists('contrib_header')) {
+    function contrib_header(string $title, string $active = 'staff', string $body_class = 'role--staff'): void {
+      global $page_title, $active_nav, $body_class as $bc, $stylesheets, $breadcrumbs;
+      $page_title   = $title;
+      $active_nav   = $active;
+      $bc           = $body_class;
+      $stylesheets[] = '/lib/css/ui.css';
+      require PRIVATE_PATH . '/shared/header.php';
+    }
+  }
+
+  if (!function_exists('contrib_footer')) {
+    function contrib_footer(): void {
+      require PRIVATE_PATH . '/shared/footer.php';
+    }
+  }
+}

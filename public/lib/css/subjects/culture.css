@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/culture.css */
+/* Theme for “Culture” */
+body.subject-culture {
+  --accent-color: #b87333;
+  --card-bg: #faf6f0;
+}
+
+body.subject-culture .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-culture .subject-card span {
+  color: var(--accent-color);
+}

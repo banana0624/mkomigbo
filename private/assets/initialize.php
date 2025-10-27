@@ -162,12 +162,13 @@ if (!isset($db) || !($db instanceof PDO)) {
 /* =========================================
    8) Core helpers: helper_functions + csrf + flash + auth + asset/seo
    ========================================= */
-$helpers    = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'helper_functions.php';
-$assets_fn  = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'asset_functions.php';
-$csrf       = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'csrf.php';
-$flash      = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'flash.php';
-$auth       = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'auth.php';
-$seo        = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'seo_functions.php';
+$helpers     = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'helper_functions.php';
+$assets_fn   = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'asset_functions.php';
+$csrf        = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'csrf.php';
+$flash       = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'flash.php';
+$auth        = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'auth.php';
+$seo         = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'seo_functions.php';
+$compat      = FUNCTIONS_PATH . DIRECTORY_SEPARATOR . 'compat_shims.php'; // <-- ADDED
 
 if (is_file($helpers))   require_once $helpers;
 if (is_file($assets_fn)) require_once $assets_fn;
@@ -175,6 +176,7 @@ if (is_file($csrf))      require_once $csrf;
 if (is_file($flash))     require_once $flash;
 if (is_file($auth))      require_once $auth;
 if (is_file($seo))       require_once $seo;
+if (is_file($compat))    require_once $compat; // <-- ADDED
 
 
 /* =========================================

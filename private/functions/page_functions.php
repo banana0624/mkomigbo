@@ -1,135 +1,108 @@
 <?php
 // project-root/private/functions/page_functions.php
-
 declare(strict_types=1);
 
-function find_all_pages() {
-  global $db;
-  $sql = "SELECT * FROM pages ORDER BY subject_id ASC, position ASC";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $rows = [];
-  while($r = mysqli_fetch_assoc($result)) { $rows[] = $r; }
-  mysqli_free_result($result);
-  return $rows;
-}
-
-function count_pages_by_subject_id($subject_id) {
-  global $db;
-  $sql = "SELECT COUNT(*) AS c FROM pages WHERE subject_id='" . db_escape($db, $subject_id) . "'";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $row = mysqli_fetch_assoc($result);
-  mysqli_free_result($result);
-  return (int)($row['c'] ?? 0);
-}
-
-
-/** Canonical page helpers */
-if (!function_exists('page_table')) {
-    function page_table(): string {
-        return $_ENV['PAGES_TABLE'] ?? 'pages';
+if (!function_exists('pf__column_exists')) {
+  function pf__column_exists(string $table, string $column): bool {
+    static $cache = [];
+    $k = strtolower("$table.$column");
+    if (array_key_exists($k, $cache)) {
+      return $cache[$k];
     }
-}
-
-if (!function_exists('page_find_all_by_subject_id')) {
-    function page_find_all_by_subject_id(int $subject_id): array {
-        $pdo = function_exists('db') ? db() : (function_exists('db_connect') ? db_connect() : null);
-        if (!$pdo) return [];
-        $sql = "SELECT * FROM " . page_table() . " WHERE subject_id = :sid ORDER BY id DESC";
-        $st  = $pdo->prepare($sql);
-        $st->bindValue(':sid', $subject_id, PDO::PARAM_INT);
-        $st->execute();
-        return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    try {
+      global $db;
+      $sql = "SELECT 1
+                FROM information_schema.COLUMNS
+               WHERE TABLE_SCHEMA = DATABASE()
+                 AND TABLE_NAME   = :t
+                 AND COLUMN_NAME  = :c
+               LIMIT 1";
+      $st = $db->prepare($sql);
+      $st->execute([':t'=>$table, ':c'=>$column]);
+      $cache[$k] = (bool)$st->fetchColumn();
+    } catch (Throwable $e) {
+      $cache[$k] = false;
     }
-}
-
-/** Back-compat alias (ONLY HERE) */
-if (!function_exists('find_pages_by_subject_id')) {
-    function find_pages_by_subject_id(int $subject_id): array {
-        return page_find_all_by_subject_id($subject_id);
-    }
-}
-
-
-function find_pages_by_subject_id_paginated($subject_id, $limit, $offset) {
-  global $db;
-  $limit = (int)$limit; $offset = (int)$offset;
-  $sql = "SELECT * FROM pages WHERE subject_id='" . db_escape($db, $subject_id) . "' ORDER BY position ASC LIMIT {$limit} OFFSET {$offset}";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $rows = [];
-  while($r = mysqli_fetch_assoc($result)) { $rows[] = $r; }
-  mysqli_free_result($result);
-  return $rows;
-}
-
-function find_page_by_id($id) {
-  global $db;
-  $sql = "SELECT * FROM pages WHERE id='" . db_escape($db, $id) . "' LIMIT 1";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $row = mysqli_fetch_assoc($result);
-  mysqli_free_result($result);
-  return $row;
-}
-
-function find_page_by_slug($slug) {
-  global $db;
-  $sql = "SELECT * FROM pages WHERE slug='" . db_escape($db, $slug) . "' LIMIT 1";
-  $result = mysqli_query($db, $sql);
-  confirm_result_set($result);
-  $row = mysqli_fetch_assoc($result);
-  mysqli_free_result($result);
-  return $row;
-}
-
-function update_page_thumbnail($page_id, $filename) {
-  global $db;
-  $sql  = "UPDATE pages SET thumbnail='" . db_escape($db, $filename) . "' ";
-  $sql .= "WHERE id='" . db_escape($db, $page_id) . "' LIMIT 1";
-  $result = mysqli_query($db, $sql);
-  return $result === true;
-}
-
-/**
- * Resolve a thumbnail URL for a page.
- * Priority:
- *  1) 'thumbnail' column in /uploads/pages/
- *  2) /lib/images/pages/{slug}.{ext}
- *  3) fallback /lib/images/pages/_placeholder.png
- */
-function page_thumbnail_url(array $page) {
-  $slug = $page['slug'] ?? '';
-  if (!empty($page['thumbnail'])) {
-    return url_for('/uploads/pages/' . $page['thumbnail']);
+    return $cache[$k];
   }
-  if ($slug !== '') {
-    $candidates = ['png','jpg','jpeg','webp','gif','avif'];
-    foreach ($candidates as $ext) {
-      $rel = '/lib/images/pages/' . $slug . '.' . $ext;
-      $abs = PUBLIC_PATH . str_replace('/', DIRECTORY_SEPARATOR, $rel);
-      if (file_exists($abs)) return url_for($rel);
+}
+
+if (!function_exists('page_get_by_id')) {
+  function page_get_by_id(int $id): ?array {
+    global $db;
+    $hasSubjectId = pf__column_exists('pages', 'subject_id');
+    $join = $hasSubjectId ? "LEFT JOIN subjects s ON s.id = p.subject_id" : "";
+
+    // Build column list dynamically
+    $cols = ["p.id", "p.title", "p.slug"];
+    // only include body if the column exists
+    if (pf__column_exists('pages', 'body')) {
+      $cols[] = "p.body";
     }
+    $cols[] = "p.is_published";
+    if (pf__column_exists('pages', 'created_at')) {
+      $cols[] = "p.created_at";
+    }
+    if (pf__column_exists('pages', 'updated_at')) {
+      $cols[] = "p.updated_at";
+    }
+    if ($hasSubjectId) {
+      $cols[] = "p.subject_id";
+    }
+    if (pf__column_exists('subjects', 'slug')) {
+      $cols[] = "s.slug AS subject_slug";
+    }
+    if (pf__column_exists('subjects', 'name')) {
+      $cols[] = "s.name AS subject_name";
+    }
+
+    $sql = "SELECT " . implode(", ", $cols) . "
+              FROM pages p
+              $join
+             WHERE p.id = :id
+             LIMIT 1";
+    $st = $db->prepare($sql);
+    $st->execute([':id' => $id]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+
+    return $row ?: null;
   }
-  return url_for('/lib/images/pages/_placeholder.png');
 }
 
-function delete_page_thumbnail($page_id) {
-  global $db;
+// Similarly update update_by_id to only include body if exists
+if (!function_exists('page_update_by_id')) {
+  function page_update_by_id(int $id, array $data): bool {
+    global $db;
+    $fields = [];
+    $bind   = [':id'=>$id];
 
-  $page = find_page_by_id($page_id);
-  if(!$page) { return false; }
+    if (array_key_exists('title',$data)) {
+      $fields[] = "title = :title";
+      $bind[':title'] = trim((string)$data['title']);
+    }
+    if (array_key_exists('slug',$data)) {
+      $fields[] = "slug = :slug";
+      $bind[':slug'] = trim((string)$data['slug']);
+    }
+    if (array_key_exists('body',$data) && pf__column_exists('pages','body')) {
+      $fields[] = "body = :body";
+      $bind[':body'] = (string)$data['body'];
+    }
+    if (array_key_exists('is_published',$data)) {
+      $fields[] = "is_published = :pub";
+      $bind[':pub'] = (int)!empty($data['is_published']);
+    }
 
-  $filename = $page['thumbnail'] ?? '';
-  if($filename) {
-    $abs = rtrim(UPLOADS_PAGES_PATH, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $filename;
-    if(file_exists($abs)) { @unlink($abs); }
+    if (!$fields) return true; // nothing to update
+
+    if (pf__column_exists('pages', 'updated_at')) {
+      $fields[] = "updated_at = NOW()";
+    }
+
+    $sql = "UPDATE pages SET " . implode(', ', $fields) . " WHERE id = :id";
+    $st = $db->prepare($sql);
+    return $st->execute($bind);
   }
-
-  $sql  = "UPDATE pages SET thumbnail=NULL ";
-  $sql .= "WHERE id='" . db_escape($db, $page_id) . "' LIMIT 1";
-  $result = mysqli_query($db, $sql);
-  return $result === true;
 }
 
+// The delete and index_simple functions remain fine

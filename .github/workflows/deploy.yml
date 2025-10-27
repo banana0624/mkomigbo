@@ -1,0 +1,22 @@
+name: Deploy public to server
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Upload public/ to server via SCP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }} # or use password: ${{ secrets.DEPLOY_PASS }}
+          source: "project-root/public/*"
+          target: "/home/username/public_html" # adjust to your docroot
+          strip_components: 2 # removes "project-root/public"

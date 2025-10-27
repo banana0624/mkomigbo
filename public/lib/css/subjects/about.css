@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/about.css */
+/* Theme for “About” */
+body.subject-about {
+  --accent-color: #333333;
+  --card-bg: #f5f5f5;
+}
+
+body.subject-about .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-about .subject-card span {
+  color: var(--accent-color);
+}

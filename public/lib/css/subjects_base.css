@@ -1,0 +1,10 @@
+/* project-root/public/lib/css/subjects_base.css */
+
+.subject-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}

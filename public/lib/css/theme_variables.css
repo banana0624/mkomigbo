@@ -1,0 +1,84 @@
+/* project-root/public/lib/css/theme_variables.css */
+/* theme_variables.css */
+
+/* Default (light mode) & global variables */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #333333;
+  --color-accent: #0066cc;
+  --color-accent-light: #3388ff;
+  --color-accent-dark: #004499;
+  --header-bg: var(--color-accent);
+  --footer-bg: var(--color-accent-dark);
+  --btn-bg: var(--color-accent);
+  --btn-text: #ffffff;
+  --link-color: var(--color-accent);
+  --scroll-to-top-bg: var(--color-accent-dark);
+}
+
+/* Dark mode override */
+[data-theme="dark"] {
+  --color-bg: #121212;
+  --color-text: #e0e0e0;
+  --color-accent: #3399ff;
+  --color-accent-light: #66b2ff;
+  --color-accent-dark: #005bb5;
+  --header-bg: var(--color-accent-dark);
+  --footer-bg: #1a1a1a;
+  --btn-bg: var(--color-accent-light);
+  --btn-text: #121212;
+  --link-color: var(--color-accent-light);
+  --scroll-to-top-bg: var(--color-accent-light);
+}
+
+/* Subject-specific overrides */
+/* Each subject slug gets its own block */
+.subject-history {
+  --color-accent: #8b0000; /* dark red for History */
+  --color-accent-light: #b22222;
+  --color-accent-dark: #5a0000;
+}
+
+.subject-slavery {
+  --color-accent: #800000;
+  --color-accent-light: #a00000;
+  --color-accent-dark: #4e0000;
+}
+
+.subject-people {
+  --color-accent: #007700;
+  --color-accent-light: #009900;
+  --color-accent-dark: #004400;
+}
+
+/* … repeat for the rest of the 19 subjects … */
+
+/* Use variables in base styling */
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.header-wrapper,
+.site-header {
+  background-color: var(--header-bg);
+}
+
+a {
+  color: var(--link-color);
+}
+
+.button,
+.btn {
+  background-color: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.site-footer {
+  background-color: var(--footer-bg);
+  color: var(--btn-text);
+}
+
+.back-to-top {
+  background-color: var(--scroll-to-top-bg);
+}

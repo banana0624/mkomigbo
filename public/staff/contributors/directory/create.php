@@ -6,7 +6,7 @@ if (!is_file($init)) { die('Init not found at: ' . $init); }
 require_once $init;
 
 require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
-require_once PRIVATE_PATH . '/common/contributors/contrib_common.php';
+require_once PRIVATE_PATH . '/common/contributors/contributors_common.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   csrf_check();
@@ -52,3 +52,5 @@ require PRIVATE_PATH . '/shared/header.php';
   </form>
 </main>
 <?php require PRIVATE_PATH . '/shared/footer.php'; ?>
+
+

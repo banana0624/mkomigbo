@@ -3,71 +3,84 @@ declare(strict_types=1);
 
 /**
  * project-root/private/assets/database.php
- * Creates a global $db (PDO) using constants from config.php
- * - Idempotent (does nothing if $db is already a PDO)
+ * Creates a global $db (PDO) using constants (preferably from config.php/.env)
+ * - Idempotent (no-op if $db already exists)
  * - UTF8MB4 safe
- * - Friendly error output in dev
+ * - Dev-friendly error output
  */
 
 if (!defined('PRIVATE_PATH')) {
-  // If called directly, pull in config first (idempotent)
-  require_once __DIR__ . '/config.php';
+  // Load your app config first if not already loaded
+  $cfg = __DIR__ . '/config.php';
+  if (is_file($cfg)) { require_once $cfg; }
 }
 
 if (isset($db) && $db instanceof PDO) {
   return; // already connected
 }
 
-// Build connection pieces from config/env (already defined in config.php)
-$dsn  = defined('DB_DSN')  ? DB_DSN  : null;
+/**
+ * --- Local defaults (only if not provided by config.php/.env) ---
+ * If you already define these in config.php, these defines will be skipped.
+ * You asked to add this snippet, so we guard each with "defined()".
+ */
+if (!defined('DB_HOST')) define('DB_HOST', '127.0.0.1');
+if (!defined('DB_PORT')) define('DB_PORT', '3306');
+if (!defined('DB_NAME')) define('DB_NAME', 'mkomigbo');
+if (!defined('DB_USER')) define('DB_USER', 'mkomigbo_app');
+if (!defined('DB_PASS')) define('DB_PASS', '$amuzi#uru@ogu!'); // <- your requested password
+
+// If a full DSN isn’t provided, build one from the constants above
+if (!defined('DB_DSN')) {
+  define('DB_DSN', sprintf(
+    'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
+    DB_HOST, DB_PORT, DB_NAME
+  ));
+}
+
+$dsn  = DB_DSN ?? null;
 $user = defined('DB_USER') ? DB_USER : null;
 $pass = defined('DB_PASS') ? DB_PASS : null;
 
-// Default PDO options (config can override with DB_PDO_OPTIONS)
-$pdoOptions = defined('DB_PDO_OPTIONS') && is_array(DB_PDO_OPTIONS) ? DB_PDO_OPTIONS : [
+// Default PDO options (can be overridden via define('DB_PDO_OPTIONS', [...]) in config.php)
+$pdoOptions = (defined('DB_PDO_OPTIONS') && is_array(DB_PDO_OPTIONS)) ? DB_PDO_OPTIONS : [
   PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
   PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
   PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// If using MySQL and charset not in DSN, set init command just in case
-if (is_string($dsn) && str_starts_with(strtolower($dsn), 'mysql:') && !str_contains(strtolower($dsn), 'charset=')) {
-  // Only add if the extension is available (it is in XAMPP)
+// If MySQL and charset not in DSN, set init command as a safety net
+$dsnLower = is_string($dsn) ? strtolower($dsn) : '';
+if (is_string($dsn) && str_starts_with($dsnLower, 'mysql:') && !str_contains($dsnLower, 'charset=')) {
   if (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
     $pdoOptions[PDO::MYSQL_ATTR_INIT_COMMAND] = "SET NAMES utf8mb4";
   }
 }
 
-/** Small helper to mask credentials in logs/errors */
-$maskDsn = static function (?string $dsn): string {
-  if (!$dsn) return '(no DSN)';
-  // Strip potential user:pass@host from DSN if present (rare with PDO DSN)
-  return preg_replace('~(//)([^:@/]+)(:([^@/]*))?@~', '$1***@', $dsn);
+// Helper to mask DSN userinfo in errors
+$maskDsn = static function (?string $d): string {
+  if (!$d) return '(no DSN)';
+  return preg_replace('~(//)([^:@/]+)(:([^@/]*))?@~', '$1***@', $d);
 };
 
 try {
   if (!$dsn) {
-    throw new RuntimeException('DB_DSN is not defined. Check your .env or config.php.');
+    throw new RuntimeException('DB_DSN is not defined. Check your config.php or .env.');
   }
 
-  // Connect (single attempt; add retry if you expect flaky local MySQL)
+  // Connect
   $db = new PDO($dsn, (string)$user, (string)$pass, $pdoOptions);
 
-  // Extra safety: ensure utf8mb4 at runtime too (harmless if already set)
-  if (str_starts_with(strtolower($dsn), 'mysql:')) {
+  // Double-enforce utf8mb4
+  if (str_starts_with($dsnLower, 'mysql:')) {
     $db->exec("SET NAMES utf8mb4");
   }
 
-  // Optional: lightweight ping helper
+  // Light ping helper
   if (!function_exists('db_ping')) {
     function db_ping(): bool {
-      try {
-        global $db;
-        $db->query('SELECT 1');
-        return true;
-      } catch (Throwable) {
-        return false;
-      }
+      try { global $db; $db->query('SELECT 1'); return true; }
+      catch (Throwable) { return false; }
     }
   }
 
@@ -84,7 +97,6 @@ try {
   }
 
 } catch (Throwable $ex) {
-  // Dev-friendly error; quiet in prod
   $isDev = defined('APP_ENV') ? (APP_ENV !== 'prod') : true;
   $msg   = $ex instanceof PDOException ? 'Database connection failed.' : 'Application error.';
   $hint  = $isDev
@@ -99,6 +111,5 @@ try {
           </div>";
   }
 
-  // Re-throw so upstream handlers (shutdown handler) can catch/log too
   throw $ex;
 }

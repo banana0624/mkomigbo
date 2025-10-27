@@ -1,0 +1,15 @@
+/* public/lib/css/subjects/spirituality.css */
+/* Theme for “Spirituality” */
+body.subject-spirituality {
+  --accent-color: #6a5acd;
+  --card-bg: #f4f4ff;
+}
+
+body.subject-spirituality .subject-card {
+  background: var(--card-bg);
+  border-color: var(--accent-color);
+}
+
+body.subject-spirituality .subject-card span {
+  color: var(--accent-color);
+}

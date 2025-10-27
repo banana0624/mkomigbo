@@ -1,73 +1,76 @@
 <?php
 declare(strict_types=1);
-
 /**
- * private/middleware/guard.php
+ * project-root/private/middleware/guard.php
  *
- * Enforce REQUIRE_LOGIN and REQUIRE_PERMS[].
- * Redirects unauthenticated users to /staff/login.php, remembering intended URL.
+ * Enforce:
+ *   - REQUIRE_LOGIN (bool)
+ *   - REQUIRE_PERMS (string|string[])
+ *
+ * Features:
+ *   - Starts session if needed
+ *   - Remembers intended URL and redirects unauthenticated users to /staff/login.php
+ *   - Uses auth.php helpers and session-cached permissions
+ *   - Friendly flash message on permission denial; shows missing perms in non-prod
  */
 
 if (!defined('GUARD_BOOTSTRAPPED')) {
   define('GUARD_BOOTSTRAPPED', true);
 
-  // Start session if needed
+  // Session bootstrap (before touching $_SESSION)
   if (session_status() !== PHP_SESSION_ACTIVE) {
     @session_start();
   }
 
-  // Small helpers (don’t collide with your global helpers)
-  if (!function_exists('guard_current_user')) {
-    function guard_current_user() {
-      return $_SESSION['user'] ?? null;
-    }
-  }
-  if (!function_exists('guard_has_permission')) {
-    function guard_has_permission(string $perm): bool {
-      $u = guard_current_user();
-      if (!$u) return false;
-      $perms = $u['perms'] ?? [];
-      return in_array($perm, $perms, true);
-    }
-  }
-  if (!function_exists('guard_has_role')) {
-    function guard_has_role(string $role): bool {
-      $u = guard_current_user();
-      if (!$u) return false;
-      $roles = $u['roles'] ?? [];
-      return in_array($role, $roles, true);
-    }
-  }
+  // We depend on auth helpers
+  require_once PRIVATE_PATH . '/functions/auth.php';
 
+  // Resolve flags
   $requireLogin = defined('REQUIRE_LOGIN') ? (bool)REQUIRE_LOGIN : false;
-  $needPerms    = defined('REQUIRE_PERMS') ? (array)REQUIRE_PERMS : [];
+  $needPermsRaw = defined('REQUIRE_PERMS') ? REQUIRE_PERMS : [];
+  $needPerms    = is_array($needPermsRaw) ? $needPermsRaw : [$needPermsRaw];
 
-  $uri = $_SERVER['REQUEST_URI'] ?? '/';
-  $isLoginRoute = (strpos($uri, '/staff/login') === 0); // matches /staff/login and /staff/login.php
+  // Current request
+  $uri          = $_SERVER['REQUEST_URI'] ?? '/';
+  $isLoginRoute = (strpos($uri, '/staff/login') === 0); // covers /staff/login and /staff/login.php
 
-  // Redirect unauthenticated users (but never from the login page itself)
-  if ($requireLogin && !guard_current_user() && !$isLoginRoute) {
-    // remember intended target to bounce back after login
-    $_SESSION['intended_url'] = $uri;
+  // Helper: location builder (respects url_for if present)
+  $to = static function (string $path): string {
+    return function_exists('url_for') ? url_for($path) : $path;
+  };
 
-    // Always send to the PHP file to avoid clean-URL ambiguity
-    header('Location: /staff/login.php', true, 302);
-    exit;
+  // 1) Require login
+  if ($requireLogin) {
+    // If not logged in and not already on the login route -> remember target & send to login
+    if (!isset($_SESSION['user']['id']) && !$isLoginRoute) {
+      $_SESSION['intended_url'] = $uri;
+      header('Location: ' . $to('/staff/login.php'), true, 302);
+      exit;
+    }
+    // If you prefer to ensure session sanity, you can still call:
+    // auth_require_login(); // but we already handled redirect + intended_url above
   }
 
-  // Permissions check (if logged in)
-  if ($requireLogin && $needPerms && guard_current_user()) {
+  // 2) Permissions (only if logged in AND perms were declared)
+  if ($requireLogin && $needPerms && isset($_SESSION['user']['id'])) {
+    $missing = [];
     foreach ($needPerms as $perm) {
-      if (!guard_has_permission($perm)) {
-        // Not enough perms → polite 403
-        http_response_code(403);
-        if (function_exists('flash')) {
-          flash('error', 'You do not have permission to perform this action.');
-        }
-        // Send them to Staff home (not login)
-        header('Location: /staff/', true, 302);
-        exit;
+      if (!auth_has_permission((string)$perm)) {
+        $missing[] = (string)$perm;
       }
+    }
+
+    if ($missing) {
+      if (function_exists('flash')) {
+        $msg = 'You do not have permission to perform this action.';
+        if (defined('APP_ENV') && APP_ENV !== 'prod') {
+          $msg .= ' Missing: ' . implode(', ', $missing);
+        }
+        flash('error', $msg);
+      }
+      // Polite redirect to Staff home (not login)
+      header('Location: ' . $to('/staff/'), true, 302);
+      exit;
     }
   }
 }
