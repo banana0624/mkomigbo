@@ -3,53 +3,68 @@ declare(strict_types=1);
 
 /**
  * project-root/private/assets/database.php
- * Creates a global $db (PDO) using constants (preferably from config.php/.env)
+ *
+ * Creates a global $db (PDO) using env or constants.
+ * Priority: $_ENV/.env  → defined() constants → defaults.
  * - Idempotent (no-op if $db already exists)
  * - UTF8MB4 safe
- * - Dev-friendly error output
+ * - Dev-friendly (masked) error output
  */
 
+//
+// 0) If config.php defines constants you want, load it (only if PRIVATE_PATH isn’t set yet)
+//
 if (!defined('PRIVATE_PATH')) {
-  // Load your app config first if not already loaded
   $cfg = __DIR__ . '/config.php';
   if (is_file($cfg)) { require_once $cfg; }
 }
 
+//
+// 1) If already connected, bail early
+//
 if (isset($db) && $db instanceof PDO) {
-  return; // already connected
+  return;
 }
 
-/**
- * --- Local defaults (only if not provided by config.php/.env) ---
- * If you already define these in config.php, these defines will be skipped.
- * You asked to add this snippet, so we guard each with "defined()".
- */
-if (!defined('DB_HOST')) define('DB_HOST', '127.0.0.1');
-if (!defined('DB_PORT')) define('DB_PORT', '3306');
-if (!defined('DB_NAME')) define('DB_NAME', 'mkomigbo');
-if (!defined('DB_USER')) define('DB_USER', 'mkomigbo_app');
-if (!defined('DB_PASS')) define('DB_PASS', '$amuzi#uru@ogu!'); // <- your requested password
+//
+// 2) Read configuration with clear precedence
+//    Prefer environment (dotenv-loaded) → constants → defaults
+//
+$env = static function (string $k, $default = null) {
+  // prefer $_ENV; fall back to $_SERVER for some hosts
+  $v = $_ENV[$k] ?? $_SERVER[$k] ?? null;
+  if ($v === null) return $default;
+  $v = is_string($v) ? trim($v) : $v;
+  return ($v === '') ? $default : $v;
+};
 
-// If a full DSN isn’t provided, build one from the constants above
-if (!defined('DB_DSN')) {
-  define('DB_DSN', sprintf(
-    'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
-    DB_HOST, DB_PORT, DB_NAME
-  ));
+$constOr = static function (string $k, $default = null) {
+  return defined($k) ? constant($k) : $default;
+};
+
+// 2a) DSN: full or built
+$dsn = $env('DB_DSN', $constOr('DB_DSN', null));
+if (!$dsn) {
+  $host    = $env('DB_HOST',    $constOr('DB_HOST',    '127.0.0.1'));
+  $port    = (int)$env('DB_PORT',    $constOr('DB_PORT',    3306));
+  $dbname  = $env('DB_NAME',    $constOr('DB_NAME',    'mkomigbo'));
+  $charset = $env('DB_CHARSET', $constOr('DB_CHARSET', 'utf8mb4'));
+  $dsn     = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 }
 
-$dsn  = DB_DSN ?? null;
-$user = defined('DB_USER') ? DB_USER : null;
-$pass = defined('DB_PASS') ? DB_PASS : null;
+// 2b) Credentials
+$user = (string)$env('DB_USER', $constOr('DB_USER', 'root'));
+$pass = (string)$env('DB_PASS', $constOr('DB_PASS', ''));
 
-// Default PDO options (can be overridden via define('DB_PDO_OPTIONS', [...]) in config.php)
-$pdoOptions = (defined('DB_PDO_OPTIONS') && is_array(DB_PDO_OPTIONS)) ? DB_PDO_OPTIONS : [
+// 2c) Options
+$pdoOptions = $constOr('DB_PDO_OPTIONS', null);
+$pdoOptions = is_array($pdoOptions) ? $pdoOptions : [
   PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
   PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
   PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
-// If MySQL and charset not in DSN, set init command as a safety net
+// If DSN is mysql: and charset not embedded, set init command as a safety net
 $dsnLower = is_string($dsn) ? strtolower($dsn) : '';
 if (is_string($dsn) && str_starts_with($dsnLower, 'mysql:') && !str_contains($dsnLower, 'charset=')) {
   if (defined('PDO::MYSQL_ATTR_INIT_COMMAND')) {
@@ -57,26 +72,34 @@ if (is_string($dsn) && str_starts_with($dsnLower, 'mysql:') && !str_contains($ds
   }
 }
 
-// Helper to mask DSN userinfo in errors
+// Helper to mask credentials in DSN for error display
 $maskDsn = static function (?string $d): string {
   if (!$d) return '(no DSN)';
-  return preg_replace('~(//)([^:@/]+)(:([^@/]*))?@~', '$1***@', $d);
+  // mask user:pass@ in mysql://user:pass@host… style (kept here for completeness)
+  $masked = preg_replace('~(//)([^:@/]+)(:([^@/]*))?@~', '$1***@', $d);
+  // also mask password if ever embedded as ;password=… (rare for mysql, but safe)
+  $masked = preg_replace('~(;password=)([^;]+)~i', '$1***', $masked);
+  return $masked ?? '(masked)';
 };
+
+// Dev mode?
+$envName = (string)$env('APP_ENV', $constOr('APP_ENV', 'production'));
+$isDev   = ($envName !== 'production') || ((int)$env('DEV_ERROR_OUTPUT', (int)$constOr('DEV_ERROR_OUTPUT', 0)) === 1);
 
 try {
   if (!$dsn) {
-    throw new RuntimeException('DB_DSN is not defined. Check your config.php or .env.');
+    throw new RuntimeException('DB_DSN is not defined (and could not be built).');
   }
 
-  // Connect
-  $db = new PDO($dsn, (string)$user, (string)$pass, $pdoOptions);
+  // 3) Connect
+  $db = new PDO($dsn, $user, $pass, $pdoOptions);
 
-  // Double-enforce utf8mb4
+  // 4) Double-enforce utf8mb4 for MySQL
   if (str_starts_with($dsnLower, 'mysql:')) {
     $db->exec("SET NAMES utf8mb4");
   }
 
-  // Light ping helper
+  // 5) Utilities
   if (!function_exists('db_ping')) {
     function db_ping(): bool {
       try { global $db; $db->query('SELECT 1'); return true; }
@@ -84,7 +107,6 @@ try {
     }
   }
 
-  // Convenience accessor
   if (!function_exists('db')) {
     /** @return PDO */
     function db(): PDO {
@@ -96,20 +118,20 @@ try {
     }
   }
 
-} catch (Throwable $ex) {
-  $isDev = defined('APP_ENV') ? (APP_ENV !== 'prod') : true;
-  $msg   = $ex instanceof PDOException ? 'Database connection failed.' : 'Application error.';
-  $hint  = $isDev
-    ? sprintf('%s DSN=%s MESSAGE=%s', $msg, $maskDsn($dsn), $ex->getMessage())
-    : $msg;
+} catch (Throwable $e) {
+  // Friendly error (masked) in dev; terse in prod
+  $baseMsg = 'Database connection failed.';
+  $hint    = $isDev ? $baseMsg . ' DSN=' . htmlspecialchars($maskDsn($dsn), ENT_QUOTES, 'UTF-8')
+                     . ' MESSAGE=' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8')
+                   : $baseMsg;
 
-  if (defined('DEV_ERROR_OUTPUT') ? DEV_ERROR_OUTPUT : $isDev) {
-    http_response_code(500);
+  if ($isDev) {
+    if (!headers_sent()) { http_response_code(500); }
     echo "<div style='padding:1rem;margin:1rem;border:2px solid #e11;background:#fee'>
             <strong>DB ERROR</strong><br>
-            <code>" . htmlspecialchars($hint, ENT_QUOTES, 'UTF-8') . "</code>
+            <code>{$hint}</code>
           </div>";
   }
 
-  throw $ex;
+  throw $e;
 }

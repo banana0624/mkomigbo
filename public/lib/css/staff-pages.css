@@ -1,0 +1,129 @@
+ /* Light styling for clearer inputs + sticky-ish actions bar */
+
+  .mk-form input[type="text"],
+  .mk-form input[type="number"],
+  .mk-form input[type="file"],
+  .mk-form textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  .form-section {
+    margin-bottom: 2rem;
+    background: #fff;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    border: 1px solid #eee;
+  }
+
+  .form-row {
+    margin-bottom: 1rem;
+  }
+
+  .form-row-inline {
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .form-row-inline > * {
+    flex: 1 1 200px;
+  }
+
+  .form-checkbox label {
+    font-weight: 600;
+  }
+
+  .hint {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.25rem;
+  }
+
+  .page-attachments-list {
+    list-style: none;
+    padding-left: 0;
+    margin: 0 0 1rem;
+  }
+
+  .page-attachment-item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    padding: 0.35rem 0;
+    border-bottom: 1px dashed #e0e0e0;
+  }
+
+  .page-attachment-item a {
+    font-weight: 600;
+  }
+
+  .attachment-meta {
+    font-size: 0.8rem;
+    color: #666;
+  }
+
+  .attachment-delete {
+    margin-left: auto;
+    font-size: 0.9rem;
+  }
+
+  .attachment-upload h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .form-actions-bar {
+    position: sticky;
+    bottom: 0;
+    margin-top: 1.5rem;
+    background: rgba(250, 250, 250, 0.95);
+    border-top: 1px solid #ddd;
+    padding: 0.75rem 0;
+  }
+
+  .form-actions-inner {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  /* Layout for the form actions row */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+/* Sticky variant: keeps actions visible near the bottom */
+.form-actions-sticky {
+  position: sticky;
+  bottom: 0;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border-top: 1px solid #ddd;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
+  z-index: 20;
+}
+
+/* Buttons look consistent in the bar */
+.form-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+}
+
+/* Small icon span in buttons/links */
+.btn .btn-icon {
+  font-size: 0.95em;
+  line-height: 1;
+}

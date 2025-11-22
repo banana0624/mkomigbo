@@ -1,3 +1,4 @@
+-- project-root/private/db/seed.sql --
 USE mkomigbo;
 
 -- Clear existing data safely

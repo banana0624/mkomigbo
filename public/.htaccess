@@ -1,44 +1,79 @@
-# project-root/public/.htaccess
+## project-root/public/.htaccess ##
 
-# 1) Default index file for directories
-DirectoryIndex index.php index.html
+# Use /public as the web root
+Options -Indexes
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # If your site is at the web root, keep "/".
-  # If it’s under a folder (e.g., http://host/mkomigbo/), set RewriteBase to "/mkomigbo/"
-  RewriteBase /
-
-  # Prevent Multiviews from hijacking clean URLs on some Apache setups
-  Options -Multiviews
-
-  # 2) Serve existing files/directories as-is (ALWAYS first)
+  # --------------------------------------------------------------------
+  # 1) Serve existing files/folders as-is
+  # --------------------------------------------------------------------
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
   RewriteRule ^ - [L]
 
-  # 3) Public Subjects Router  (/subjects, /subjects/{subject}, /subjects/{subject}/{page})
-  RewriteRule ^subjects/?$ staff/subjects/router.php [L,QSA]
-  RewriteRule ^subjects/(.+)$ staff/subjects/router.php?path=$1 [L,QSA]
+  # --------------------------------------------------------------------
+  # 2) Pretty routes for STAFF
+  #    /staff, /staff/, /staff/login, /staff/logout
+  #    NOTE:
+  #      - /staff/subjects/, /staff/pages/, /staff/contributors/, /staff/platforms/
+  #        are handled by their own directories and index.php files,
+  #        thanks to rule (1) above.
+  # --------------------------------------------------------------------
+  RewriteRule ^staff/?$          staff/index.php      [L,QSA]
+  RewriteRule ^staff/login/?$    staff/login.php      [L,QSA]
+  RewriteRule ^staff/logout/?$   staff/logout.php     [L,QSA]
 
-  # 4) Public Contributors Router
-  RewriteRule ^contributors/?$ staff/contributors/router.php [L,QSA]
-  RewriteRule ^contributors/(.+)$ staff/contributors/router.php?path=$1 [L,QSA]
+  # --------------------------------------------------------------------
+  # 3) Pretty routes for CONTRIBUTORS (public)
+  #    /contributors, /contributors/
+  # --------------------------------------------------------------------
+  RewriteRule ^contributors/?$   contributors/index.php [L,QSA]
 
-  # 5) Public Platforms Router
-  RewriteRule ^platforms/?$ staff/platforms/router.php [L,QSA]
-  RewriteRule ^platforms/(.+)$ staff/platforms/router.php?path=$1 [L,QSA]
+  # --------------------------------------------------------------------
+  # 4) Pretty routes for PLATFORMS (public)
+  #    /platforms, /platforms/
+  # --------------------------------------------------------------------
+  RewriteRule ^platforms/?$      platforms/index.php    [L,QSA]
 
-  # 6) Sitemaps + Robots (PHP handlers)
-  RewriteRule ^sitemap-subjects\.xml$ sitemap-subjects.php [L]
-  RewriteRule ^sitemap-contributors\.xml$ sitemap-contributors.php [L]
-  RewriteRule ^sitemap-index\.xml$ sitemap-index.php [L]
-  RewriteRule ^sitemap\.xml$ sitemap.php [L]
-  RewriteRule ^robots\.txt$ robots.php [L]
+  # --------------------------------------------------------------------
+  # 5) Pretty routes for SUBJECTS (public)
+  #    /subjects/
+  #    /subjects/{subject}/
+  #    /subjects/{subject}/{page}/
+  # --------------------------------------------------------------------
+  RewriteRule ^subjects/?$                 subjects/index.php                         [L,QSA]
+  RewriteRule ^subjects/([^/]+)/?$         subjects/index.php?subject=$1              [L,QSA]
+  RewriteRule ^subjects/([^/]+)/([^/]+)/?$ subjects/index.php?subject=$1&page=$2      [L,QSA]
 
-  # 7) Optional clean URLs: map "/path" => "/path.php" (only if the PHP file exists)
-  #    Example: /staff/login -> /staff/login.php
-  RewriteCond %{REQUEST_FILENAME}.php -f
-  RewriteRule ^(.+)$ $1.php [L]
+  # --------------------------------------------------------------------
+  # 6) Security hardening within /public
+  #    Block traversal into private/vendor if a rewrite ever leaks
+  # --------------------------------------------------------------------
+  RewriteRule ^(?:../)*(?:private|vendor)(/|$) - [F,L]
+</IfModule>
+
+# ----------------------------------------------------------------------
+# 7) Don’t expose dotfiles or env
+# ----------------------------------------------------------------------
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+
+<Files ".env">
+  Require all denied
+</Files>
+
+# ----------------------------------------------------------------------
+# 8) Cache static assets sensibly (tune as you like)
+# ----------------------------------------------------------------------
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css               "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+  ExpiresByType image/svg+xml          "access plus 30 days"
+  ExpiresByType image/png              "access plus 30 days"
+  ExpiresByType image/jpeg             "access plus 30 days"
+  ExpiresByType image/webp             "access plus 30 days"
 </IfModule>

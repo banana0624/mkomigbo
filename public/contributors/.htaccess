@@ -1,0 +1,28 @@
+## project-root/public/contributors/.htaccess ##
+
+# Pretty URLs for /contributors/<slug>/
+# e.g. /contributors/adaeze/ -> /contributors/show.php?slug=adaeze
+
+Options -Multiviews
+RewriteEngine On
+
+# Serve real files/dirs (css/js/images, index.php, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# /contributors -> index.php
+RewriteRule ^$ index.php [L]
+
+# Slug route
+RewriteRule ^([A-Za-z0-9_-]+)/?$ show.php?slug=$1 [QSA,L]
+
+# Optional canonicalization for old query links
+RewriteCond %{THE_REQUEST} \s/+contributors/show\.php\?slug=([A-Za-z0-9_-]+)\s [NC]
+RewriteRule ^ show.php?slug=%1 [E=CANON:%1,N]
+
+RewriteCond %{ENV:CANON} !=""
+RewriteRule ^ show.php [ENV=REDIR:%1]
+
+RewriteCond %{ENV:REDIR} !=""
+RewriteRule ^ /contributors/%1/ [R=301,L]

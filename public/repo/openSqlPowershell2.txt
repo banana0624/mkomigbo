@@ -1,0 +1,134 @@
+Perfect, we’ll keep everything the same but swap in your actual MariaDB path:
+
+> `F:\xampp\MariaDB 11.8\New Folder\bin`
+
+Because of spaces, we’ll always wrap it in quotes in PowerShell.
+
+---
+
+## 1. Quick one-off connection (recommended)
+
+From PowerShell:
+
+```powershell
+# 1) Go to your MariaDB bin folder
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+# 2) Connect as root (no password) on port 3306:
+.\mysql.exe -u root --port=3306 --protocol=TCP
+```
+
+If **root** has a password:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u root -p --port=3306 --protocol=TCP
+```
+
+You’ll see:
+
+```text
+Enter password:
+```
+
+Once inside the MariaDB prompt:
+
+```sql
+USE mkomigbo;
+SHOW TABLES;
+SOURCE F:/xampp/htdocs/mkomigbo/project-root/private/db/seed_roles_users.sql;
+```
+
+and exit when done:
+
+```sql
+EXIT;
+```
+
+---
+
+## 2. Connect directly to the `mkomigbo` database
+
+If you always work on the same DB:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+# Root, no password, DB mkomigbo:
+.\mysql.exe -u root --port=3306 --protocol=TCP mkomigbo
+```
+
+Or with password:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u root -p --port=3306 --protocol=TCP mkomigbo
+```
+
+If your MariaDB is actually listening on **3307** (older setup), just change `--port=3306` → `--port=3307`.
+
+---
+
+## 3. Using your `uzoma` user
+
+If your `.env` is using `DB_USER="uzoma"`:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u uzoma -p --port=3306 --protocol=TCP mkomigbo
+```
+
+Enter the same password you configured for `uzoma`.
+
+---
+
+## 4. Optional PowerShell shortcut command
+
+Update the helper function to use the **new MariaDB path**.
+
+In PowerShell:
+
+```powershell
+notepad $PROFILE
+```
+
+Add or update this function:
+
+```powershell
+function mkomigbo-db {
+    param(
+        [string]$User = "root",
+        [int]$Port = 3306
+    )
+
+    $pw = Read-Host "MariaDB password for $User (leave blank if none)" -AsSecureString
+    $bstr  = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw)
+    $plain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+
+    & "F:\xampp\MariaDB 11.8\New Folder\bin\mysql.exe" `
+        --host=127.0.0.1 `
+        --port=$Port `
+        --user=$User `
+        --password=$plain `
+        mkomigbo
+}
+```
+
+Save and close, then open a **new** PowerShell window and use:
+
+```powershell
+mkomigbo-db               # default: root on 3306
+mkomigbo-db -User uzoma   # connect as uzoma
+```
+
+Inside MariaDB you can then run anything you need:
+
+```sql
+SHOW TABLES;
+SOURCE F:/xampp/htdocs/mkomigbo/project-root/private/db/seed_roles_users.sql;
+```
+
+If you confirm **which** combo you want as standard (e.g. `uzoma` on 3306), I can give you a tiny “canonical” snippet to paste into your notes as *the* official way to open the DB for this project.

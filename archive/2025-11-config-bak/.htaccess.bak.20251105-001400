@@ -1,0 +1,25 @@
+# =========================================
+# ROOT .htaccess  (project-root/.htaccess)
+# Purpose:
+#   - Extra safety if someone hits http://mkomigbo.local/ at the project root
+#   - Push everything into /public/
+#   - Keep it SIMPLE because the real routing happens in /public/.htaccess
+# =========================================
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # 1) Block very sensitive things at root
+    RewriteRule ^private/ - [F,L]
+    RewriteRule ^vendor/ - [F,L]
+    RewriteRule ^\.env$ - [F,L]
+
+    # 2) If request is already for /public/... let it pass
+    RewriteCond %{REQUEST_URI} ^/public/ [NC]
+    RewriteRule ^ - [L]
+
+    # 3) Everything else → /public/...
+    RewriteRule ^(.*)$ /public/$1 [L]
+</IfModule>

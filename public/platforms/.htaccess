@@ -1,0 +1,41 @@
+# Pretty URLs for /platforms/<slug>/ → show.php?slug=<slug>
+# Hardened to block direct access to controller PHP files.
+
+Options -MultiViews
+RewriteEngine On
+# RewriteBase /platforms/  # Uncomment if your server needs an explicit base
+
+# 1) Serve existing files/dirs as-is (assets, index.php, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 2) Disallow direct access to any PHP file here except index.php
+#    (Internal rewrites still work because the URL shown to the user is not *.php)
+RewriteRule ^(?!index\.php$).*\.php$ - [F,L]
+
+# 3) Canonicalize legacy links:
+#    /platforms/show.php?slug=blogs  →  /platforms/blogs/
+RewriteCond %{THE_REQUEST} \s/+platforms/show\.php\?slug=([A-Za-z0-9_-]+)\s [NC]
+RewriteRule ^ /platforms/%1/ [R=301,L]
+
+#    /platforms/show.php (no slug) → /platforms/
+RewriteCond %{THE_REQUEST} \s/+platforms/show\.php(?:\s|\?) [NC]
+RewriteRule ^ /platforms/ [R=301,L]
+
+# 4) Force trailing slash on slug routes:
+#    /platforms/blogs  →  /platforms/blogs/
+RewriteRule ^([A-Za-z0-9_-]+)$ $1/ [R=301,L]
+
+# 5) Route pretty URL to controller (internal)
+#    /platforms/blogs/ → show.php?slug=blogs
+RewriteRule ^([A-Za-z0-9_-]+)/$ show.php?slug=$1 [QSA,L]
+
+# 6) Extra hardening in this folder
+#    - Block dotfiles and .env
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+<Files ".env">
+  Require all denied
+</Files>

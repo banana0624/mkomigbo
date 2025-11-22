@@ -2,77 +2,158 @@
 // project-root/public/staff/subjects/pgs/show.php
 declare(strict_types=1);
 
-// Boot
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
-if (!is_file($init)) { die('Init not found at: ' . $init); }
+if (!is_file($init)) {
+  echo "<h1>FATAL: initialize.php missing</h1>";
+  echo "<p>Expected at: {$init}</p>";
+  exit;
+}
 require_once $init;
 
-// Permissions (only if your middleware exists)
-if (is_file(PRIVATE_PATH . '/middleware/guard.php')) {
-  define('REQUIRE_LOGIN', true);
-  define('REQUIRE_PERMS', ['pages.view']);
-  require PRIVATE_PATH . '/middleware/guard.php';
+if (function_exists('require_staff')) {
+  require_staff();
+} elseif (function_exists('require_login')) {
+  require_login();
 }
 
-$id   = (int)($_GET['id'] ?? 0);
-$page = $id > 0 ? page_get_by_id($id) : null;
-if (!$page) {
-  if (function_exists('flash')) flash('error','Page not found.');
-  header('Location: ' . url_for('/staff/subjects/pgs/'));
+global $db;
+
+if (!function_exists('h')) {
+  function h(string $v): string {
+    return htmlspecialchars($v, ENT_QUOTES, 'UTF-8');
+  }
+}
+
+// Detect content column
+$body_column = null;
+if (function_exists('pf__column_exists')) {
+  foreach (['body_html', 'body', 'content_html', 'content'] as $col) {
+    if (pf__column_exists('pages', $col)) {
+      $body_column = $col;
+      break;
+    }
+  }
+}
+
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($id <= 0) {
+  http_response_code(400);
+  echo "Missing or invalid page id.";
   exit;
 }
 
-// Page chrome
-$page_title    = 'View Page';
-$active_nav    = 'pages';
-$body_class    = 'role--staff';
-$page_logo     = '/lib/images/icons/doc.svg';
-$stylesheets[] = '/lib/css/ui.css';
+$page = null;
+try {
+  $cols = "p.id, p.subject_id, p.title, p.slug, p.visible, p.nav_order,
+           s.name AS subject_name, s.slug AS subject_slug";
+  if ($body_column !== null) {
+    $cols .= ", p.{$body_column}";
+  }
+  $sql = "SELECT {$cols}
+            FROM pages p
+            LEFT JOIN subjects s ON p.subject_id = s.id
+           WHERE p.id = :id
+           LIMIT 1";
+  $st = $db->prepare($sql);
+  $st->execute([':id' => $id]);
+  $page = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (Throwable $e) {
+  $page = null;
+}
 
-$breadcrumbs = [
-  ['label'=>'Home','url'=>'/'],
-  ['label'=>'Staff','url'=>'/staff/'],
-  ['label'=>'Pages','url'=>'/staff/subjects/pgs/'],
-  ['label'=>'View'],
-];
+if (!$page) {
+  http_response_code(404);
+  echo "Page not found.";
+  exit;
+}
 
-require PRIVATE_PATH . '/shared/staff_header.php';
+$page_title = 'View Subject Page (Staff)';
+$body_class = 'role--staff role--subject-pages';
+$stylesheets = $stylesheets ?? [];
+if (!in_array('/lib/css/ui.css', $stylesheets, true)) {
+  $stylesheets[] = '/lib/css/ui.css';
+}
+
+// Header
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
+  include SHARED_PATH . '/header.php';
+} elseif (defined('PRIVATE_PATH') && is_file(PRIVATE_PATH . '/shared/staff_header.php')) {
+  include PRIVATE_PATH . '/shared/staff_header.php';
+} else {
+  ?><!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title><?= h($page_title); ?></title>
+    <link rel="stylesheet" href="<?= h(url_for('/lib/css/ui.css')); ?>">
+  </head>
+  <body>
+  <?php
+}
+
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/nav.php')) {
+  include SHARED_PATH . '/nav.php';
+}
 ?>
-<main class="container" style="max-width:860px;padding:1.25rem 0">
-  <h1>Page #<?= (int)$page['id'] ?></h1>
-
-  <div class="grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0">
-    <div class="card" style="padding:1rem;border:1px solid #ddd;border-radius:.5rem">
-      <h3 style="margin:.25rem 0 .5rem">Meta</h3>
-      <dl class="dl">
-        <dt>Title</dt><dd><?= h((string)($page['title'] ?? '')) ?></dd>
-        <dt>Slug</dt><dd><?= h((string)($page['slug']  ?? '')) ?></dd>
-        <dt>Published</dt><dd><?= !empty($page['is_published']) ? 'Yes' : 'No' ?></dd>
-        <dt>Created</dt><dd><?= h((string)($page['created_at'] ?? '')) ?></dd>
-        <dt>Updated</dt><dd><?= h((string)($page['updated_at'] ?? '')) ?></dd>
-        <?php if (!empty($page['subject_slug']) || !empty($page['subject_id'])): ?>
-          <dt>Subject</dt>
-          <dd>
-            <?php if (!empty($page['subject_slug'])): ?>
-              <?= h((string)$page['subject_slug']) ?>
-            <?php elseif (!empty($page['subject_id'])): ?>
-              #<?= (int)$page['subject_id'] ?>
-            <?php endif; ?>
-          </dd>
-        <?php endif; ?>
-      </dl>
-    </div>
-
-    <div class="card" style="padding:1rem;border:1px solid #ddd;border-radius:.5rem">
-      <h3 style="margin:.25rem 0 .5rem">Body</h3>
-      <div class="prose" style="white-space:pre-wrap"><?= h((string)($page['body'] ?? '')) ?></div>
-    </div>
+<main class="container" style="max-width:720px;padding:1.75rem 0;">
+  <div class="page-header-block">
+    <h1><?= h($page['title'] ?? 'Page'); ?></h1>
+    <p class="page-intro">
+      Subject:
+      <strong><?= h($page['subject_name'] ?? ('#' . ($page['subject_id'] ?? ''))); ?></strong>
+      <?php if (!empty($page['subject_slug'])): ?>
+        <span class="muted">
+          (slug: <code><?= h($page['subject_slug']); ?></code>)
+        </span>
+      <?php endif; ?>
+    </p>
   </div>
 
-  <div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
-    <a class="btn btn-primary" href="<?= h(url_for('/staff/subjects/pgs/edit.php?id='.$id)) ?>">Edit</a>
-    <a class="btn btn-danger"  href="<?= h(url_for('/staff/subjects/pgs/delete.php?id='.$id)) ?>">Delete…</a>
-    <a class="btn" href="<?= h(url_for('/staff/subjects/pgs/')) ?>">&larr; Back to Pages</a>
+  <div style="margin-bottom:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+    <a href="<?= h(url_for('/staff/subjects/pgs/index.php')); ?>" class="btn">
+      &larr; Back to Subject Pages
+    </a>
+    <a href="<?= h(url_for('/staff/subjects/pgs/edit.php?id=' . (int)$page['id'])); ?>" class="btn btn--primary">
+      Edit
+    </a>
+    <a href="<?= h(url_for('/staff/subjects/pgs/delete.php?id=' . (int)$page['id'])); ?>" class="btn btn--danger">
+      Delete
+    </a>
+    <?php if (!empty($page['subject_slug']) && !empty($page['slug'])): ?>
+      <?php $publicUrl = url_for('/subjects/page.php')
+          . '?subject=' . rawurlencode((string)$page['subject_slug'])
+          . '&page='    . rawurlencode((string)$page['slug']); ?>
+      <a href="<?= h($publicUrl); ?>" class="btn" target="_blank">
+        View on public site
+      </a>
+    <?php endif; ?>
   </div>
+
+  <dl class="data-list">
+    <dt>Slug</dt>
+    <dd><code><?= h((string)$page['slug']); ?></code></dd>
+
+    <dt>Visible</dt>
+    <dd><?= ((int)$page['visible'] === 1) ? 'Yes' : 'No'; ?></dd>
+
+    <dt>Nav order</dt>
+    <dd><?= h((string)($page['nav_order'] ?? '')); ?></dd>
+  </dl>
+
+  <?php if ($body_column !== null): ?>
+    <section style="margin-top:1.5rem;">
+      <h2>Page content</h2>
+      <div class="box">
+        <pre style="white-space:pre-wrap;word-wrap:break-word;"><?= h((string)($page[$body_column] ?? '')); ?></pre>
+      </div>
+    </section>
+  <?php endif; ?>
 </main>
-<?php require PRIVATE_PATH . '/shared/footer.php'; ?>
+<?php
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/footer.php')) {
+  include SHARED_PATH . '/footer.php';
+} elseif (defined('PRIVATE_PATH') && is_file(PRIVATE_PATH . '/shared/footer.php')) {
+  include PRIVATE_PATH . '/shared/footer.php';
+} else {
+  ?></body></html><?php
+}

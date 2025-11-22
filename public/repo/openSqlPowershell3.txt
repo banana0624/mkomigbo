@@ -1,0 +1,104 @@
+Good memory – let’s lock everything to **3307** then. I’ll rewrite the commands and helper so you don’t have to think about it again.
+
+---
+
+## 1. Quick one-off MariaDB console (port 3307)
+
+From PowerShell:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+# As root, no password:
+.\mysql.exe -u root --port=3307 --protocol=TCP
+```
+
+If `root` has a password:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u root -p --port=3307 --protocol=TCP
+```
+
+Once you’re inside the MariaDB prompt:
+
+```sql
+USE mkomigbo;
+SHOW TABLES;
+-- Example: run a seed file
+SOURCE F:/xampp/htdocs/mkomigbo/project-root/private/db/seed_roles_users.sql;
+EXIT;
+```
+
+---
+
+## 2. Connect straight into `mkomigbo` (port 3307)
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+# Root, no password, DB mkomigbo:
+.\mysql.exe -u root --port=3307 --protocol=TCP mkomigbo
+```
+
+With password:
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u root -p --port=3307 --protocol=TCP mkomigbo
+```
+
+---
+
+## 3. Using your `uzoma` user on 3307
+
+```powershell
+cd "F:\xampp\MariaDB 11.8\New Folder\bin"
+
+.\mysql.exe -u uzoma -p --port=3307 --protocol=TCP mkomigbo
+```
+
+Enter the same password you configured for `uzoma`.
+
+---
+
+## 4. Updated PowerShell helper (`mkomigbo-db`) for port 3307
+
+Update your PowerShell profile:
+
+```powershell
+notepad $PROFILE
+```
+
+Paste / update this:
+
+```powershell
+function mkomigbo-db {
+    param(
+        [string]$User = "root",
+        [int]$Port = 3307  # <— default to 3307
+    )
+
+    $pw   = Read-Host "MariaDB password for $User (leave blank if none)" -AsSecureString
+    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw)
+    $plain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+
+    & "F:\xampp\MariaDB 11.8\New Folder\bin\mysql.exe" `
+        --host=127.0.0.1 `
+        --port=$Port `
+        --user=$User `
+        --password=$plain `
+        mkomigbo
+}
+```
+
+Save, open a **new** PowerShell window, then:
+
+```powershell
+mkomigbo-db              # root on port 3307
+mkomigbo-db -User uzoma  # uzoma on port 3307
+```
+
+That’s now your “official” way into MariaDB for this project.

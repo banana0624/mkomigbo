@@ -2,35 +2,53 @@
 // project-root/public/staff/logout.php
 declare(strict_types=1);
 
-/**
- * Robustly locate initialize.php from /public/staff/.
- * Primary path:   <project-root>/private/assets/initialize.php
- */
 $init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
-
-// Optional fallback if your tree differs (comment out if not needed)
 if (!is_file($init)) {
-  $alt = dirname(__DIR__) . '/../private/assets/initialize.php'; // one level up (rare)
-  if (is_file($alt)) { $init = $alt; }
-}
-
-if (!is_file($init)) {
-  // Helpful error with both attempted paths
-  header('Content-Type: text/plain; charset=utf-8');
-  echo "Init not found.\nTried:\n - " . dirname(__DIR__, 2) . "/private/assets/initialize.php\n - " . dirname(__DIR__) . "/../private/assets/initialize.php\n";
+  echo "<h1>FATAL: initialize.php missing</h1>";
+  echo "<p>Expected at: {$init}</p>";
   exit;
 }
 require_once $init;
 
-require_once PRIVATE_PATH . '/functions/auth.php';
-
-// End the session + clear user
-auth_logout();
-
-// Use a friendly “signed out” screen instead of a blind redirect.
-// (If you prefer immediate redirect to login, replace with header() call directly.)
-if (function_exists('flash')) {
-  flash('success', 'You have been signed out.');
+// Make sure session is active
+if (function_exists('auth__session_start')) {
+  auth__session_start();
+} elseif (session_status() !== PHP_SESSION_ACTIVE) {
+  @session_start();
 }
-header('Location: ' . url_for('/staff/session-ended.php'));
+
+// Prefer unified auth logout if available
+if (function_exists('auth_logout')) {
+  auth_logout();
+} elseif (function_exists('log_out_admin')) {
+  // Legacy function from earlier versions of the project
+  log_out_admin();
+} else {
+  // Fallback: destroy session manually
+  $_SESSION = [];
+
+  if (ini_get('session.use_cookies')) {
+    $params = session_get_cookie_params();
+    setcookie(
+      session_name(),
+      '',
+      time() - 42000,
+      $params['path'],
+      $params['domain'],
+      $params['secure'],
+      $params['httponly']
+    );
+  }
+
+  if (session_status() === PHP_SESSION_ACTIVE) {
+    session_destroy();
+  }
+}
+
+// Clear any "intended URL" or auth-related flags
+unset($_SESSION['auth'], $_SESSION['intended_url'], $_SESSION['auth_redirect_after_login']);
+
+// Redirect to staff login using a proper web path
+$loginUrl = url_for('/staff/login.php');
+header('Location: ' . $loginUrl, true, 302);
 exit;

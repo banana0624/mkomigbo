@@ -1,127 +1,147 @@
 <?php
-// project-root/private/common/staff_subject_pages/edit.php
 declare(strict_types=1);
 /**
- * Requires: $subject_slug, $subject_name
+ * project-root/private/common/staff_subject_pages/edit.php
+ * Uses /pgs/ in generated URLs.
  */
-$init = dirname(__DIR__, 2) . '/assets/initialize.php';
-if (!is_file($init)) { die('Init not found at: ' . $init); }
-require_once $init;
 
-/** ---- Permission gate (tolerant if wrapper already defined) ---- */
-$__need_guard = (!defined('REQUIRE_LOGIN') || !defined('REQUIRE_PERMS'));
-if (!defined('REQUIRE_LOGIN')) {
-  define('REQUIRE_LOGIN', true);
+require __DIR__ . '/../_common_boot.php';
+
+$subjectSlug = $current_subject_slug ?? ($_GET['subject'] ?? '');
+$pageSlug    = $current_page_slug    ?? ($_GET['slug'] ?? '');
+
+$subjectSlug = trim((string)$subjectSlug);
+$pageSlug    = trim((string)$pageSlug);
+
+if ($subjectSlug === '' || $pageSlug === '') {
+    http_response_code(400);
+    echo 'Bad request: subject or page slug missing.';
+    exit;
 }
-if (!defined('REQUIRE_PERMS')) {
-  define('REQUIRE_PERMS', ['pages.edit']);
+
+// load subject
+$subject = $current_subject ?? null;
+if (!$subject) {
+    if (function_exists('find_subject_by_slug')) {
+        $subject = find_subject_by_slug($subjectSlug);
+    } elseif (function_exists('subjects_catalog')) {
+        $all = subjects_catalog();
+        if (isset($all[$subjectSlug])) {
+            $subject = $all[$subjectSlug];
+        }
+    }
 }
-if ($__need_guard) {
-  require PRIVATE_PATH . '/middleware/guard.php';
+if (!$subject) {
+    http_response_code(404);
+    echo 'Subject not found: ' . h($subjectSlug);
+    exit;
 }
 
-if (empty($subject_slug)) { die('edit.php: $subject_slug required'); }
-if (empty($subject_name)) { $subject_name = ucfirst(str_replace('-', ' ', $subject_slug)); }
+// load page
+$page = null;
+if (function_exists('find_page_by_slug_and_subject')) {
+    $page = find_page_by_slug_and_subject($pageSlug, (int)$subject['id']);
+} elseif (function_exists('find_page_by_slug')) {
+    $page = find_page_by_slug($pageSlug);
+}
 
-// DRY logo
-require_once __DIR__ . '/_prelude.php';
+if (!$page) {
+    http_response_code(404);
+    echo 'Page not found: ' . h($pageSlug);
+    exit;
+}
 
-$id = (int)($_GET['id'] ?? $_POST['id'] ?? 0);
-$row = $id ? page_find($id, $subject_slug) : null;
-if (!$row) { http_response_code(404); die('Page not found'); }
+$errors = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  csrf_check();
+    $title            = trim((string)($_POST['title'] ?? ''));
+    $slugNew          = trim((string)($_POST['slug'] ?? ''));
+    $content          = (string)($_POST['content'] ?? '');
+    $meta_description = (string)($_POST['meta_description'] ?? '');
+    $meta_keywords    = (string)($_POST['meta_keywords'] ?? '');
 
-  $title   = sanitize_text($_POST['title'] ?? '');
-  $slug_in = sanitize_text($_POST['slug'] ?? '');
-  $body    = (string)($_POST['body'] ?? '');
-  $slug    = $slug_in !== '' ? slugify($slug_in) : slugify($title);
+    if ($title === '') {
+        $errors[] = 'Title is required.';
+    }
+    if ($slugNew === '') {
+        $errors[] = 'Slug is required.';
+    }
 
-  $data = [
-    'title'        => $title,
-    'slug'         => $slug,
-    'body'         => $body,
-    'is_published' => isset($_POST['is_published']) ? 1 : 0,
-  ];
+    if (empty($errors)) {
+        $pageData = [
+            'id'               => $page['id'],
+            'subject_id'       => $subject['id'],
+            'title'            => $title,
+            'slug'             => $slugNew,
+            'content'          => $content,
+            'meta_description' => $meta_description,
+            'meta_keywords'    => $meta_keywords,
+        ];
 
-  if (page_update($id, $subject_slug, $data)) {
-    flash('success', 'Page updated.');
-    header('Location: ' . url_for("/staff/subjects/{$subject_slug}/pages/")); exit;
-  }
-  flash('error', 'Update failed. Title & Slug are required.');
+        $ok = false;
+        if (function_exists('update_page')) {
+            $ok = update_page($pageData);
+        } elseif (function_exists('page_update')) {
+            $ok = page_update($pageData);
+        }
+
+        if ($ok) {
+            redirect_to(url_for('/staff/subjects/' . rawurlencode($subjectSlug) . '/pgs/' . rawurlencode($slugNew) . '/show.php'));
+        } else {
+            $errors[] = 'Update failed.';
+        }
+    } else {
+        // repopulate
+        $page['title']            = $title;
+        $page['slug']             = $slugNew;
+        $page['content']          = $content;
+        $page['meta_description'] = $meta_description;
+        $page['meta_keywords']    = $meta_keywords;
+    }
 }
 
-$page_title     = "Edit Page • {$subject_name}";
-$active_nav     = 'staff';
-$body_class     = "role--staff subject--{$subject_slug}";
-$stylesheets[]  = '/lib/css/ui.css';
-$breadcrumbs    = [
-  ['label'=>'Home','url'=>'/'],
-  ['label'=>'Staff','url'=>'/staff/'],
-  ['label'=>'Subjects','url'=>'/staff/subjects/'],
-  ['label'=>$subject_name,'url'=>"/staff/subjects/{$subject_slug}/"],
-  ['label'=>'Pages','url'=>"/staff/subjects/{$subject_slug}/pages/"],
-  ['label'=>'Edit'],
-];
-
-require PRIVATE_PATH . '/shared/header.php';
+$page_title = 'Edit page: ' . ($page['title'] ?? $pageSlug);
+common_open('staff', 'subject', $page_title);
 ?>
-<main class="container" style="max-width:780px;padding:1.25rem 0">
-  <h1>Edit Page — <?= h($subject_name) ?></h1>
-  <?= function_exists('display_session_message') ? display_session_message() : '' ?>
+<main class="container" style="padding:1rem 0;">
+  <?php if (!empty($errors)): ?>
+    <div class="errors">
+      <p>Please fix:</p>
+      <ul><?php foreach ($errors as $e): ?><li><?= h($e) ?></li><?php endforeach; ?></ul>
+    </div>
+  <?php endif; ?>
+
   <form method="post">
-    <?= function_exists('csrf_field') ? csrf_field() : '' ?>
-    <input type="hidden" name="id" value="<?= (int)$row['id'] ?>">
-    <div class="field"><label>Title</label>
-      <input class="input" type="text" name="title" value="<?= h($row['title'] ?? '') ?>" required>
-    </div>
-    <div class="field"><label>Slug</label>
-      <input class="input" type="text" name="slug" value="<?= h($row['slug'] ?? '') ?>" required>
-    </div>
-    <div class="field"><label>Body</label>
-      <textarea class="input" name="body" rows="10"><?= h($row['body'] ?? '') ?></textarea>
-    </div>
     <div class="field">
-      <label><input type="checkbox" name="is_published" value="1" <?= !empty($row['is_published']) ? 'checked' : '' ?>> Published</label>
+      <label for="title">Title</label>
+      <input id="title" name="title" type="text" value="<?= h($page['title'] ?? '') ?>">
     </div>
-    <div class="actions">
+
+    <div class="field">
+      <label for="slug">Slug</label>
+      <input id="slug" name="slug" type="text" value="<?= h($page['slug'] ?? $pageSlug) ?>">
+    </div>
+
+    <div class="field">
+      <label for="content">Content</label>
+      <textarea id="content" name="content" rows="10"><?= h($page['content'] ?? '') ?></textarea>
+    </div>
+
+    <div class="field">
+      <label for="meta_description">Meta description</label>
+      <textarea id="meta_description" name="meta_description" rows="3"><?= h($page['meta_description'] ?? '') ?></textarea>
+    </div>
+
+    <div class="field">
+      <label for="meta_keywords">Meta keywords</label>
+      <input id="meta_keywords" name="meta_keywords" type="text" value="<?= h($page['meta_keywords'] ?? '') ?>">
+    </div>
+
+    <div class="actions" style="margin-top:1rem;">
       <button class="btn btn-primary" type="submit">Save</button>
-      <a class="btn" href="<?= h(url_for("/staff/subjects/{$subject_slug}/pages/")) ?>">Cancel</a>
+      <a class="btn" href="<?= h(url_for('/staff/subjects/pgs/index.php?subject=' . urlencode($subjectSlug))) ?>">Cancel</a>
     </div>
   </form>
-
-  <?php /* URL-based media inserter */ ?>
-  <section style="margin:1rem 0;border-top:1px solid #eee;padding-top:.75rem">
-    <div class="muted" style="margin-bottom:.5rem">Insert media (by URL):</div>
-    <div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap">
-      <button class="btn btn-sm" type="button" onclick="insImg()">Image</button>
-      <button class="btn btn-sm" type="button" onclick="insVideo()">Video</button>
-      <button class="btn btn-sm" type="button" onclick="insAudio()">Audio</button>
-      <button class="btn btn-sm" type="button" onclick="insLink()">Link</button>
-    </div>
-  </section>
-
-  <script>
-  (function(){
-    const ta = document.querySelector('textarea[name="body"]');
-    function insertAtCaret(openTag, closeTag, placeholder='') {
-      if (!ta) return;
-      ta.focus();
-      const start = ta.selectionStart ?? ta.value.length;
-      const end   = ta.selectionEnd ?? ta.value.length;
-      const sel   = ta.value.substring(start, end) || placeholder;
-      const before = ta.value.substring(0, start);
-      const after  = ta.value.substring(end);
-      ta.value = before + openTag + sel + closeTag + after;
-      const caret = (before + openTag + sel + closeTag).length;
-      ta.setSelectionRange(caret, caret);
-    }
-    window.insImg = function(){ const url = prompt('Image URL (http/https):'); if (!url) return; insertAtCaret('<img src="'+url+'" alt="','" />','alt text'); };
-    window.insVideo = function(){ const url = prompt('Video URL (mp4/webm/ogg):'); if (!url) return; insertAtCaret('<video controls src="','"></video>'); };
-    window.insAudio = function(){ const url = prompt('Audio URL (mp3/ogg/wav):'); if (!url) return; insertAtCaret('<audio controls src="','"></audio>'); };
-    window.insLink = function(){ const url = prompt('Link URL:'); if (!url) return; insertAtCaret('<a href="'+url+'" target="_blank" rel="noopener">','</a>','link text'); };
-  })();
-  </script>
 </main>
-<?php require PRIVATE_PATH . '/shared/footer.php'; ?>
+<?php
+common_close('staff', 'subject');

@@ -1,0 +1,131 @@
+Here’s a simple, practical way to open MariaDB from PowerShell so you can run any SQL for the project (create / update tables, run seed files, etc.).
+
+---
+
+## 1. Quick one-off connection (recommended)
+
+From PowerShell:
+
+```powershell
+# 1) Go to your XAMPP MariaDB folder
+cd F:\xampp\mysql\bin
+
+# 2) Connect as root (no password) on port 3306:
+.\mysql.exe -u root --port=3306 --protocol=TCP
+```
+
+If your **root** user actually has a password, use:
+
+```powershell
+.\mysql.exe -u root -p --port=3306 --protocol=TCP
+```
+
+It will then prompt:
+
+```text
+Enter password:
+```
+
+Once you’re in, you can do things like:
+
+```sql
+USE mkomigbo;
+SHOW TABLES;
+SOURCE F:/xampp/htdocs/mkomigbo/project-root/private/db/seed_roles_users.sql;
+```
+
+Exit when you’re done:
+
+```sql
+EXIT;
+```
+
+---
+
+## 2. Connect directly to the `mkomigbo` database
+
+If you always work on the same DB, do:
+
+```powershell
+cd F:\xampp\mysql\bin
+
+# Root, no password, DB mkomigbo:
+.\mysql.exe -u root --port=3306 --protocol=TCP mkomigbo
+```
+
+Or (with password prompt):
+
+```powershell
+.\mysql.exe -u root -p --port=3306 --protocol=TCP mkomigbo
+```
+
+---
+
+## 3. If you want to use your `uzoma` user
+
+If your `.env` is currently using `DB_USER="uzoma"` (with a password), then in PowerShell:
+
+```powershell
+cd F:\xampp\mysql\bin
+
+.\mysql.exe -u uzoma -p --port=3306 --protocol=TCP mkomigbo
+```
+
+Enter the same password you set for `uzoma` in MariaDB.
+
+---
+
+## 4. Optional: create a small helper command
+
+If you like, you can create a tiny shortcut function in PowerShell so you only type one command.
+
+In PowerShell, run:
+
+```powershell
+notepad $PROFILE
+```
+
+Add this function to the file that opens:
+
+```powershell
+function mkomigbo-db {
+    param(
+        [string]$User = "root",
+        [int]$Port = 3306
+    )
+
+    $pw = Read-Host "MariaDB password for $User (leave blank if none)" -AsSecureString
+    $bstr = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($pw)
+    $plain = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
+
+    & "F:\xampp\mysql\bin\mysql.exe" `
+        --host=127.0.0.1 `
+        --port=$Port `
+        --user=$User `
+        --password=$plain `
+        mkomigbo
+}
+```
+
+Close/save, then open a **new** PowerShell window and type:
+
+```powershell
+mkomigbo-db
+```
+
+or (for uzoma):
+
+```powershell
+mkomigbo-db -User uzoma
+```
+
+That drops you straight into `mkomigbo` and you can run:
+
+```sql
+SHOW TABLES;
+SOURCE F:/xampp/htdocs/mkomigbo/project-root/private/db/seed_roles_users.sql;
+```
+
+---
+
+If you tell me **which user** you finally settled on for the project (`root` vs `uzoma` and which port), I can tailor a very tight one-liner specifically for your setup.

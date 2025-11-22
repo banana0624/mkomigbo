@@ -12,3 +12,136 @@
 .staff-header .main-nav a:hover {
   color: #fff;
 }
+
+/* Sticky actions bar at bottom of viewport inside the form/page */
+.mk-form-actions-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  padding: 0.75rem 0;
+  margin-top: 2rem;
+  background: #ffffff;
+  border-top: 1px solid #e0e0e0;
+  box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.06);
+}
+
+/* Inner container: right-aligned, spaced buttons */
+.mk-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Optional: smaller text on secondary/link buttons */
+.mk-form-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Icon span */
+.mk-btn-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+/* Sticky actions bar under forms */
+  .form-actions-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 40;
+    margin-top: 2rem;
+    border-top: 1px solid #e5e7eb;
+    background: linear-gradient(to top, #f9fafb 0%, #ffffff 40%);
+  }
+
+  .form-actions-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    padding: 0.85rem 1.25rem;
+  }
+
+  .form-actions-bar-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .actions-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+  }
+
+  .actions-hint {
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }
+
+  .form-actions-bar-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  /* Generic button styles, adapt if you already have .btn classes */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    padding: 0.45rem 0.95rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: #111827;
+    color: #f9fafb;
+  }
+
+  .btn-secondary {
+    background: #e5e7eb;
+    color: #111827;
+  }
+
+  .btn-link {
+    background: transparent;
+    color: #4b5563;
+    border-color: transparent;
+  }
+
+  .btn-icon {
+    font-size: 1rem;
+  }
+
+  /* Attachments upload block */
+  .page-attachments-upload {
+    margin-top: 2rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.75rem;
+    border: 1px dashed #d1d5db;
+    background-color: #f9fafb;
+  }
+
+  .page-attachments-upload legend {
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 0 0.5rem;
+  }
+
+  .page-attachments-upload .field-hint {
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+

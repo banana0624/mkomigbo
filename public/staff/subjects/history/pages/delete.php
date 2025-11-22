@@ -1,18 +1,33 @@
 <?php
 declare(strict_types=1);
-$init = dirname(__DIR__, 5) . '/private/assets/initialize.php';
-if (!is_file($init)) { die('Init not found at: ' . $init); }
-require_once $init;
+/**
+ * project-root/public/staff/subjects/history/pages/delete.php
+ * Delete a page record for subject “history”
+ */
 
+require_once dirname(__DIR__, 5) . '/private/assets/initialize.php';
 require_once PRIVATE_PATH . '/functions/auth.php';
 require_staff();
 
-$subject_slug = basename(dirname(__DIR__));
-$subject_name = function_exists('subject_human_name') ? subject_human_name($subject_slug) : ucfirst(str_replace('-', ' ', $subject_slug));
+$subject_slug = 'history';
+$subject      = subject_row_by_slug($subject_slug);
+if (!$subject) {
+    http_response_code(404);
+    die('Subject not found');
+}
 
-define('REQUIRE_LOGIN', true);
-define('REQUIRE_PERMS', ['pages.delete']);
-require PRIVATE_PATH . '/middleware/guard.php';
+$page_id = (int)($_GET['id'] ?? 0);
+$page    = page_find($page_id, $subject_slug);
+if (!$page) {
+    http_response_code(404);
+    die('Page not found');
+}
 
-require PRIVATE_PATH . '/common/staff_subject_pages/delete.php';
-?><!---- pages-delete-wrapper-ok ---->
+$success = page_delete($page_id, $subject_slug);
+if ($success) {
+    redirect_to(url_for('/staff/subjects/' . h($subject_slug) . '/pages/index.php'));
+} else {
+    // on failure
+    http_response_code(500);
+    die('Delete failed.');
+}

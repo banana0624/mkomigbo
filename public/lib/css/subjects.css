@@ -1,42 +1,34 @@
-/* public/lib/css/subjects.css */
+/* ==========================================================================
+ * public/lib/css/subjects.css
+ * Purpose:
+ * - Style the PUBLIC subjects landing (grid of subjects)
+ * - Style individual subject pages
+ * - Keep backward compatibility with existing .subjects-header and .subject-item
+ * - Provide an accent system for all 19 subjects
+ * - Add subject hero + logo for subject detail pages
+ * --------------------------------------------------------------------------
+ * Notes:
+ * - Your PHP should add a class to <body> or to a top wrapper like:
+ *     <body class="public-subjects subject history">
+ *   so that both the layout styles (.public-subjects) and the accent
+ *   styles (.subject.history ...) will kick in.
+ * ========================================================================== */
 
-.subjects-header .site-header {
-  background-color: #4a148c; /* example purple */
-  color: #ffffff;
-}
-
-.subjects-header .main-nav a {
-  color: #d1c4e9;
-}
-
-.subjects-header .main-nav a:hover {
-  color: #ffffff;
-}
-
-/* Content area styling */
-.subjects-content {
-  padding: 24px;
-  background: #f3e5f5;
-}
-
-/* Subject card style if listing inside staff or public */
-.subject-item {
-  border: 1px solid #aaa;
-  border-radius: 6px;
-  padding: 12px;
-  background: #fff;
-  transition: box-shadow 0.2s ease;
-}
-
-.subject-item:hover {
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-}
-
-/* === Subject Accent System =============================================== */
-/* Each subject gets a class on the wrapper: .subject.<slug>
-   Choose colors freely; these are tasteful defaults. */
-
+/* ==========================================================================
+   1. Design Tokens / Variables
+   -------------------------------------------------------------------------- */
 :root {
+  /* brand-ish neutrals */
+  --page-bg: #f5f5f7;
+  --surface: #ffffff;
+  --ink: #222;
+  --ink-muted: #555;
+  --border-soft: rgba(0, 0, 0, 0.04);
+  --radius-lg: 1.2rem;
+  --shadow-sm: 0 3px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 10px 25px rgba(0, 0, 0, 0.05);
+
+  /* existing subject accent system (kept!) */
   --accent-history: #6d28d9;
   --accent-slavery: #b91c1c;
   --accent-people: #2563eb;
@@ -58,62 +50,458 @@
   --accent-about: #475569;
 }
 
-/* Title accent + subtle table emphasis */
-.subject.history .subject-article h1 {
+/* ==========================================================================
+   2. Page Contexts
+   -------------------------------------------------------------------------- */
+/* When you're on a public subjects page (list or detail) */
+body.public-subjects {
+  background: var(--page-bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+/* If you ever have staff pages reusing these subject cards, you can also do:
+   body.staff-subjects { ... }
+*/
+
+/* ==========================================================================
+   3. Top Subject Header (from your existing file, refined)
+   -------------------------------------------------------------------------- */
+/* This is for pages that include a header block above the subject content */
+.subjects-header .site-header {
+  background-color: #4a148c; /* existing purple */
+  color: #ffffff;
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.subjects-header .site-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.subjects-header .main-nav {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.subjects-header .main-nav a {
+  color: #d1c4e9;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: color 0.15s ease-out;
+}
+
+.subjects-header .main-nav a:hover,
+.subjects-header .main-nav a:focus-visible {
+  color: #ffffff;
+}
+
+/* fallback content area class from your file */
+.subjects-content {
+  padding: 24px;
+  background: #f3e5f5;
+}
+
+/* ==========================================================================
+   4. Hero / Intro for Subjects Landing (the grid page)
+   -------------------------------------------------------------------------- */
+.subjects-hero {
+  max-width: 1080px;
+  margin: 2.5rem auto 1.5rem;
+  text-align: center;
+  padding: 0 1rem;
+}
+
+.subjects-hero h1 {
+  font-size: clamp(2.1rem, 3.4vw, 2.4rem);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.03em;
+}
+
+.subjects-hero p {
+  color: var(--ink-muted);
+  max-width: 680px;
+  margin: 0 auto;
+  font-size: 1rem;
+}
+
+/* ==========================================================================
+   5. Subjects Grid (PUBLIC)
+   -------------------------------------------------------------------------- */
+.grid-subjects {
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin: 2rem auto 3rem;
+  padding: 0 1rem;
+  max-width: 1080px;
+}
+
+.grid-subjects li a {
+  display: block;
+  background: var(--surface);
+  border-radius: 1rem;
+  padding: 1.1rem 1.2rem;
+  text-decoration: none;
+  color: #16161d;
+  font-weight: 600;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(22, 22, 29, 0.02);
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+}
+
+.grid-subjects li small {
+  display: block;
+  margin-top: 0.4rem;
+  font-weight: 400;
+  font-size: 0.77rem;
+  color: #707070;
+}
+
+.grid-subjects li a:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================================================
+   6. Subject Detail Page Layout (PUBLIC)
+   -------------------------------------------------------------------------- */
+.subject-page {
+  max-width: 950px;
+  margin: 2rem auto 3rem;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.4rem;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(0, 0, 0, 0.0075);
+}
+
+.subject-page h1 {
+  font-size: 2rem;
+  margin-bottom: 0.4rem;
+}
+
+.subject-page .meta {
+  color: #6a6a6a;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.subject-page .subject-article {
+  line-height: 1.7;
+}
+
+.subject-page .subject-article h2,
+.subject-page .subject-article h3 {
+  margin-top: 1.8rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.2;
+}
+
+.subject-page .subject-article p {
+  margin-bottom: 1rem;
+}
+
+.subject-page .subject-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.subject-page .subject-article table th,
+.subject-page .subject-article table td {
+  border: 1px solid #e2e8f0;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+}
+
+.subject-page .back {
+  margin-top: 2rem;
+}
+
+.subject-page .back a {
+  color: #0d63c5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.subject-page .back a:hover {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   6a. Subject Hero & Logo (DETAIL PAGE)
+   -------------------------------------------------------------------------- */
+
+.subject-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: var(--mk-surface-subject, #f7f7f7);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin: 2rem auto 1.5rem;
+  max-width: 950px;
+}
+
+.subject-hero__logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  object-fit: contain;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.05);
+}
+
+.subject-hero__text h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+.subject-hero__slug {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Optional: accent per subject slug (background tint for hero) */
+.subject-hero--history {
+  --mk-surface-subject: #f6f0ff;
+}
+
+.subject-hero--slavery {
+  --mk-surface-subject: #fdf3ec;
+}
+
+.subject-hero--people {
+  --mk-surface-subject: #e8f6ff;
+}
+
+.subject-hero--persons {
+  --mk-surface-subject: #e0faff;
+}
+
+.subject-hero--culture {
+  --mk-surface-subject: #e9fdf3;
+}
+
+.subject-hero--religion {
+  --mk-surface-subject: #eceff1;
+}
+
+.subject-hero--spirituality {
+  --mk-surface-subject: #e6fff6;
+}
+
+.subject-hero--tradition {
+  --mk-surface-subject: #fff4e5;
+}
+
+.subject-hero--language1 {
+  --mk-surface-subject: #f4efff;
+}
+
+.subject-hero--language2 {
+  --mk-surface-subject: #efe9ff;
+}
+
+.subject-hero--struggles {
+  --mk-surface-subject: #feeceb;
+}
+
+.subject-hero--biafra {
+  --mk-surface-subject: #eceff4;
+}
+
+.subject-hero--nigeria {
+  --mk-surface-subject: #ecfdf2;
+}
+
+.subject-hero--ipob {
+  --mk-surface-subject: #ffeaea;
+}
+
+.subject-hero--africa {
+  --mk-surface-subject: #e3f8f6;
+}
+
+.subject-hero--uk {
+  --mk-surface-subject: #e3f0ff;
+}
+
+.subject-hero--europe {
+  --mk-surface-subject: #e1f4ff;
+}
+
+.subject-hero--arabs {
+  --mk-surface-subject: #fff6e0;
+}
+
+.subject-hero--about {
+  --mk-surface-subject: #e5edf6;
+}
+
+/* ==========================================================================
+   7. Shared Subject Card Style (PUBLIC + STAFF)
+   -------------------------------------------------------------------------- */
+/* Keeps your original .subject-item but makes it match the new surface look */
+.subject-item,
+.subject-card {
+  border: 1px solid #ddd;
+  border-radius: 0.75rem;
+  padding: 1rem 1.15rem 1.05rem;
+  background: #fff;
+  transition: box-shadow 0.2s ease, transform 0.15s ease-out;
+}
+
+.subject-item:hover,
+.subject-card:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.subject-item h3,
+.subject-card h3 {
+  margin-bottom: 0.25rem;
+  font-size: 1.07rem;
+}
+
+.subject-item .meta,
+.subject-card .meta {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+/* ==========================================================================
+   8. Accent System (kept from your file, but applied to more places)
+   -------------------------------------------------------------------------- */
+/* We assume the wrapper has: <div class="subject history"> ... */
+.subject.history .subject-article h1,
+.subject.history .subject-article h2,
+.subject.history .subject-article h3 {
   color: var(--accent-history);
 }
-.subject.slavery .subject-article h1 {
+
+.subject.slavery .subject-article h1,
+.subject.slavery .subject-article h2,
+.subject.slavery .subject-article h3 {
   color: var(--accent-slavery);
 }
-.subject.people .subject-article h1 {
+
+.subject.people .subject-article h1,
+.subject.people .subject-article h2,
+.subject.people .subject-article h3 {
   color: var(--accent-people);
 }
-.subject.persons .subject-article h1 {
+
+.subject.persons .subject-article h1,
+.subject.persons .subject-article h2,
+.subject.persons .subject-article h3 {
   color: var(--accent-persons);
 }
-.subject.culture .subject-article h1 {
+
+.subject.culture .subject-article h1,
+.subject.culture .subject-article h2,
+.subject.culture .subject-article h3 {
   color: var(--accent-culture);
 }
-.subject.religion .subject-article h1 {
+
+.subject.religion .subject-article h1,
+.subject.religion .subject-article h2,
+.subject.religion .subject-article h3 {
   color: var(--accent-religion);
 }
-.subject.spirituality .subject-article h1 {
+
+.subject.spirituality .subject-article h1,
+.subject.spirituality .subject-article h2,
+.subject.spirituality .subject-article h3 {
   color: var(--accent-spirituality);
 }
-.subject.tradition .subject-article h1 {
+
+.subject.tradition .subject-article h1,
+.subject.tradition .subject-article h2,
+.subject.tradition .subject-article h3 {
   color: var(--accent-tradition);
 }
-.subject.language1 .subject-article h1 {
+
+.subject.language1 .subject-article h1,
+.subject.language1 .subject-article h2,
+.subject.language1 .subject-article h3 {
   color: var(--accent-language1);
 }
-.subject.language2 .subject-article h1 {
+
+.subject.language2 .subject-article h1,
+.subject.language2 .subject-article h2,
+.subject.language2 .subject-article h3 {
   color: var(--accent-language2);
 }
-.subject.struggles .subject-article h1 {
+
+.subject.struggles .subject-article h1,
+.subject.struggles .subject-article h2,
+.subject.struggles .subject-article h3 {
   color: var(--accent-struggles);
 }
-.subject.biafra .subject-article h1 {
+
+.subject.biafra .subject-article h1,
+.subject.biafra .subject-article h2,
+.subject.biafra .subject-article h3 {
   color: var(--accent-biafra);
 }
-.subject.nigeria .subject-article h1 {
+
+.subject.nigeria .subject-article h1,
+.subject.nigeria .subject-article h2,
+.subject.nigeria .subject-article h3 {
   color: var(--accent-nigeria);
 }
-.subject.ipob .subject-article h1 {
+
+.subject.ipob .subject-article h1,
+.subject.ipob .subject-article h2,
+.subject.ipob .subject-article h3 {
   color: var(--accent-ipob);
 }
-.subject.africa .subject-article h1 {
+
+.subject.africa .subject-article h1,
+.subject.africa .subject-article h2,
+.subject.africa .subject-article h3 {
   color: var(--accent-africa);
 }
-.subject.uk .subject-article h1 {
+
+.subject.uk .subject-article h1,
+.subject.uk .subject-article h2,
+.subject.uk .subject-article h3 {
   color: var(--accent-uk);
 }
-.subject.europe .subject-article h1 {
+
+.subject.europe .subject-article h1,
+.subject.europe .subject-article h2,
+.subject.europe .subject-article h3 {
   color: var(--accent-europe);
 }
-.subject.arabs .subject-article h1 {
+
+.subject.arabs .subject-article h1,
+.subject.arabs .subject-article h2,
+.subject.arabs .subject-article h3 {
   color: var(--accent-arabs);
 }
-.subject.about .subject-article h1 {
+
+.subject.about .subject-article h1,
+.subject.about .subject-article h2,
+.subject.about .subject-article h3 {
   color: var(--accent-about);
 }
 
@@ -122,4 +510,557 @@
   background: #f8fafc;
   color: #0f172a;
   border-bottom: 2px solid #e2e8f0;
+}
+
+/* ==========================================================================
+   9. Responsive Tweaks
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .subjects-header .site-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subject-page {
+    margin: 1.5rem 1rem 2.5rem;
+    padding: 1.6rem 1.35rem 1.5rem;
+  }
+
+  .subjects-hero {
+    margin-top: 2rem;
+  }
+
+  .subject-hero {
+    margin: 1.5rem 1rem 1.25rem;
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grid-subjects {
+    grid-template-columns: 1fr;
+  }
+
+  .subject-page h1 {
+    font-size: 1.6rem;
+  }
+
+  .subject-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   10. Page detail polish (public /subjects/page.php)
+   -------------------------------------------------------------------------- */
+
+.page-detail__breadcrumb {
+  max-width: 950px;
+  margin: 1.5rem auto 0.5rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.page-detail__breadcrumb a {
+  color: #0f766e;
+  text-decoration: none;
+}
+
+.page-detail__breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.page-detail__breadcrumb span {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Meta pills below hero */
+.page-detail__meta {
+  max-width: 950px;
+  margin: 0.75rem auto 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.page-detail__meta .pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  background: #ecfeff;
+  color: #0369a1;
+}
+
+.page-detail__meta .pill--muted {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+
+/* Article body */
+.page-detail__content {
+  max-width: 950px;
+  margin: 0 auto 2.5rem;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  color: #111827;
+}
+
+.page-detail__content p {
+  margin-bottom: 1rem;
+}
+
+.page-detail__content h2 {
+  font-size: 1.4rem;
+  margin: 1.8rem 0 0.5rem;
+  line-height: 1.2;
+}
+
+.page-detail__content h3 {
+  font-size: 1.15rem;
+  margin: 1.4rem 0 0.4rem;
+  line-height: 1.3;
+}
+
+.page-detail__content h4 {
+  font-size: 1.02rem;
+  margin: 1.1rem 0 0.4rem;
+  font-weight: 600;
+}
+
+/* Lists */
+.page-detail__content ul,
+.page-detail__content ol {
+  margin: 0.75rem 0 1rem 1.25rem;
+}
+
+.page-detail__content li {
+  margin-bottom: 0.25rem;
+}
+
+/* Blockquotes */
+.page-detail__content blockquote {
+  margin: 1.2rem 0;
+  padding: 0.9rem 1rem;
+  border-left: 4px solid rgba(15, 118, 110, 0.7);
+  background: #f0fdfa;
+  font-style: italic;
+}
+
+/* Tables inside page content */
+.page-detail__content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.page-detail__content th,
+.page-detail__content td {
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+}
+
+.page-detail__content th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+
+/* Images / figures */
+.page-detail__content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.25rem auto;
+}
+
+.page-detail__content figure {
+  margin: 1.25rem 0;
+  text-align: center;
+}
+
+.page-detail__content figcaption {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+/* Back link at bottom */
+.subject-page .back {
+  max-width: 950px;
+  margin: 0 auto 2rem;
+}
+
+.subject-page .back a {
+  color: #0d63c5;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.subject-page .back a:hover {
+  text-decoration: underline;
+}
+
+/* Mobile tweaks */
+@media (max-width: 768px) {
+  .page-detail__breadcrumb {
+    padding: 0 1rem;
+  }
+  .page-detail__meta {
+    padding: 0 1rem;
+  }
+  .page-detail__content {
+    padding: 0 1rem;
+  }
+}
+
+/* ===========================
+   Subject page layout (History)
+   =========================== */
+
+.subject-page-layout {
+  margin: 1.5rem auto 2.5rem;
+  max-width: 960px;
+}
+
+/* Breadcrumb */
+.mk-breadcrumb {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.mk-breadcrumb a {
+  color: #0b63bd;
+  text-decoration: none;
+}
+
+.mk-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* Hero */
+.subject-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0b63bd10, #0b63bd05);
+  border: 1px solid #e2e8f0;
+  margin-bottom: 1.75rem;
+}
+
+.subject-hero-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.subject-kicker {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #0b63bd;
+  font-weight: 600;
+}
+
+.subject-page-title {
+  font-size: 1.7rem;
+  line-height: 1.2;
+  margin: 0;
+  color: #0f172a;
+}
+
+.subject-hero-tagline {
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.subject-hero-media {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.subject-hero-logo {
+  max-width: 120px;
+  height: auto;
+  display: block;
+}
+
+/* Body article */
+.subject-article {
+  font-size: 0.98rem;
+  line-height: 1.7;
+  color: #0f172a;
+}
+
+.subject-article h1,
+.subject-article h2,
+.subject-article h3 {
+  margin-top: 1.6rem;
+  margin-bottom: 0.6rem;
+  line-height: 1.3;
+  color: #0f172a;
+}
+
+.subject-article h2 {
+  font-size: 1.3rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.25rem;
+}
+
+.subject-article p {
+  margin: 0.6rem 0;
+}
+
+.subject-article ul,
+.subject-article ol {
+  padding-left: 1.4rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.subject-article li {
+  margin: 0.15rem 0;
+}
+
+/* Blockquote styling */
+.subject-article blockquote {
+  margin: 1.2rem 0;
+  padding: 0.9rem 1.1rem;
+  border-left: 4px solid #0b63bd;
+  background-color: #f1f5f9;
+  border-radius: 0 10px 10px 0;
+  font-style: italic;
+  color: #1e293b;
+}
+
+/* Table styling */
+.subject-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.2rem 0;
+  font-size: 0.95rem;
+}
+
+.subject-article thead {
+  background-color: #f1f5f9;
+}
+
+.subject-article th,
+.subject-article td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.6rem;
+  text-align: left;
+}
+
+.subject-article th {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .subject-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .subject-hero-media {
+    justify-content: flex-start;
+  }
+
+  .subject-hero-logo {
+    max-width: 90px;
+  }
+}
+
+.subject-layout {
+  max-width: 900px;
+  margin: 0 auto 3rem;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.subject-hero {
+  margin-bottom: 1.5rem;
+}
+
+.subject-hero-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.subject-hero--history {
+  border-bottom: 2px solid var(--accent-history, #1d4ed8);
+  padding-bottom: 0.75rem;
+}
+
+.subject-hero-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.subject-crumb {
+  text-decoration: none;
+  color: inherit;
+}
+
+.subject-crumb-current {
+  font-weight: 500;
+}
+
+.subject-page-title {
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #111827;
+}
+
+.subject-logo-wrap {
+  margin-top: 0.5rem;
+}
+
+.subject-logo-img {
+  max-height: 64px;
+  width: auto;
+}
+
+/* Article typography */
+.subject-article {
+  font-size: 1.03rem;
+  line-height: 1.75;
+  color: #111827;
+}
+
+.subject-article-body > * + * {
+  margin-top: 1rem;
+}
+
+.subject-article h2 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.subject-article ul,
+.subject-article ol {
+  padding-left: 1.3rem;
+}
+
+.subject-article li + li {
+  margin-top: 0.25rem;
+}
+
+.subject-article blockquote {
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--accent-history, #1d4ed8);
+  font-style: italic;
+  color: #4b5563;
+}
+
+.subject-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95rem;
+}
+
+.subject-article table th,
+.subject-article table td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+}
+
+.subject-article table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}
+
+/* Attachments block */
+.subject-attachments {
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.75rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.subject-attachments-heading {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+}
+
+.subject-attachments-intro {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+.subject-attachments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.subject-attachments-item + .subject-attachments-item {
+  margin-top: 0.5rem;
+}
+
+.subject-attachments-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  text-decoration: none;
+  font-size: 0.95rem;
+}
+
+.subject-attachments-icon {
+  font-size: 1rem;
+}
+
+.subject-attachments-label {
+  text-decoration: underline;
+  text-decoration-style: dotted;
+}
+
+.subject-attachments-meta {
+  margin-left: 0.5rem;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.subject-page-breadcrumb,
+.subject-page-footer-nav {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.crumb-link {
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.crumb-link:hover {
+  border-bottom-color: currentColor;
 }

@@ -2,117 +2,160 @@
 // project-root/public/staff/login.php
 declare(strict_types=1);
 
+// ---------------------------------------------
+// 1) Bootstrap
+// ---------------------------------------------
 $init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
-if (!is_file($init)) { die('Init not found: ' . $init); }
+if (!is_file($init)) {
+  echo "<h1>FATAL: initialize.php missing</h1>";
+  echo "<p>Expected at: {$init}</p>";
+  exit;
+}
 require_once $init;
 
-require_once PRIVATE_PATH . '/functions/auth.php';
+// We assume auth.php is loaded via initialize.php
+auth__session_start();
 
-// If already signed in, go to staff home
-if (function_exists('current_user') && current_user()) {
-  header('Location: ' . url_for('/staff/')); exit;
+// ---------------------------------------------
+// 2) If already logged in, redirect to staff home
+// ---------------------------------------------
+if (function_exists('is_logged_in') && is_logged_in()) {
+  $target = $_SESSION['auth']['redirect_after_login'] ?? url_for('/staff/');
+  unset($_SESSION['auth']['redirect_after_login']);
+  header('Location: ' . $target, true, 302);
+  exit;
 }
 
-/** ---- Simple session-based rate limit ---- */
-if (session_status() !== PHP_SESSION_ACTIVE) { session_start(); }
-$now        = time();
-$lockUntil  = (int)($_SESSION['login_lock_until'] ?? 0);
-$isLocked   = $now < $lockUntil;
-$remaining  = $isLocked ? max(0, $lockUntil - $now) : 0;
+// ---------------------------------------------
+// 3) Handle form submission
+// ---------------------------------------------
+$errors     = [];
+$identifier = '';
+$remember   = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  csrf_check();
+  $identifier = trim($_POST['identifier'] ?? '');
+  $password   = $_POST['password'] ?? '';
+  $remember   = isset($_POST['remember']) && $_POST['remember'] === '1';
 
-  if ($isLocked) {
-    if (function_exists('flash')) {
-      $mins = (int)ceil($remaining / 60);
-      flash('error', "Too many attempts. Try again in about {$mins} minute(s).");
-    }
-    header('Location: ' . url_for('/staff/login.php')); exit;
-  }
+  if ($identifier === '' || $password === '') {
+    $errors[] = 'Username/email and password are required.';
+  } else {
+    if (!function_exists('auth_login')) {
+      $errors[] = 'Login function unavailable (auth_login not defined). Check includes.';
+    } else {
+      // Perform login
+      $ok = auth_login($identifier, $password);
+      if (!$ok) {
+        $errors[] = 'Login failed. Please check your credentials.';
+      } else {
+        // Optional: remember-me cookie stub (you can extend later)
+        if ($remember) {
+          // Example placeholder – implement real remember tokens if desired
+          // setcookie('mk_remember', 'stub', time() + 60*60*24*30, '/', '', false, true);
+        }
 
-  $identifier = trim((string)($_POST['identifier'] ?? '')); // email OR username
-  $password   = (string)($_POST['password'] ?? '');
+        // Redirect after login
+        $target = $_SESSION['auth']['redirect_after_login'] ?? url_for('/staff/');
+        unset($_SESSION['auth']['redirect_after_login']);
 
-  if ($identifier !== '' && $password !== '') {
-    // auth_login can return bool or ['ok'=>bool,...] depending on your implementation
-    $result = auth_login($identifier, $password);
-    $ok = is_array($result) ? !empty($result['ok']) : (bool)$result;
-
-    if ($ok) {
-      // Reset counters on success
-      $_SESSION['login_fails'] = 0;
-      $_SESSION['login_lock_until'] = 0;
-
-      // Respect an intended destination (set by guards)
-      $dest = (string)($_SESSION['intended_url'] ?? '');
-      unset($_SESSION['intended_url']);
-      if ($dest === '' || strpos($dest, '/staff') !== 0) {
-        $dest = url_for('/staff/');
+        header('Location: ' . $target, true, 302);
+        exit;
       }
-      if (function_exists('flash')) flash('success', 'Welcome back.');
-      header('Location: ' . $dest); exit;
     }
   }
-
-  // Failed attempt => bump counters and show generic error
-  $_SESSION['login_fails'] = (int)($_SESSION['login_fails'] ?? 0) + 1;
-  if ($_SESSION['login_fails'] >= 5) {
-    $_SESSION['login_lock_until'] = $now + 300; // lock 5 minutes
-    $_SESSION['login_fails'] = 0;
-  }
-  if (function_exists('flash')) flash('error', 'Invalid credentials.');
-  header('Location: ' . url_for('/staff/login.php')); exit;
 }
 
-/** ---- Page chrome ---- */
-$page_title    = 'Staff Login';
-$active_nav    = 'staff';
-$body_class    = 'role--staff';
-$stylesheets[] = '/lib/css/ui.css';
-$breadcrumbs   = [
-  ['label'=>'Home','url'=>'/'],
-  ['label'=>'Staff','url'=>'/staff/'],
-  ['label'=>'Login'],
-];
+// ---------------------------------------------
+// 4) Page skeleton / layout
+// ---------------------------------------------
+$page_title = 'Staff Login';
 
-require_once PRIVATE_PATH . '/shared/header.php';
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
+  include SHARED_PATH . '/header.php';
+} else {
+  // Minimal fallback header
+  ?><!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title><?= htmlspecialchars($page_title, ENT_QUOTES, 'UTF-8') ?></title>
+    <link rel="stylesheet" href="<?= htmlspecialchars(url_for('/lib/css/app.css'), ENT_QUOTES, 'UTF-8') ?>">
+    <link rel="stylesheet" href="<?= htmlspecialchars(url_for('/lib/css/auth.css'), ENT_QUOTES, 'UTF-8') ?>">
+  </head>
+  <body>
+  <?php
+}
+
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/nav.php')) {
+  include SHARED_PATH . '/nav.php';
+}
 ?>
-<main class="container" style="max-width:640px;padding:1.25rem 0">
-  <h1>Staff Login</h1>
-  <?= function_exists('display_session_message') ? display_session_message() : '' ?>
 
-  <?php if ($isLocked): ?>
-    <div class="notice error" style="margin:.75rem 0">
-      Too many attempts. Please wait about <?= (int)ceil($remaining/60) ?> minute(s) and try again.
-    </div>
-  <?php endif; ?>
+<main class="mk-main mk-main--auth">
+  <section class="mk-auth-card">
+    <h1>Staff Login</h1>
+    <p>Please sign in to access the staff dashboard.</p>
 
-  <form method="post" autocomplete="off">
-    <?= function_exists('csrf_field') ? csrf_field() : '' ?>
+    <?php if (!empty($errors)): ?>
+      <div class="mk-alert mk-alert--error">
+        <ul>
+          <?php foreach ($errors as $err): ?>
+            <li><?= htmlspecialchars($err, ENT_QUOTES, 'UTF-8') ?></li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endif; ?>
 
-    <div class="field">
-      <label>Email or Username</label>
-      <input class="input" type="text" name="identifier" required
-             value="<?= h($_POST['identifier'] ?? '') ?>"
-             autocomplete="username">
-    </div>
+    <form method="post" action="<?= htmlspecialchars(url_for('/staff/login.php'), ENT_QUOTES, 'UTF-8') ?>" class="mk-form mk-form--auth">
+      <div class="mk-form-row">
+        <label for="identifier">Username or Email</label>
+        <input
+          type="text"
+          name="identifier"
+          id="identifier"
+          value="<?= htmlspecialchars($identifier, ENT_QUOTES, 'UTF-8') ?>"
+          autocomplete="username"
+          required
+        >
+      </div>
 
-    <div class="field">
-      <label>Password</label>
-      <input class="input" type="password" name="password" required autocomplete="current-password">
-    </div>
+      <div class="mk-form-row">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          name="password"
+          id="password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
 
-    <div class="actions" style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center">
-      <button class="btn btn-primary" type="submit" <?= $isLocked ? 'disabled' : '' ?>>Sign in</button>
-      <a class="btn" href="<?= h(url_for('/')) ?>">Cancel</a>
-      <a class="muted" href="<?= h(url_for('/staff/password/forgot.php')) ?>">Forgot password?</a>
-    </div>
+      <div class="mk-form-row mk-form-row--inline">
+        <label class="mk-checkbox">
+          <input type="checkbox" name="remember" value="1" <?= $remember ? 'checked' : '' ?>>
+          <span>Remember me</span>
+        </label>
+      </div>
 
-    <p class="muted" style="margin-top:.5rem">
-      After requesting a reset, open <code>storage/logs/password_resets.log</code>,
-      copy the link, load it, and set a new password.
+      <div class="mk-form-actions">
+        <button type="submit" class="mk-btn mk-btn--primary">Sign in</button>
+        <a href="<?= htmlspecialchars(url_for('/'), ENT_QUOTES, 'UTF-8') ?>" class="mk-btn mk-btn--ghost">Back to site</a>
+      </div>
+    </form>
+
+    <p class="mk-auth-hint">
+      Having trouble logging in? Contact the site administrator.
     </p>
-  </form>
+  </section>
 </main>
-<?php require_once PRIVATE_PATH . '/shared/footer.php'; ?>
+
+<?php
+if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/footer.php')) {
+  include SHARED_PATH . '/footer.php';
+} else {
+  ?>
+  </body>
+  </html>
+  <?php
+}

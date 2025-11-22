@@ -1,0 +1,129 @@
+/* ===========================
+   Auth / Form Layout Styles
+   Reusable across login, signup, reset, etc.
+   =========================== */
+
+/* Basic page padding for auth pages (optional) */
+body.mk-auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f4f5f7;
+}
+
+/* Card-style container for auth forms */
+.mk-form.mk-form--auth {
+  max-width: 420px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 2rem 2.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  box-sizing: border-box;
+}
+
+/* Title & subtitle inside auth forms */
+.mk-form--auth .mk-auth-title {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.mk-form--auth .mk-auth-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+/* Stack fields nicely with spacing */
+.mk-form.mk-form--auth .mk-form-group {
+  margin-bottom: 1rem;
+}
+
+/* Labels */
+.mk-form.mk-form--auth label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: #374151;
+}
+
+/* Text inputs, email, password, etc. */
+.mk-form.mk-form--auth input[type="text"],
+.mk-form.mk-form--auth input[type="email"],
+.mk-form.mk-form--auth input[type="password"] {
+  width: 100%;
+  display: block;
+  padding: 0.6rem 0.7rem;
+  font-size: 0.95rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #f9fafb;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+/* Focus state */
+.mk-form.mk-form--auth input[type="text"]:focus,
+.mk-form.mk-form--auth input[type="email"]:focus,
+.mk-form.mk-form--auth input[type="password"]:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+}
+
+/* Error text */
+.mk-form.mk-form--auth .mk-form-error {
+  color: #b91c1c;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Helper / hint text */
+.mk-form.mk-form--auth .mk-form-hint {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* Buttons area */
+.mk-form.mk-form--auth .mk-form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Primary button (you already have .mk-btn, this is just spacing) */
+.mk-form.mk-form--auth .mk-btn {
+  white-space: nowrap;
+}
+
+/* Link row below the form (e.g. "Back to site") */
+.mk-form.mk-form--auth .mk-auth-footer {
+  margin-top: 1.25rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.mk-form.mk-form--auth .mk-auth-footer a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.mk-form.mk-form--auth .mk-auth-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+  .mk-form.mk-form--auth {
+    margin: 1.5rem;
+    padding: 1.5rem 1.25rem;
+  }
+}

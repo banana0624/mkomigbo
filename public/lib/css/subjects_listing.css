@@ -1,0 +1,71 @@
+/* 
+ * public/lib/css/subjects_listing.css
+ * Subject Listing Page Styles 
+ */
+
+.subjects-main h1 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: var(--brand);
+}
+.subjects-main .btn {
+  margin-bottom: 1.5rem;
+}
+.subjects-main .listing {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.5rem;
+}
+.subjects-main .listing thead th {
+  background: var(--surface-2);
+  color: var(--muted);
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+
+/* Column width logic */
+.subjects-main .listing {
+  table-layout: fixed;
+}
+.subjects-main .listing thead th:nth-child(1) {
+  width: 10%; /* ID column narrower */
+}
+.subjects-main .listing thead th:nth-child(2),
+.subjects-main .listing thead th:nth-child(3) {
+  width: 20%; /* Name & Slug equal width */
+}
+.subjects-main .listing thead th:nth-child(4) {
+  width: 50%; /* Actions takes the rest */
+}
+
+.subjects-main .listing tbody td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+.subjects-main .listing tbody tr:hover {
+  background: color-mix(in srgb, var(--surface) 90%, var(--surface-2) 10%);
+}
+.subjects-main .listing .nowrap {
+  white-space: nowrap;
+}
+.subjects-main .listing tbody td:nth-child(4) {
+  display: flex;
+  gap: 2rem; /* increased gap between View | Edit | Delete links */
+  justify-content: flex-start; /* ensures links start on left side */
+}
+
+.subjects-footer {
+  text-align: center;
+  padding: 1rem 0;
+  color: var(--muted);
+}
+
+@media (max-width: 720px) {
+  .subjects-main .listing thead th:nth-child(1),
+  .subjects-main .listing thead th:nth-child(2),
+  .subjects-main .listing thead th:nth-child(3),
+  .subjects-main .listing thead th:nth-child(4) {
+    width: auto; /* allow full width on small screens */
+  }
+}

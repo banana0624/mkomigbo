@@ -1,18 +1,34 @@
-### project-root/.htaccess ###
+##  project-root/.htaccess ##
+# Root-level router: send all web traffic to /public as the real web root
 
-RewriteEngine On
+<IfModule mod_rewrite.c>
+  RewriteEngine On
 
-# Redirect requests explicitly asking for /public/ in URL to hide it
-RewriteCond %{THE_REQUEST} \s/public/ [NC]
-RewriteRule ^public/(.*)$ /$1 [L,R=301]
+  # --------------------------------------------------------------------
+  # 0) Security guard at project root: block direct access to private/vendor
+  #    IF some misconfigured vhost ever points here directly.
+  # --------------------------------------------------------------------
+  RewriteRule ^(?:private|vendor)(/|$) - [F,L]
 
-# If the request isn't already to /public/, and target is not an existing file or directory
-RewriteCond %{REQUEST_URI} !^/public/
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+  # --------------------------------------------------------------------
+  # 1) If the request is already under /public, or is an existing file/dir,
+  #    then do NOTHING and let it be served as-is.
+  # --------------------------------------------------------------------
+  RewriteCond %{REQUEST_URI} ^/public/ [OR]
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
 
-# Rewrite everything else into public/
-RewriteRule ^(.*)$ public/$1 [L]
+  # --------------------------------------------------------------------
+  # 2) Otherwise, rewrite everything to /public/...
+  #    Example: /staff/login  ->  /public/staff/login
+  # --------------------------------------------------------------------
+  RewriteRule ^(.*)$ /public/$1 [L]
+</IfModule>
 
-# Use public/index.php as default for root
-DirectoryIndex public/index.php
+# --- Security: block sensitive things at the project root ---
+
+# Never serve these config / backup style files directly, even if misrouted
+<FilesMatch "^(?:\.env|composer\.(?:json|lock)|\.gitignore|.*\.(?:sql|sqlite|bak|ini))$">
+  Require all denied
+</FilesMatch>

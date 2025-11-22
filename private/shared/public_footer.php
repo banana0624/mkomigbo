@@ -1,10 +1,4 @@
 <?php
-declare(strict_types=1);
-/**
- * Public footer wrapper.
- * Optionally set $scripts_foot, $footer_note, $footer_extra_html before requiring.
- */
-if (!isset($footer_note)) {
-  $footer_note = ''; // keep public footer minimal by default
-}
-require __DIR__ . '/footer.php';
+// project-root/private/shared/subjects/public_subjects_footer.php
+// Keep it simple: delegate to the shared footer so styles/scripts stay consistent.
+require_once dirname(__DIR__) . '/footer.php';

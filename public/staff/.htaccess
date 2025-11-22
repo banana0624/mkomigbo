@@ -1,0 +1,32 @@
+## project-root/public/staff/.htaccess ##
+# Local rules for /staff area
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # ------------------------------------------------------------------
+  # LEGACY ROUTER (DISABLED)
+  # Previously, these rules turned:
+  #   /staff/subjects/ → /staff/index.php?section=subjects
+  #   /staff/pages/    → /staff/index.php?section=pages
+  #
+  # We now have dedicated directories:
+  #   /staff/subjects/index.php
+  #   /staff/pages/index.php
+  # so we must NOT rewrite /subjects/ or /pages/ here.
+  # ------------------------------------------------------------------
+
+  # RewriteRule ^subjects/$                          index.php?section=subjects [L,QSA]
+  # RewriteRule ^subjects/new/?$                    index.php?section=subjects&action=new [L,QSA]
+  # RewriteRule ^subjects/([0-9]+)/?$               index.php?section=subjects&id=$1&action=show [L,QSA]
+  # RewriteRule ^subjects/([0-9]+)/(show|edit|delete)/?$ index.php?section=subjects&id=$1&action=$2 [L,QSA]
+
+  # RewriteRule ^pages/$                            index.php?section=pages [L,QSA]
+  # RewriteRule ^pages/new/?$                       index.php?section=pages&action=new [L,QSA]
+  # RewriteRule ^pages/([0-9]+)/?$                  index.php?section=pages&id=$1&action=show [L,QSA]
+  # RewriteRule ^pages/([0-9]+)/(show|edit|delete)/?$ index.php?section=pages&id=$1&action=$2 [L,QSA]
+
+  # If you need NEW rules specific to /staff later, we can add them here.
+</IfModule>

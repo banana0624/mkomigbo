@@ -1,4 +1,5 @@
 /* public/lib/css/subjects/history.css */
+
 /* Theme for “History” */
 body.subject-history {
   --accent-color: #5a4d41;
@@ -12,4 +13,124 @@ body.subject-history .subject-card {
 
 body.subject-history .subject-card span {
   color: var(--accent-color);
+}
+
+/* Basic layout for public History pages */
+.subject-page-layout.subject-history {
+  max-width: 960px;
+  margin: 2rem auto;
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+/* Breadcrumb */
+.mk-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+.mk-breadcrumb a {
+  text-decoration: none;
+  color: var(--accent-color, #5a4d41);
+}
+.mk-breadcrumb a:hover {
+  text-decoration: underline;
+}
+.mk-breadcrumb span {
+  margin: 0 0.25rem;
+}
+
+/* Hero */
+.subject-hero {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1.25rem;
+}
+.subject-hero-text {
+  flex: 1 1 auto;
+}
+.subject-kicker {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+.subject-page-title {
+  font-size: 1.8rem;
+  margin: 0.25rem 0 0.5rem;
+}
+.subject-hero-tagline {
+  color: #555;
+  margin: 0;
+}
+.subject-hero-media {
+  flex: 0 0 auto;
+}
+.subject-hero-logo {
+  max-width: 120px;
+  height: auto;
+}
+
+/* Article body */
+.subject-article {
+  line-height: 1.7;
+  font-size: 1rem;
+}
+.subject-article h2 {
+  margin-top: 1.5rem;
+  font-size: 1.4rem;
+}
+.subject-article p {
+  margin: 0.75rem 0;
+}
+.subject-article ul {
+  padding-left: 1.25rem;
+  margin: 0.75rem 0 1rem;
+}
+.subject-article li {
+  margin: 0.25rem 0;
+}
+.subject-article blockquote {
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #ccc;
+  font-style: italic;
+  background: #f8f8f8;
+}
+.subject-article table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+.subject-article table th,
+.subject-article table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 0.75rem;
+}
+.subject-article table th {
+  background: #f3f3f3;
+  text-align: left;
+}
+
+/* Responsive tweaks */
+@media (max-width: 700px) {
+  .subject-hero {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subject-hero-logo {
+    max-width: 90px;
+  }
+
+  .subject-page-layout.subject-history {
+    margin: 1rem;
+    padding: 1rem;
+  }
 }

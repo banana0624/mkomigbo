@@ -1,5 +1,5 @@
 {
-  /* TypeScript config for a PHP-first project with some front-end/utility TS. */
+  /* TypeScript config for a PHP-first project with some front-end/utility TS/JS. */
   /* Save as: project-root/tsconfig.json */
 
   "compileOnSave": false,
@@ -15,12 +15,16 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
 
+    /* Let TS also type-check plain JS files (so there are always inputs). */
+    "allowJs": true,
+    "checkJs": false, // set true if you want JS to be type-checked strictly
+
     /* Type checking strictness */
     "strict": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": false, // set true if you want unused param errors
+    "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
     "useUnknownInCatchVariables": true,
     "skipLibCheck": true,
@@ -40,17 +44,26 @@
     "types": ["node", "vitest"]
   },
 
-  /* Which files to type-check */
+  /* Which files to type-check.
+     We include TS/TSX and JS under public/, assets/, and tests/.
+  */
   "include": [
     "public/**/*.ts",
     "public/**/*.tsx",
+    "public/**/*.js",
     "assets/**/*.ts",
     "assets/**/*.tsx",
+    "assets/**/*.js",
     "tests/**/*.ts",
-    "tests/**/*.tsx"
-    // If you keep plain JS and want TS to type-check it too:
-    // "public/**/*.js",
-    // "assets/**/*.js"
+    "tests/**/*.tsx",
+    "tests/**/*.js"
   ],
-  "exclude": ["node_modules", "vendor", "dist", "build", "**/*.d.ts"]
+
+  "exclude": [
+    "node_modules",
+    "vendor",
+    "dist",
+    "build",
+    "**/*.d.ts"
+  ]
 }

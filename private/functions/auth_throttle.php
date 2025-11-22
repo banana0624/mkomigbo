@@ -1,8 +1,8 @@
 <?php
-// project-root/private/functions/auth_throttle.php
 declare(strict_types=1);
 
 /**
+ * project-root/private/functions/auth_throttle.php
  * Tiny, session-only throttle for login attempts from this browser.
  * Blocks for $blockSeconds after $maxAttempts failures in $windowSeconds.
  */

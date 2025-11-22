@@ -8,6 +8,10 @@ declare(strict_types=1);
  */
 require __DIR__ . '/header.php';
 ?>
+  <!-- Staff-specific shared styles -->
+  <link rel="stylesheet"
+        href="<?= h(url_for('/lib/css/staff-pages.css')) ?>">
+
   <header class="site-header">
     <div class="container header-bar">
       <div class="brand">

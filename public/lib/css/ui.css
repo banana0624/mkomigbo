@@ -383,6 +383,31 @@ textarea {
   border-right: 0;
 }
 
+/* ---------- Grid Utility: cards / listing grids ---------- */
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.grid-item {
+  /* optional: style each card/box inside grid */
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.grid-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px color-mix(in srgb, black 15%, transparent);
+}
+
 /* ---------- Modal (optional utility) ---------- */
 .modal-backdrop {
   position: fixed;
@@ -422,4 +447,494 @@ textarea {
 .table.compact tbody td {
   padding: 0.45rem 0.6rem;
   font-size: 0.92rem;
+}
+
+
+/* ================================
+   Staff Contributors – layout
+   ================================ */
+
+.page--staff-contributors main.container {
+  max-width: 1120px;
+  padding-top: 1.75rem;
+  padding-bottom: 2.5rem;
+}
+
+/* Header block */
+.page--staff-contributors .page-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+.page--staff-contributors .page-header h1 {
+  margin: 0 0 .35rem;
+}
+
+.page--staff-contributors .page-subtitle {
+  margin: 0;
+  font-size: .95rem;
+  line-height: 1.4;
+}
+
+.page--staff-contributors .page-subtitle .small {
+  font-size: .85rem;
+}
+
+.page--staff-contributors .page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+/* Cards */
+.page--staff-contributors .card {
+  border-radius: .75rem;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .03);
+  margin-bottom: 1.5rem;
+}
+
+.page--staff-contributors .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.page--staff-contributors .card-header h2 {
+  margin: 0 0 .25rem;
+}
+
+.page--staff-contributors .card-header .muted {
+  margin: 0;
+}
+
+/* Empty state */
+.page--staff-contributors .card-empty h2 {
+  margin: 0 0 .5rem;
+}
+
+.page--staff-contributors .card-empty p {
+  margin: 0 0 .75rem;
+}
+
+/* Table spacing */
+.page--staff-contributors .table-wrap {
+  margin-top: .25rem;
+  overflow-x: auto;
+}
+
+.page--staff-contributors table.table-spacious {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 .25rem;
+}
+
+.page--staff-contributors table.table-spacious thead th {
+  font-size: .85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: .6rem .75rem;
+  white-space: nowrap;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.page--staff-contributors table.table-spacious tbody tr {
+  background: #f9fafb;
+}
+
+.page--staff-contributors table.table-spacious tbody td {
+  padding: .55rem .75rem;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.page--staff-contributors table.table-spacious tbody tr:first-child td {
+  border-top-left-radius: .5rem;
+  border-top-right-radius: .5rem;
+}
+
+.page--staff-contributors table.table-spacious tbody tr:last-child td {
+  border-bottom-left-radius: .5rem;
+  border-bottom-right-radius: .5rem;
+}
+
+/* Badges */
+.page--staff-contributors .badge {
+  display: inline-flex;
+  align-items: center;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.page--staff-contributors .badge-success {
+  background: #ecfdf3;
+  border-color: #bbf7d0;
+}
+
+.page--staff-contributors .badge-muted {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+/* Actions column */
+.page--staff-contributors td.actions {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.page--staff-contributors .actions-inline {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+}
+
+.page--staff-contributors .btn-xs {
+  font-size: .75rem;
+  padding: .25rem .5rem;
+}
+
+/* Footer links */
+.page--staff-contributors .page-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: .75rem;
+}
+
+/* ================================
+   Admin + listing layout polish
+   Applies to contributors, subjects, pages, etc.
+   ================================ */
+
+main.container {
+  padding: 1.75rem 0;
+}
+
+/* Page headings / intro text */
+main.container > h1 {
+  font-size: 1.5rem;
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+}
+
+.page-intro,
+main.container > p.page-intro {
+  margin: 0 0 1.25rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+/* Generic top/bottom bars (for buttons / links) */
+.page-actions-top,
+.page-actions-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.75rem 0 1rem;
+}
+
+/* Table wrapper */
+.table-wrap {
+  margin-top: 0.75rem;
+  overflow-x: auto;
+}
+
+/* Main table style used across staff/public listings */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+/* Headers */
+.table thead th {
+  text-align: left;
+  background: #f9fafb;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #4b5563;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* Body cells */
+.table tbody td {
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  color: #111827;
+  vertical-align: top;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* Alternating rows for readability */
+.table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+/* Muted cells (e.g. emails, handles, notes) */
+.table td.muted,
+.table th.muted {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* Actions column: keep buttons tidy */
+.table td.actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* Generic buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.85rem;
+  line-height: 1.25;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: #f3f4f6;
+}
+
+/* Primary / danger variants */
+.btn-primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-danger {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+/* Small buttons, typically in table rows */
+.btn-sm {
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+}
+
+/* “Muted” helper text / small labels */
+.muted {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* Top title + subtitle block used in many staff pages */
+.page-header-block {
+  margin-bottom: 1.25rem;
+}
+
+.page-header-block h1 {
+  margin: 0 0 0.25rem;
+}
+
+.page-header-block p {
+  margin: 0;
+  color: #4b5563;
+  font-size: 0.9rem;
+}
+
+/* Make last row’s border disappear for a cleaner bottom edge */
+.table tbody tr:last-child td {
+  border-bottom-color: transparent;
+}
+
+/* ============================================
+   Staff: Subject Pages Console (pgs)
+   Applies to: /staff/subjects/pgs/*
+   ============================================ */
+
+body.staff-subject-pages .staff-pages-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.3rem 0;
+}
+
+/* Center the table within the main area */
+body.staff-subject-pages .pgs-table {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Column width bias - give Actions more room */
+body.staff-subject-pages .pgs-table col:nth-child(1) { width: 6%; }   /* ID        */
+body.staff-subject-pages .pgs-table col:nth-child(2) { width: 10%; }  /* Subject   */
+body.staff-subject-pages .pgs-table col:nth-child(3) { width: 18%; }  /* Menu Name */
+body.staff-subject-pages .pgs-table col:nth-child(4) { width: 14%; }  /* Slug      */
+body.staff-subject-pages .pgs-table col:nth-child(5) { width: 8%; }   /* Visible   */
+body.staff-subject-pages .pgs-table col:nth-child(6) { width: 8%; }   /* Position  */
+body.staff-subject-pages .pgs-table col:nth-child(7) { width: 34%; }  /* Actions   */
+
+/* Generic horizontal link/button group with nice spacing */
+body.staff-subject-pages .mk-link-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.7rem;               /* 👈 this is the key: clear spacing between links */
+}
+
+/* Actions cell uses the link group */
+body.staff-subject-pages .table-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Toolbar above content on show/edit pages */
+body.staff-subject-pages .page-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+body.staff-subject-pages .page-toolbar__spacer {
+  flex: 1 1 auto;
+}
+
+body.staff-subject-pages .page-toolbar a {
+  text-decoration: none;
+}
+
+/* ==== Form inputs: clear borders + focus state ==== */
+
+.mk-form input[type="text"],
+.mk-form input[type="email"],
+.mk-form input[type="number"],
+.mk-form input[type="password"],
+.mk-form input[type="url"],
+.mk-form input[type="search"],
+.mk-form select,
+.mk-form textarea {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  /* Visual box */
+  border: 1px solid #cbd5e1;       /* light grey border */
+  border-radius: 6px;
+  background-color: #ffffff;
+
+  /* Spacing */
+  padding: 0.45rem 0.6rem;
+  margin-top: 0.15rem;
+
+  /* Text */
+  font-size: 0.95rem;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #0f172a;
+}
+
+/* Hover state - slightly darker border */
+.mk-form input[type="text"]:hover,
+.mk-form input[type="email"]:hover,
+.mk-form input[type="number"]:hover,
+.mk-form input[type="password"]:hover,
+.mk-form input[type="url"]:hover,
+.mk-form input[type="search"]:hover,
+.mk-form select:hover,
+.mk-form textarea:hover {
+  border-color: #94a3b8;
+}
+
+/* Focus state - clear highlight */
+.mk-form input[type="text"]:focus,
+.mk-form input[type="email"]:focus,
+.mk-form input[type="number"]:focus,
+.mk-form input[type="password"]:focus,
+.mk-form input[type="url"]:focus,
+.mk-form input[type="search"]:focus,
+.mk-form select:focus,
+.mk-form textarea:focus {
+  outline: none;
+  border-color: #0b63bd;          /* your blue accent */
+  box-shadow: 0 0 0 1px #0b63bd22; /* soft blue glow */
+}
+
+/* Optional: label spacing */
+.mk-form .form-group label {
+  font-weight: 500;
+  display: inline-block;
+  margin-bottom: 0.15rem;
+}
+
+/* Top breadcrumb trail (Home » Subjects » History » Page) */
+.mk-breadcrumb {
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  color: #4a5568; /* dark grey */
+}
+
+.mk-breadcrumb a {
+  text-decoration: none;
+  color: #2b6cb0; /* link-ish blue */
+}
+
+.mk-breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+/* The two extra “Back to ...” links */
+.subject-page-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.9rem;
+}
+
+.subject-page-breadcrumb .crumb-link {
+  text-decoration: none;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #f7fafc;
+  color: #2b6cb0;
+}
+
+.subject-page-breadcrumb .crumb-link:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
 }

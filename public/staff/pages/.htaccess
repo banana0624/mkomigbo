@@ -1,0 +1,26 @@
+## project-root/public/staff/pages/.htaccess ##
+
+Options -Indexes
+DirectoryIndex index.php
+
+# If your vhost needs a base, uncomment and set it:
+# RewriteBase /staff/pages/
+
+RewriteEngine On
+
+# 0) Don't rewrite real files/dirs
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 1) Allow specific PHP endpoints directly (CRUD + thumbnails uploaders)
+#    (This is independent of mod_rewrite and overrides generic PHP deny below)
+<FilesMatch "^(new|edit|delete|show|thumbnails|upload_thumbnail)\.php$">
+  Require all granted
+</FilesMatch>
+
+# 2) Block any other direct PHP access in this folder
+RewriteRule \.php$ - [F]
+
+# 3) Catch-all: forward pretty URLs to index.php
+RewriteRule ^.*$ index.php [QSA,L]

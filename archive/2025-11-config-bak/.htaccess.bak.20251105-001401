@@ -1,0 +1,47 @@
+# =========================================
+# PUBLIC .htaccess  (project-root/public/.htaccess)
+# =========================================
+
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 1) Block sensitive stuff
+    RewriteRule ^(private|src|vendor)/ - [F,L]
+    RewriteRule ^\.env$ - [F,L]
+
+    # 2) Let real files/dirs through
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # 3) STAFF (your working rules)
+    RewriteRule ^staff/subjects/new\.php$ staff/subjects/index.php?action=new [QSA,L]
+
+    RewriteRule ^staff/subjects/([^/]+)/pages/([^/]+)/show\.php$   staff/subjects/pages/index.php?subject=$1&slug=$2&action=show [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pages/([^/]+)/edit\.php$   staff/subjects/pages/index.php?subject=$1&slug=$2&action=edit [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pages/([^/]+)/delete\.php$ staff/subjects/pages/index.php?subject=$1&slug=$2&action=delete [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pages/([^/]+)/?$          staff/subjects/pages/index.php?subject=$1&slug=$2 [QSA,L]
+
+    RewriteRule ^staff/subjects/([^/]+)/pgs/?$                   staff/subjects/pgs/index.php?subject=$1 [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pgs/new\.php$            staff/subjects/pgs/index.php?action=new&subject=$1 [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pgs/([^/]+)/show\.php$   staff/subjects/pgs/index.php?action=show&subject=$1&slug=$2 [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pgs/([^/]+)/edit\.php$   staff/subjects/pgs/index.php?action=edit&subject=$1&slug=$2 [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/pgs/([^/]+)/delete\.php$ staff/subjects/pgs/index.php?action=delete&subject=$1&slug=$2 [QSA,L]
+
+    RewriteRule ^staff/subjects/([^/]+)/show\.php$   staff/subjects/index.php?slug=$1&action=show [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/edit\.php$   staff/subjects/index.php?slug=$1&action=edit [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/delete\.php$ staff/subjects/index.php?slug=$1&action=delete [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/new\.php$    staff/subjects/index.php?slug=$1&action=new [QSA,L]
+    RewriteRule ^staff/subjects/([^/]+)/?$           staff/subjects/index.php?slug=$1 [QSA,L]
+
+    # 4) PUBLIC SUBJECTS (the part you want)
+    RewriteRule ^subjects/?$ subjects/index.php [QSA,L]
+    RewriteRule ^subjects/([^/]+)/?$ subjects/show.php?slug=$1 [QSA,L]
+
+    # (optional) public pages under subject
+    #RewriteRule ^subjects/([^/]+)/([^/]+)/?$ subjects/page.php?subject=$1&page=$2 [QSA,L]
+
+</IfModule>

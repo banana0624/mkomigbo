@@ -1,0 +1,38 @@
+1. 
+a) # Stop service first so the port is free
+sc.exe stop MariaDB 2>$null
+
+b) # Start service to the port
+sc.exe start MariaDB
+netstat -ano | findstr ":3307 "
+
+# Start in console mode with your my.ini
+& "F:\xampp\MariaDB 11.8\New Folder\bin\mysqld.exe" --defaults-file="F:\xampp\MariaDB 11.8\New Folder\data\my.ini" --console
+
+2. & "F:\xampp\MariaDB 11.8\New Folder\bin\mysqld.exe" --defaults-file="$myini" --console
+
+
+3. sc.exe start MariaDB
+netstat -ano | findstr ":3307 "
+
+4. ## Open MariaDBcd 
+"F:\xampp\htdocs\mkomigbo\project-root"
+.\open-mariadb.ps1
+
+
+5. # & "F:\xampp\MariaDB 11.8\New Folder\bin\mariadb.exe" `
+  # -h 127.0.0.1 `
+  # -P 3307 `
+  # -u uzoma `
+  # -p
+
+
+6. & "F:\xampp\MariaDB 11.8\New Folder\bin\mysql.exe" `
+  -h 127.0.0.1 `
+  -P 3307 `
+  -u uzoma `
+  -p
+
+
+7. cd "F:\xampp\htdocs\mkomigbo\project-root"
+.\open-mariadb.ps1

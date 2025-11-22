@@ -1,0 +1,50 @@
+# Pretty URLs for:
+#   /subjects/                       → index.php
+#   /subjects/<subject>/             → index.php?subject=<subject>
+#   /subjects/<subject>/<page>/      → index.php?subject=<subject>&page=<page>
+# Hardened: block direct access to PHP controllers (except index.php).
+
+Options -MultiViews
+RewriteEngine On
+# RewriteBase /subjects/  # ← Uncomment if your server needs an explicit base
+
+# 1) Serve existing files/folders as-is (assets, index.php, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 2) Block direct access to any PHP file here except index.php
+RewriteRule ^(?!index\.php$).*\.php$ - [F,L]
+
+# 3) Canonicalize legacy query links to pretty URLs
+#    /subjects/index.php?subject=slug&page=pslug → /subjects/slug/pslug/
+RewriteCond %{THE_REQUEST} \s/+subjects/index\.php\?subject=([A-Za-z0-9_-]+)&page=([A-Za-z0-9_-]+) [NC]
+RewriteRule ^ /subjects/%1/%2/ [R=301,L]
+
+#    /subjects/index.php?subject=slug → /subjects/slug/
+RewriteCond %{THE_REQUEST} \s/+subjects/index\.php\?subject=([A-Za-z0-9_-]+) [NC]
+RewriteRule ^ /subjects/%1/ [R=301,L]
+
+#    /subjects/index.php (no query) → /subjects/
+RewriteCond %{THE_REQUEST} \s/+subjects/index\.php(?:\s|\?) [NC]
+RewriteRule ^ /subjects/ [R=301,L]
+
+# 4) Force trailing slash where appropriate (avoid dupes)
+#    /subjects → /subjects/
+RewriteRule ^$ index.php [L]
+#    /subjects/slug → /subjects/slug/
+RewriteRule ^([A-Za-z0-9_-]+)$ $1/ [R=301,L]
+#    /subjects/slug/page → /subjects/slug/page/
+RewriteRule ^([A-Za-z0-9_-]+)/([A-Za-z0-9_-]+)$ $1/$2/ [R=301,L]
+
+# 5) Route pretty URLs internally
+RewriteRule ^([A-Za-z0-9_-]+)/$                      index.php?subject=$1    [QSA,L]
+RewriteRule ^([A-Za-z0-9_-]+)/([A-Za-z0-9_-]+)/$     index.php?subject=$1&page=$2 [QSA,L]
+
+# 6) Extra hardening
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
+<Files ".env">
+  Require all denied
+</Files>
