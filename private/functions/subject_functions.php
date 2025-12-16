@@ -43,7 +43,14 @@ if (!function_exists('sf__title_col')) {
     return "'(untitled)'";
   }
 }
+
 if (!function_exists('sf__visible_expr')) {
+  /**
+   * Visibility expression for SUBJECTS ONLY.
+   *
+   * NOTE: do not use this for pages. Pages no longer have is_public/visible
+   * in your current schema, and using this with alias 'p' would produce p.is_public.
+   */
   function sf__visible_expr(string $alias = 's'): string {
     $bits = [];
     if (pf__column_exists('subjects', 'is_public')) $bits[] = "{$alias}.is_public";
@@ -52,6 +59,7 @@ if (!function_exists('sf__visible_expr')) {
     return 'COALESCE(' . implode(', ', $bits) . ')';
   }
 }
+
 if (!function_exists('sf__order_expr')) {
   function sf__order_expr(string $alias = 's'): string {
     $o = [];
@@ -149,7 +157,7 @@ if (!function_exists('subject_update_settings')) {
     $fields = [];
     $bind   = [':slug' => $slug];
 
-    // visibility
+    // visibility (subjects table only)
     if (array_key_exists('is_public', $data) || array_key_exists('visible', $data)) {
       $val = isset($data['is_public']) ? (int)!empty($data['is_public'])
            : (isset($data['visible'])   ? (int)!empty($data['visible']) : null);
@@ -195,26 +203,54 @@ if (!function_exists('find_all_subjects')) {
 }
 
 if (!function_exists('find_pages_by_subject_id')) {
+  /**
+   * Find pages for a subject.
+   *
+   * IMPORTANT: this version does NOT use is_public/visible for pages.
+   * It assumes your current `pages` table has:
+   *   - id, subject_id, title/menu_name, slug, body/body_html,
+   *   - optionally position or nav_order for ordering.
+   */
   function find_pages_by_subject_id(int $subject_id): array {
     global $db;
 
+    // Title column: prefer menu_name, then title, else placeholder
     $titleCol = pf__column_exists('pages','menu_name') ? "p.menu_name"
               : (pf__column_exists('pages','title') ? "p.title" : "'(untitled)'");
+
+    // Body column: prefer body_html, then body, else NULL
     $bodyCol  = pf__column_exists('pages','body_html') ? "p.body_html"
               : (pf__column_exists('pages','body') ? "p.body" : "NULL");
 
+    // Position / ordering
+    if (pf__column_exists('pages','position')) {
+      $positionSelect = "p.position AS position";
+      $orderExpr      = "p.position";
+    } elseif (pf__column_exists('pages','nav_order')) {
+      $positionSelect = "p.nav_order AS position";
+      $orderExpr      = "p.nav_order";
+    } else {
+      $positionSelect = "p.id AS position";
+      $orderExpr      = "p.id";
+    }
+
     $sql = "SELECT p.id,
-                   {$titleCol} AS title,
+                   {$titleCol}      AS title,
                    p.slug,
-                   " . (pf__column_exists('pages','position') ? "p.position" : "NULL AS position") . ",
-                   " . sf__visible_expr('p') . " AS visible,
-                   {$bodyCol} AS body_html
-            FROM pages p
-            WHERE " . (pf__column_exists('pages','subject_id') ? "p.subject_id = :sid AND " : "") . sf__visible_expr('p') . " = 1
-            ORDER BY COALESCE(p.position,1), p.id";
-    $st = $db->prepare($sql);
+                   {$positionSelect},
+                   1                AS visible,
+                   {$bodyCol}       AS body_html
+            FROM pages p";
+
     $bind = [];
-    if (pf__column_exists('pages','subject_id')) $bind[':sid'] = $subject_id;
+    if (pf__column_exists('pages','subject_id')) {
+      $sql  .= " WHERE p.subject_id = :sid";
+      $bind[':sid'] = $subject_id;
+    }
+
+    $sql .= " ORDER BY {$orderExpr}, p.id";
+
+    $st = $db->prepare($sql);
     $st->execute($bind);
     return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
   }
@@ -227,85 +263,12 @@ if (!function_exists('subject_pages_new_url')) {
   }
 }
 
-if (!function_exists('subject_logo_url')) {
-  /**
-   * Return the public URL for a subject's logo.
-   *
-   * Convention:
-   *   public/lib/images/subjects/<slug>.png
-   *
-   * Example:
-   *   history      => /lib/images/subjects/history.png
-   *   spirituality => /lib/images/subjects/spirituality.png
-   *
-   * If the specific logo file does not exist, falls back to:
-   *   /lib/images/subjects/default-subject.png
-   *
-   * @param array $subject  Row from `subjects` table with at least ['slug']
-   * @return string         Public URL suitable for <img src="...">
-   */
-  function subject_logo_url(array $subject): string {
-    // Ensure we have a slug
-    $slug = $subject['slug'] ?? '';
-    if ($slug === '') {
-      return function_exists('url_for')
-        ? url_for('/lib/images/subjects/default-subject.png')
-        : '/lib/images/subjects/default-subject.png';
-    }
-
-    // Clean slug a bit for safety in filenames
-    $slug = strtolower((string)$slug);
-    $slug = preg_replace('/[^a-z0-9_-]+/', '', $slug);
-
-    // Relative URL within the public folder
-    $relative_url = '/lib/images/subjects/' . $slug . '.png';
-
-    // If we can, check if the file exists on disk; if not, fall back
-    if (defined('PUBLIC_PATH')) {
-      static $cache = [];
-
-      if (!array_key_exists($relative_url, $cache)) {
-        $fs_path = rtrim(PUBLIC_PATH, DIRECTORY_SEPARATOR)
-                 . str_replace('/', DIRECTORY_SEPARATOR, $relative_url);
-        $cache[$relative_url] = is_file($fs_path);
-      }
-
-      if ($cache[$relative_url]) {
-        return function_exists('url_for')
-          ? url_for($relative_url)
-          : $relative_url;
-      }
-    }
-
-    // Fallback logo
-    $fallback = '/lib/images/subjects/default-subject.png';
-
-    return function_exists('url_for')
-      ? url_for($fallback)
-      : $fallback;
-  }
-}
-
-if (!function_exists('find_subject_by_id')) {
-  /**
-   * Back-compat helper for older code.
-   *
-   * Returns the subject row as an associative array or NULL if not found.
-   */
-  function find_subject_by_id(int $id): ?array {
-    global $db;
-
-    $sql = "SELECT *
-              FROM subjects
-             WHERE id = :id
-             LIMIT 1";
-    $stmt = $db->prepare($sql);
-    $stmt->execute([':id' => $id]);
-    $row = $stmt->fetch(PDO::FETCH_ASSOC);
-
-    return $row !== false ? $row : null;
-  }
-}
+/**
+ * NOTE: In your pasted file there were two different subject_logo_url()
+ * blocks under separate if (!function_exists(...)) guards. The first one
+ * wins; the second is never defined. I am keeping only the more flexible
+ * array|string version below.
+ */
 
 if (!function_exists('subject_logo_url')) {
   /**
@@ -379,5 +342,26 @@ if (!function_exists('subject_logo_url')) {
 
     // 6) Nothing found
     return null;
+  }
+}
+
+if (!function_exists('find_subject_by_id')) {
+  /**
+   * Back-compat helper for older code.
+   *
+   * Returns the subject row as an associative array or NULL if not found.
+   */
+  function find_subject_by_id(int $id): ?array {
+    global $db;
+
+    $sql = "SELECT *
+              FROM subjects
+             WHERE id = :id
+             LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    return $row !== false ? $row : null;
   }
 }

@@ -2,6 +2,30 @@
 // project-root/public/staff/subjects/pgs/index.php
 declare(strict_types=1);
 
+/**
+ * Staff listing for all pages under subjects.
+ *
+ * Notes for History / Slavery cleanup:
+ *  - History slugs:
+ *      history-overview
+ *      precolonial-history-of-ndi-igbo
+ *      colonial-era-and-missionaries
+ *      post-independence-developments
+ *  - Slavery slugs:
+ *      slavery-overview
+ *      pre-slavery-igbo-land   (or pre-slavery)
+ *      trans-atlantis-slave-trade-effect
+ *      slave-trade-triangle
+ *
+ * Each page should have:
+ *  - Correct subject (History or Slavery)
+ *  - Clean Title (no “TEST”)
+ *  - Sensible slug (as above)
+ *  - nav_order like 1,2,3,4 under each subject
+ *  - Clean Body (article HTML only)
+ */
+
+/* 1) Bootstrap */
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 // __DIR__ = project-root/public/staff/subjects/pgs
 // dirname(__DIR__, 4) = project-root
@@ -14,37 +38,47 @@ require_once $init;
 
 global $db;
 
-// Auth guard
+/* 2) Auth guard */
 if (function_exists('require_staff')) {
   require_staff();
 } elseif (function_exists('require_login')) {
   require_login();
 }
 
-// Simple h() helper if needed
+/* 3) Simple h() helper if needed */
 if (!function_exists('h')) {
   function h(string $value): string {
     return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
   }
 }
 
-// Read optional subject filter (from hub or query)
+/* 4) Read optional subject filter (from hub or query) */
 $subject_slug = isset($_GET['subject']) ? trim((string)$_GET['subject']) : '';
 $subject_id   = isset($_GET['subject_id']) ? (int)$_GET['subject_id'] : 0;
 
-// 1) Load all subjects for dropdown + validation
+/* 5) Load all subjects for dropdown + validation */
 $subjects = [];
 try {
+  // Try ordering by nav_order first (if column exists)
   $sql = "SELECT id, name, slug
             FROM subjects
            ORDER BY nav_order, id";
   $st = $db->query($sql);
   $subjects = $st->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-  $subjects = [];
+  // Fallback: simple id ordering
+  try {
+    $sql = "SELECT id, name, slug
+              FROM subjects
+             ORDER BY id";
+    $st = $db->query($sql);
+    $subjects = $st->fetchAll(PDO::FETCH_ASSOC);
+  } catch (Throwable $e2) {
+    $subjects = [];
+  }
 }
 
-// Resolve filter subject if possible
+/* 6) Resolve filter subject if possible */
 $current_subject = null;
 if ($subject_slug !== '') {
   foreach ($subjects as $s) {
@@ -67,15 +101,18 @@ if ($current_subject !== null) {
   $subject_slug = (string)$current_subject['slug'];
 }
 
-// 2) Load pages (optionally filtered by subject)
+/* 7) Load pages (optionally filtered by subject), with robust handling
+ *    for is_public (if the column exists).
+ */
 $pages = [];
 try {
+  // First attempt: include is_public column (modern schema)
   $sql = "SELECT 
             p.id,
             p.subject_id,
             p.title,
             p.slug,
-            p.visible,
+            p.is_public,
             p.nav_order,
             s.name AS subject_name,
             s.slug AS subject_slug
@@ -89,41 +126,57 @@ try {
     $params[':sid'] = $subject_id;
   }
 
-  $sql .= " ORDER BY s.nav_order, s.id, COALESCE(p.nav_order, p.id), p.id";
+  $sql .= " ORDER BY s.id, COALESCE(p.nav_order, p.id), p.id";
   $st = $db->prepare($sql);
   $st->execute($params);
   $pages = $st->fetchAll(PDO::FETCH_ASSOC);
 } catch (Throwable $e) {
-  $pages = [];
+  // Fallback if is_public does not exist
+  try {
+    $sql = "SELECT 
+              p.id,
+              p.subject_id,
+              p.title,
+              p.slug,
+              p.nav_order,
+              s.name AS subject_name,
+              s.slug AS subject_slug
+            FROM pages p
+            JOIN subjects s ON s.id = p.subject_id
+            WHERE 1=1";
+    $params = [];
+
+    if ($subject_id > 0) {
+      $sql .= " AND s.id = :sid";
+      $params[':sid'] = $subject_id;
+    }
+
+    $sql .= " ORDER BY s.id, COALESCE(p.nav_order, p.id), p.id";
+    $st = $db->prepare($sql);
+    $st->execute($params);
+    $pages = $st->fetchAll(PDO::FETCH_ASSOC);
+  } catch (Throwable $e2) {
+    $pages = [];
+  }
 }
 
-// Page meta
+/* 8) Page meta for header.php */
 $page_title = 'Subject Pages (Staff)';
-$body_class = 'role--staff role--subjects-pages';
+$body_class = 'staff-body staff-pages-body';
+$active_nav = 'staff-pages';
 
-$stylesheets = $stylesheets ?? [];
-if (!in_array('/lib/css/ui.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/ui.css';
-}
-if (!in_array('/lib/css/subjects.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/subjects.css';
-}
-
-// Header
-if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
-  include SHARED_PATH . '/header.php';
-} elseif (defined('PRIVATE_PATH') && is_file(PRIVATE_PATH . '/shared/staff_header.php')) {
-  include PRIVATE_PATH . '/shared/staff_header.php';
-}
+include PRIVATE_PATH . '/shared/header.php';
 ?>
-<main class="container" style="max-width:1000px;padding:1.75rem 0;">
-  <div class="page-header-block">
-    <h1>Subject Pages (Staff)</h1>
-    <p class="page-intro">
-      Manage pages under each subject (Overview + deeper content pages).
+
+<main class="mk-container staff-pages-layout">
+
+  <header class="staff-page-header">
+    <h1 class="staff-page-title">Subject Pages (Staff)</h1>
+    <p class="staff-page-subtitle">
+      Manage pages under each subject (overview and deeper content pages).
       This is <code>public/staff/subjects/pgs/index.php</code>.
     </p>
-  </div>
+  </header>
 
   <div class="page-actions-top" style="margin-bottom:1.25rem;display:flex;gap:.75rem;flex-wrap:wrap;align-items:center;">
     <a href="<?= h(url_for('/staff/')); ?>" class="btn">
@@ -132,19 +185,19 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
 
     <?php if ($current_subject): ?>
       <a href="<?= h(url_for('/staff/subjects/pgs/new.php?subject_id=' . (int)$current_subject['id'])); ?>"
-         class="btn btn--primary">
-        + New Page for <?= h($current_subject['name']); ?>
+         class="btn btn-primary">
+        + New Page for <?= h($current_subject['name'] ?? 'Subject'); ?>
       </a>
     <?php else: ?>
       <a href="<?= h(url_for('/staff/subjects/pgs/new.php')); ?>"
-         class="btn btn--primary">
+         class="btn btn-primary">
         + New Page
       </a>
     <?php endif; ?>
   </div>
 
   <section class="filter-block" style="margin-bottom:1.25rem;">
-    <form method="get" class="form-inline" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
+    <form method="get" class="mk-form form-inline" style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;">
       <div class="form-group">
         <label for="subject_id">Filter by subject</label><br>
         <select name="subject_id" id="subject_id">
@@ -152,7 +205,7 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
           <?php foreach ($subjects as $s): ?>
             <option value="<?= (int)$s['id']; ?>"
               <?= $subject_id === (int)$s['id'] ? 'selected' : ''; ?>>
-              <?= h($s['name']); ?> (<?= h($s['slug']); ?>)
+              <?= h($s['name'] ?? ''); ?> (<?= h($s['slug'] ?? ''); ?>)
             </option>
           <?php endforeach; ?>
         </select>
@@ -160,7 +213,7 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
 
       <div>
         <button type="submit" class="btn">Apply</button>
-        <a href="<?= h(url_for('/staff/subjects/pgs/')); ?>" class="btn btn--ghost">
+        <a href="<?= h(url_for('/staff/subjects/pgs/')); ?>" class="btn btn-ghost">
           Reset
         </a>
       </div>
@@ -173,9 +226,9 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
         <tr>
           <th>#</th>
           <th>Subject</th>
-          <th>Menu Name / Title</th>
+          <th>Title</th>
           <th>Slug</th>
-          <th>Visible</th>
+          <th>Public?</th>
           <th>Nav order</th>
           <th>Actions</th>
         </tr>
@@ -185,7 +238,7 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
         <tr>
           <td colspan="7" class="muted">
             <?php if ($current_subject): ?>
-              No pages found for subject <strong><?= h($current_subject['name']); ?></strong>.
+              No pages found for subject <strong><?= h($current_subject['name'] ?? ''); ?></strong>.
             <?php else: ?>
               No pages found. Use “New Page” to create one.
             <?php endif; ?>
@@ -194,19 +247,22 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
       <?php else: ?>
         <?php $i = 1; foreach ($pages as $p): ?>
           <?php
-            $pid   = (int)$p['id'];
+            $pid   = (int)($p['id'] ?? 0);
             $sname = $p['subject_name'] ?? '';
             $sslug = $p['subject_slug'] ?? '';
             $title = $p['title'] ?? '';
             $slug  = $p['slug'] ?? '';
-            $vis   = isset($p['visible']) ? (int)$p['visible'] === 1 : true;
             $nav   = $p['nav_order'] ?? null;
 
-            $public_detail = '';
+            // Public flag (if we have is_public, otherwise assume public)
+            $vis = isset($p['is_public']) ? ((int)$p['is_public'] === 1) : true;
+
+            // Canonical public URL for this page
+            $public_url = '';
             if ($sslug !== '' && $slug !== '') {
-              $public_detail = url_for('/subjects/page.php')
-                . '?subject=' . rawurlencode($sslug)
-                . '&page='    . rawurlencode($slug);
+              $public_url = url_for(
+                '/subjects/' . rawurlencode($sslug) . '/' . rawurlencode($slug) . '/'
+              );
             }
           ?>
           <tr>
@@ -227,9 +283,9 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
               <a href="<?= h(url_for('/staff/subjects/pgs/delete.php?id=' . $pid)); ?>">
                 Delete
               </a>
-              <?php if ($public_detail): ?>
+              <?php if ($public_url): ?>
                 &middot;
-                <a href="<?= h($public_detail); ?>" target="_blank">
+                <a href="<?= h($public_url); ?>" target="_blank">
                   View
                 </a>
               <?php endif; ?>
@@ -243,9 +299,4 @@ if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/header.php')) {
 </main>
 
 <?php
-// Footer
-if (defined('SHARED_PATH') && is_file(SHARED_PATH . '/footer.php')) {
-  include SHARED_PATH . '/footer.php';
-} elseif (defined('PRIVATE_PATH') && is_file(PRIVATE_PATH . '/shared/footer.php')) {
-  include PRIVATE_PATH . '/shared/footer.php';
-}
+include PRIVATE_PATH . '/shared/footer.php';

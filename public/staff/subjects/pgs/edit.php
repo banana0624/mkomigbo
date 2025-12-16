@@ -1,15 +1,15 @@
 <?php
-// project-root/public/staff/subjects/pgs/edit.php
 declare(strict_types=1);
 
 /**
- * Edit a subject page (within staff/subjects/pgs)
- * - Core page fields (menu_name, title, slug, body, nav_order, is_public)
- * - Attachment list with "Delete" checkboxes
- * - Attachment upload (single file)
+ * project-root/public/staff/subjects/pgs/edit.php
+ * Editor for a single `pages` row.
+ *
+ * Columns used: id, subject_id, title, slug, body, nav_order
+ * Optional: is_public for pages, page_files attachments.
  */
 
-/* 1) Bootstrap (initialize.php) */
+/* 1) Bootstrap */
 $init = dirname(__DIR__, 4) . '/private/assets/initialize.php';
 if (!is_file($init)) {
   echo "<h1>FATAL: initialize.php missing</h1>";
@@ -25,426 +25,436 @@ if (function_exists('require_staff')) {
   require_login();
 }
 
-/* 3) Helpers */
+/* 3) DB handle */
 global $db;
+if (!isset($db) || !($db instanceof PDO)) {
+  if (function_exists('db')) {
+    $db = db();
+  } else {
+    http_response_code(500);
+    exit('Database connection not available.');
+  }
+}
+
+/* 4) Helpers */
+if (!function_exists('h')) {
+  function h(string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+  }
+}
 
 /**
- * Small wrapper so this file works even if pf__column_exists()
- * isn't available (but in your project it should already exist in
- * private/functions/page_functions.php).
+ * Load page row by id.
  */
-if (!function_exists('pf__column_exists')) {
-  function pf__column_exists(string $table, string $column): bool {
-    static $cache = [];
-    $k = strtolower("$table.$column");
-    if (array_key_exists($k, $cache)) {
-      return $cache[$k];
+function mk_page_load_by_id(int $id): ?array {
+  if (function_exists('find_page_by_id')) {
+    $row = find_page_by_id($id);
+    return is_array($row) ? $row : null;
+  }
+
+  global $db;
+  $sql = "SELECT * FROM pages WHERE id = :id LIMIT 1";
+  $stmt = $db->prepare($sql);
+  $stmt->execute([':id' => $id]);
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
+  return $row ?: null;
+}
+
+/**
+ * Update page row (only columns we know exist).
+ * On error, throws; caller will catch and show message.
+ */
+function mk_page_update(array $page): void {
+  global $db;
+
+  $sql = "UPDATE pages
+             SET subject_id = :subject_id,
+                 title      = :title,
+                 slug       = :slug,
+                 body       = :body,
+                 nav_order  = :nav_order
+           WHERE id = :id";
+
+  $stmt = $db->prepare($sql);
+  $stmt->execute([
+    ':subject_id' => (int)($page['subject_id'] ?? 0),
+    ':title'      => (string)($page['title'] ?? ''),
+    ':slug'       => (string)($page['slug'] ?? ''),
+    ':body'       => (string)($page['body'] ?? ''),
+    ':nav_order'  => (int)($page['nav_order'] ?? 0),
+    ':id'         => (int)($page['id'] ?? 0),
+  ]);
+}
+
+/**
+ * Load all subjects (for dropdown).
+ */
+function mk_load_all_subjects(): array {
+  if (function_exists('find_all_subjects')) {
+    $rows = find_all_subjects();
+    return is_array($rows) ? $rows : [];
+  }
+
+  global $db;
+  try {
+    // Prefer nav_order if it exists
+    $sql = "SELECT * FROM subjects ORDER BY nav_order, id";
+    $stmt = $db->query($sql);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($rows)) {
+      return $rows;
     }
-    try {
-      global $db;
-      $sql = "SELECT 1
-                FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE()
-                 AND TABLE_NAME   = :t
-                 AND COLUMN_NAME  = :c
-               LIMIT 1";
-      $st = $db->prepare($sql);
-      $st->execute([':t' => $table, ':c' => $column]);
-      $cache[$k] = (bool)$st->fetchColumn();
-    } catch (Throwable $e) {
-      $cache[$k] = false;
-    }
-    return $cache[$k];
+  } catch (Throwable $e) {
+    // ignore and fall back
+  }
+
+  $sql = "SELECT * FROM subjects ORDER BY id ASC";
+  $stmt = $db->query($sql);
+  return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+}
+
+/**
+ * Subject label for dropdown.
+ */
+function mk_subject_label(array $subject): string {
+  return (string)(
+    $subject['name']
+    ?? $subject['menu_name']
+    ?? $subject['title']
+    ?? $subject['slug']
+    ?? ('Subject #' . ($subject['id'] ?? '?'))
+  );
+}
+
+/* Attachments (optional) */
+function mk_page_attachments(int $page_id): array {
+  if (!function_exists('page_files_for_page')) {
+    return [];
+  }
+  try {
+    return page_files_for_page($page_id, true);
+  } catch (Throwable $e) {
+    return [];
   }
 }
 
-/* 4) Get ID */
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($id <= 0) {
-  if (function_exists('redirect_to') && function_exists('url_for')) {
-    redirect_to(url_for('/staff/subjects/pgs/index.php'));
-  }
-  echo "<p>Missing or invalid page ID.</p>";
+/* 5) Get & validate ID */
+$page_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+if ($page_id <= 0) {
+  http_response_code(400);
+  echo "<h1>Missing or invalid page id.</h1>";
   exit;
 }
+
+/* 6) Load page + subjects + attachments */
+$page = mk_page_load_by_id($page_id);
+if (!$page) {
+  http_response_code(404);
+  echo "<h1>Page not found.</h1>";
+  exit;
+}
+
+$subjects    = mk_load_all_subjects();
+$attachments = mk_page_attachments($page_id);
 
 $errors = [];
-$page   = null;
+$notice = '';
 
-/* 5) Load current page row */
-if (function_exists('page_get_by_id')) {
-  $page = page_get_by_id($id);
-} else {
-  // Fallback if helper is missing
-  $stmt = $db->prepare("SELECT * FROM pages WHERE id = :id LIMIT 1");
-  $stmt->execute([':id' => $id]);
-  $page = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
-}
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
-if (!$page) {
-  echo "<p>Page not found.</p>";
-  exit;
-}
+/* 7) Handle POST */
+if ($method === 'POST') {
+  // 7.1 merge posted values
+  $page['subject_id'] = isset($_POST['subject_id']) ? (int)$_POST['subject_id'] : (int)$page['subject_id'];
+  $page['title']      = trim((string)($_POST['title'] ?? $page['title'] ?? ''));
+  $page['slug']       = trim((string)($_POST['slug'] ?? $page['slug'] ?? ''));
+  $page['nav_order']  = (int)($_POST['nav_order'] ?? $page['nav_order'] ?? 0);
+  $page['body']       = (string)($_POST['body'] ?? $page['body'] ?? '');
 
-/* 6) Process POST */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // 7.2 basic validation
+  if ($page['subject_id'] <= 0) { $errors[] = 'Please choose a subject.'; }
+  if ($page['title']      === '') { $errors[] = 'Title is required.'; }
+  if ($page['slug']       === '') { $errors[] = 'Slug is required.'; }
 
-  /* 6a) Delete selected attachments (if any) */
-  $delete_ids = $_POST['delete_file_ids'] ?? [];
-  if (is_array($delete_ids) && !empty($delete_ids) && function_exists('page_files_delete_by_ids')) {
-    // Normalize to unique ints
-    $delete_ids = array_values(array_unique(array_map('intval', $delete_ids)));
-    try {
-      page_files_delete_by_ids($delete_ids);
-    } catch (Throwable $e) {
-      $errors[] = 'Failed to delete one or more attachments: ' . $e->getMessage();
+  // 7.3 attachments: delete selected
+  if (empty($errors)
+      && !empty($_POST['delete_file_ids'])
+      && is_array($_POST['delete_file_ids'])
+      && function_exists('page_files_delete_by_ids')) {
+
+    $ids = array_map('intval', $_POST['delete_file_ids']);
+    $ids = array_values(array_filter($ids, fn($v) => $v > 0));
+
+    if (!empty($ids)) {
+      try {
+        page_files_delete_by_ids($ids);
+      } catch (Throwable $e) {
+        $errors[] = 'Attachment delete failed: ' . $e->getMessage();
+      }
     }
   }
 
-  /* 6b) Handle new attachment upload (if wired) */
-  if (!empty($_FILES['attachment_file']['name'] ?? '') && function_exists('page_file_handle_upload')) {
+  // 7.4 attachments: add new
+  if (empty($errors)
+      && isset($_FILES['attachment'])
+      && ($_FILES['attachment']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE
+      && function_exists('page_files_insert_from_upload')) {
+
+    $file_title  = trim((string)($_POST['attachment_title'] ?? ''));
+    $is_public_f = !empty($_POST['attachment_is_public']) ? 1 : 0;
+
     try {
-      $attTitle  = trim($_POST['attachment_title'] ?? '');
-      $attPublic = !empty($_POST['attachment_is_public']);
-      page_file_handle_upload((int)$page['id'], $_FILES['attachment_file'], $attTitle, $attPublic);
+      page_files_insert_from_upload(
+        (int)$page['id'],
+        $_FILES['attachment'],
+        $file_title,
+        $is_public_f
+      );
     } catch (Throwable $e) {
       $errors[] = 'Attachment upload failed: ' . $e->getMessage();
     }
   }
 
-  /* 6c) Core page fields */
-  $menu_name = trim($_POST['menu_name'] ?? ($page['menu_name'] ?? ''));
-  $title     = trim($_POST['title']     ?? ($page['title']     ?? ''));
-  $slug      = trim($_POST['slug']      ?? ($page['slug']      ?? ''));
-
-  // Body/content (works for either `body` or `content` column)
-  $body_post = trim($_POST['body'] ?? ($_POST['content'] ?? ''));
-  if ($body_post === '' && isset($page['body'])) {
-    $body_post = $page['body'];
-  } elseif ($body_post === '' && isset($page['content'])) {
-    $body_post = $page['content'];
-  }
-
-  // Visible / public flags
-  $is_public = !empty($_POST['is_public']) ? 1 : 0;
-
-  // Position / nav order
-  $nav_raw   = $_POST['nav_order'] ?? $_POST['position'] ?? ($page['nav_order'] ?? $page['position'] ?? '');
-  $nav_order = is_numeric($nav_raw) ? (int)$nav_raw : null;
-
-  /* 6d) Simple validation */
-  if ($menu_name === '') {
-    $errors[] = 'Menu name is required.';
-  }
-  if ($title === '') {
-    $errors[] = 'Page title is required.';
-  }
-
-  /* 6e) If no validation errors, update the DB */
+  // 7.5 update page
   if (empty($errors)) {
-    $setParts = [];
-    $params   = [':id' => $id];
-
-    if (pf__column_exists('pages', 'menu_name')) {
-      $setParts[]           = 'menu_name = :menu_name';
-      $params[':menu_name'] = $menu_name;
+    try {
+      mk_page_update($page);
+      $notice = 'Page updated successfully.';
+      // reload attachments in case new ones were added/removed
+      $attachments = mk_page_attachments($page_id);
+    } catch (Throwable $e) {
+      $errors[] = 'Database update failed: ' . $e->getMessage();
     }
-
-    if (pf__column_exists('pages', 'title')) {
-      $setParts[]       = 'title = :title';
-      $params[':title'] = $title;
-    }
-
-    if (pf__column_exists('pages', 'slug')) {
-      $setParts[]      = 'slug = :slug';
-      $params[':slug'] = $slug;
-    }
-
-    if (pf__column_exists('pages', 'body')) {
-      $setParts[]     = 'body = :body';
-      $params[':body'] = $body_post;
-    } elseif (pf__column_exists('pages', 'content')) {
-      $setParts[]     = 'content = :body';
-      $params[':body'] = $body_post;
-    }
-
-    if (pf__column_exists('pages', 'is_public')) {
-      $setParts[]          = 'is_public = :is_public';
-      $params[':is_public'] = $is_public;
-    } elseif (pf__column_exists('pages', 'visible')) {
-      $setParts[]          = 'visible = :is_public';
-      $params[':is_public'] = $is_public;
-    }
-
-    if ($nav_order !== null) {
-      if (pf__column_exists('pages', 'nav_order')) {
-        $setParts[]           = 'nav_order = :nav_order';
-        $params[':nav_order'] = $nav_order;
-      } elseif (pf__column_exists('pages', 'position')) {
-        $setParts[]           = 'position = :nav_order';
-        $params[':nav_order'] = $nav_order;
-      }
-    }
-
-    if (!empty($setParts)) {
-      $sql = "UPDATE pages
-                 SET " . implode(', ', $setParts) . "
-               WHERE id = :id
-               LIMIT 1";
-      $stmt = $db->prepare($sql);
-      $stmt->execute($params);
-    }
-
-    // Flash + redirect back to this edit page (so refresh won't re-POST)
-    if (function_exists('session_flash')) {
-      session_flash('notice', 'Page updated successfully.');
-    }
-
-    if (function_exists('redirect_to') && function_exists('url_for')) {
-      redirect_to(url_for('/staff/subjects/pgs/edit.php?id=' . urlencode((string)$id)));
-    } else {
-      // Fallback simple reload (no HTML escaping in HTTP header)
-      header('Location: ' . $_SERVER['REQUEST_URI']);
-      exit;
-    }
-  }
-
-  // Merge posted values back into $page so the form shows what the user tried
-  $page['menu_name'] = $menu_name;
-  $page['title']     = $title;
-  $page['slug']      = $slug;
-
-  if (isset($page['body'])) {
-    $page['body'] = $body_post;
-  } else {
-    $page['content'] = $body_post;
-  }
-
-  $page['is_public'] = $is_public;
-  if (isset($page['nav_order'])) {
-    $page['nav_order'] = $nav_order;
-  } elseif (isset($page['position'])) {
-    $page['position'] = $nav_order;
   }
 }
 
-/* 7) Existing attachments for this page (for the list with delete checkboxes) */
-$attachments = [];
-if (function_exists('page_files_for_page')) {
-  $attachments = page_files_for_page((int)$page['id'], true); // include non-public
+/* 8) Metadata for header */
+$page_title = 'Edit page: ' . h($page['title'] ?? ('#' . $page_id));
+$body_class = 'staff-body staff-pages-body';
+$active_nav = 'staff-pages';
+
+/**
+ * Build URL for "+ New Page" action, prefilling the same subject if possible.
+ */
+$subject_id_for_new = (int)($page['subject_id'] ?? 0);
+if ($subject_id_for_new > 0) {
+  $new_page_path = '/staff/subjects/pgs/new.php?subject_id=' . rawurlencode((string)$subject_id_for_new);
+} else {
+  $new_page_path = '/staff/subjects/pgs/new.php';
 }
+$new_page_url = url_for($new_page_path);
 
-/* 8) Page chrome */
-$page_title = 'Edit Page';
-
-// Use direct path instead of SHARED_PATH constant
-include dirname(__DIR__, 4) . '/private/shared/staff_header.php';
+include PRIVATE_PATH . '/shared/header.php';
 ?>
-<main class="staff-main">
-  <header class="page-header">
-    <h1>Edit Page</h1>
+
+<main class="mk-container staff-pages-layout">
+
+  <header class="staff-page-header">
+    <h1 class="staff-page-title">Edit page</h1>
+    <p class="staff-page-subtitle">
+      Update the content and settings for this page.
+    </p>
   </header>
 
-  <p class="page-back-link">
-    <a href="<?= h(url_for('/staff/subjects/pgs/')) ?>">
-      &laquo; Back to Pages list
-    </a>
-  </p>
+  <?php if (!empty($notice)): ?>
+    <div class="mk-alert mk-alert-success">
+      <?= h($notice) ?>
+    </div>
+  <?php endif; ?>
 
   <?php if (!empty($errors)): ?>
-    <div class="alert alert-danger">
-      <h2>There were problems with your submission:</h2>
+    <div class="mk-alert mk-alert-danger">
+      <h2>There were problems saving this page:</h2>
       <ul>
-        <?php foreach ($errors as $err): ?>
-          <li><?= h($err) ?></li>
+        <?php foreach ($errors as $error): ?>
+          <li><?= h($error) ?></li>
         <?php endforeach; ?>
       </ul>
     </div>
   <?php endif; ?>
 
-  <?php if (function_exists('session_flash_output')): ?>
-    <?= session_flash_output('notice'); ?>
-  <?php endif; ?>
-
   <form id="page-form"
+        class="mk-form"
         action=""
         method="post"
-        class="mk-form"
         enctype="multipart/form-data">
 
-    <section class="form-section">
-      <h2>Page Details</h2>
+    <!-- SUBJECT -->
+    <div class="form-group">
+      <label for="subject_id">Subject</label>
+      <select name="subject_id" id="subject_id" required>
+        <option value="">-- Choose subject --</option>
+        <?php foreach ($subjects as $s): ?>
+          <?php $sid = (int)($s['id'] ?? 0); ?>
+          <option value="<?= h((string)$sid) ?>"
+            <?= $sid === (int)$page['subject_id'] ? 'selected' : '' ?>>
+            <?= h(mk_subject_label($s)) ?>
+          </option>
+        <?php endforeach; ?>
+      </select>
+      <p class="help-text">Which subject this page belongs to.</p>
+    </div>
 
-      <div class="form-row">
-        <label for="menu_name">Menu name *</label>
-        <input type="text"
-               id="menu_name"
-               name="menu_name"
-               value="<?= h($page['menu_name'] ?? '') ?>">
-        <p class="hint">Short label used in navigation menus.</p>
-      </div>
+    <!-- TITLE -->
+    <div class="form-group">
+      <label for="title">Title</label>
+      <input type="text"
+             name="title"
+             id="title"
+             value="<?= h((string)($page['title'] ?? '')) ?>"
+             required>
+      <p class="help-text">Public heading of the article.</p>
+    </div>
 
-      <div class="form-row">
-        <label for="title">Title *</label>
-        <input type="text"
-               id="title"
-               name="title"
-               value="<?= h($page['title'] ?? '') ?>">
-        <p class="hint">Full title shown as the main heading of the article.</p>
-      </div>
+    <!-- SLUG -->
+    <div class="form-group">
+      <label for="slug">Slug</label>
+      <input type="text"
+             name="slug"
+             id="slug"
+             value="<?= h((string)($page['slug'] ?? '')) ?>"
+             required>
+      <p class="help-text">
+        Appears in the URL. Example:
+        <code>/subjects/history/<strong>history-overview</strong>/</code>
+      </p>
+    </div>
 
-      <div class="form-row">
-        <label for="slug">Slug</label>
-        <input type="text"
-               id="slug"
-               name="slug"
-               value="<?= h($page['slug'] ?? '') ?>">
-        <p class="hint">Used in URLs: /subjects/&lt;subject&gt;/&lt;slug&gt;/ (letters, numbers, - and _ only).</p>
-      </div>
+    <!-- NAV ORDER -->
+    <div class="form-group">
+      <label for="nav_order">Order</label>
+      <input type="number"
+             name="nav_order"
+             id="nav_order"
+             value="<?= h((string)($page['nav_order'] ?? '0')) ?>">
+      <p class="help-text">Lower numbers appear earlier in the sidebar list.</p>
+    </div>
 
-      <div class="form-row">
-        <label for="body">Body</label>
-        <textarea id="body"
-                  name="body"
-                  rows="15"><?= h($page['body'] ?? ($page['content'] ?? '')) ?></textarea>
-        <p class="hint">You can paste formatted HTML here (headings, lists, tables, quotes).</p>
-      </div>
+    <!-- BODY -->
+    <div class="form-group">
+      <label for="body">Body</label>
+      <textarea name="body"
+                id="body"
+                rows="18"><?= h((string)($page['body'] ?? '')) ?></textarea>
+      <p class="help-text">
+        HTML is allowed (&lt;p&gt;, &lt;h2&gt;, &lt;img&gt;, etc.).
+      </p>
+    </div>
 
-      <div class="form-row form-row-inline">
-        <div>
-          <label for="nav_order">Position / Nav order</label>
-          <input type="number"
-                 id="nav_order"
-                 name="nav_order"
-                 min="1"
-                 value="<?= h($page['nav_order'] ?? ($page['position'] ?? '')) ?>">
-          <p class="hint">Lower numbers appear first in the subject's page list.</p>
-        </div>
-
-        <div class="form-checkbox">
-          <label>
-            <input type="checkbox"
-                   name="is_public"
-                   value="1"
-                   <?= !empty($page['is_public'] ?? $page['visible'] ?? 0) ? 'checked' : '' ?>>
-            Publicly visible?
-          </label>
-          <p class="hint">If unchecked, the page is hidden from the public site but visible to staff.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- 9) Attachments section -->
-    <section class="form-section page-attachments">
-      <h2>Attachments</h2>
+    <!-- ATTACHMENTS -->
+    <section class="page-attachments">
+      <h2 class="page-attachments-heading">Attachments</h2>
 
       <?php if (!empty($attachments)): ?>
-        <p class="hint">Existing files attached to this page. Tick "Delete" for any you want to remove.</p>
-        <ul class="page-attachments-list">
-          <?php foreach ($attachments as $f): ?>
-            <?php
-              $stored = $f['stored_filename'] ?? $f['filename'] ?? '';
-              $fileUrl = $stored !== ''
-                ? url_for('/lib/uploads/pages/' . $stored)
-                : '#';
-
-              $label = $f['title']
-                ?? $f['original_filename']
-                ?? $f['stored_filename']
-                ?? 'Attachment';
-            ?>
-            <li class="page-attachment-item">
-              <?php if ($stored !== ''): ?>
-                <a href="<?= h($fileUrl) ?>" target="_blank" rel="noopener">
-                  <?= h($label) ?>
-                </a>
-              <?php else: ?>
-                <span><?= h($label) ?></span>
-              <?php endif; ?>
-
-              <?php if (!empty($f['filesize'])): ?>
-                <span class="attachment-meta">
-                  (<?= h(number_format((float)$f['filesize'] / 1024, 1)) ?> KB)
+        <div class="existing-attachments">
+          <h3>Existing files</h3>
+          <ul class="attachments-list">
+            <?php foreach ($attachments as $file): ?>
+              <li class="attachments-item">
+                <label>
+                  <input type="checkbox"
+                         name="delete_file_ids[]"
+                         value="<?= h((string)($file['id'] ?? '')) ?>">
+                  Delete
+                </label>
+                <span class="attachment-main">
+                  <?= h($file['title'] ?? ($file['filename'] ?? 'File')) ?>
                 </span>
-              <?php endif; ?>
-
-              <label class="attachment-delete">
-                <input type="checkbox"
-                       name="delete_file_ids[]"
-                       value="<?= (int)$f['id'] ?>">
-                Delete
-              </label>
-            </li>
-          <?php endforeach; ?>
-        </ul>
+                <?php if (!empty($file['is_public'])): ?>
+                  <span class="badge badge-soft">Public</span>
+                <?php else: ?>
+                  <span class="badge badge-muted">Staff-only</span>
+                <?php endif; ?>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <p class="help-text">Tick and save to remove selected files.</p>
+        </div>
       <?php else: ?>
-        <p class="hint">No attachments yet for this page.</p>
+        <p class="help-text">No attachments yet.</p>
       <?php endif; ?>
 
-      <div class="attachment-upload">
-        <h3>Add a new attachment</h3>
+      <div class="form-group">
+        <label for="attachment">Add new attachment</label>
+        <input type="file"
+               name="attachment"
+               id="attachment">
+      </div>
 
-        <div class="form-row">
-          <label for="attachment_file">File</label>
-          <input type="file"
-                 id="attachment_file"
-                 name="attachment_file">
-          <p class="hint">Allowed types and size limits follow your image/file rules (see image_functions.php).</p>
-        </div>
+      <div class="form-group">
+        <label for="attachment_title">Attachment title</label>
+        <input type="text"
+               name="attachment_title"
+               id="attachment_title">
+      </div>
 
-        <div class="form-row">
-          <label for="attachment_title">Attachment title</label>
-          <input type="text"
-                 id="attachment_title"
-                 name="attachment_title"
-                 value="">
-          <p class="hint">Optional. If set, shown instead of the raw filename.</p>
-        </div>
-
-        <div class="form-checkbox">
-          <label>
-            <input type="checkbox"
-                   name="attachment_is_public"
-                   value="1"
-                   checked>
-            Publicly visible attachment?
-          </label>
-        </div>
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox"
+                 name="attachment_is_public"
+                 value="1"
+                 checked>
+          File is publicly visible
+        </label>
       </div>
     </section>
 
-    <!-- 10) Actions bar -->
+    <!-- ACTIONS -->
     <div class="form-actions form-actions-sticky">
-      <!-- Save -->
       <button type="submit"
               name="submit"
-              class="btn btn-primary"
-              title="Save changes to this page">
+              class="btn btn-primary">
         <span class="btn-icon" aria-hidden="true">💾</span>
         <span>Save Changes</span>
       </button>
 
-      <!-- Refresh / Clear: reset to values as at page load -->
-      <button type="button"
-              class="btn btn-secondary"
-              onclick="document.getElementById('page-form').reset();"
-              title="Reset all fields to their original values">
-        <span class="btn-icon" aria-hidden="true">⟳</span>
-        <span>Refresh / Clear</span>
-      </button>
+      <a href="<?= h(url_for('/staff/subjects/pgs/index.php')) ?>"
 
-      <!-- Cancel: back to the Pages list -->
-      <a href="<?= h(url_for('/staff/subjects/pgs/')) ?>"
-
-         class="btn btn-link"
-         title="Discard changes and go back to the Pages list">
-        <span class="btn-icon" aria-hidden="true">←</span>
-        <span>Cancel</span>
+         class="btn btn-secondary">
+        Cancel
       </a>
+
+      <!-- + New Page link -->
+      <a href="<?= h($new_page_url) ?>"
+         class="btn btn-secondary">
+        <span class="btn-icon" aria-hidden="true">➕</span>
+        <span>New Page</span>
+      </a>
+
+      <?php
+        // Public page link, if we can build it
+        $subject_slug = '';
+        if (!empty($page['subject_id']) && !empty($subjects)) {
+          foreach ($subjects as $s) {
+            if ((int)$s['id'] === (int)$page['subject_id']) {
+              $subject_slug = (string)($s['slug'] ?? '');
+              break;
+            }
+          }
+        }
+        if ($subject_slug !== '' && !empty($page['slug'])) {
+          $public_url = url_for(
+            '/subjects/' . rawurlencode($subject_slug) . '/' . rawurlencode((string)$page['slug']) . '/'
+          );
+        } else {
+          $public_url = '';
+        }
+      ?>
+
+      <?php if ($public_url !== ''): ?>
+        <a href="<?= h($public_url) ?>"
+
+           class="btn btn-ghost"
+           target="_blank"
+           rel="noopener">
+          View public page →
+        </a>
+      <?php endif; ?>
     </div>
+
   </form>
+
 </main>
 
-<?php
-// Footer include via direct path
-include dirname(__DIR__, 4) . '/private/shared/footer.php';
+<?php include PRIVATE_PATH . '/shared/footer.php'; ?>

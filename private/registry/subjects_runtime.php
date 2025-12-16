@@ -42,7 +42,7 @@ if (!function_exists('subjects_catalog')) {
       'struggles'    => ['name' => 'Struggles',     'nav_order' => 11],
       'biafra'      => ['name' => 'Biafra',       'nav_order' => 12],
       'nigeria'     => ['name' => 'Nigeria',      'nav_order' => 13],
-      'ipob'        => ['name' => 'IPOB',         'nav_order' => 14],
+      'ipob'        => ['name' => 'Resistance',         'nav_order' => 14],
       'africa'      => ['name' => 'Africa',       'nav_order' => 15],
       'uk'          => ['name' => 'UK',           'nav_order' => 16],
       'europe'      => ['name' => 'Europe',       'nav_order' => 17],

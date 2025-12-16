@@ -17,7 +17,7 @@ $subjects = [
     11 => ['slug'=>'struggles',    'name'=>'Struggles'],
     12 => ['slug'=>'biafra',       'name'=>'Biafra'],
     13 => ['slug'=>'nigeria',      'name'=>'Nigeria'],
-    14 => ['slug'=>'ipob',         'name'=>'IPOB'],
+    14 => ['slug'=>'resistance',         'name'=>'Resistance'],
     15 => ['slug'=>'africa',       'name'=>'Africa'],
     16 => ['slug'=>'uk',           'name'=>'UK'],
     17 => ['slug'=>'europe',       'name'=>'Europe'],

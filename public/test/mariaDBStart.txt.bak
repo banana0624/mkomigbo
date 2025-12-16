@@ -1,5 +1,10 @@
-1. # Stop service first so the port is free
+1. 
+a) # Stop service first so the port is free
 sc.exe stop MariaDB 2>$null
+
+b) # Start service to the port
+sc.exe start MariaDB
+netstat -ano | findstr ":3307 "
 
 # Start in console mode with your my.ini
 & "F:\xampp\MariaDB 11.8\New Folder\bin\mysqld.exe" --defaults-file="F:\xampp\MariaDB 11.8\New Folder\data\my.ini" --console

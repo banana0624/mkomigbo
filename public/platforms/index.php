@@ -1,132 +1,240 @@
 <?php
 declare(strict_types=1);
+
 /**
-  *public/platforms/index.php — Public router for Platforms
-  * - /platforms/                 → list all platforms
-  * - /platforms/{platform}/      → list items for platform
-  * - /platforms/{platform}/{it}/ → show one item
-  */
+ * project-root/public/platforms/index.php
+ *
+ * Public Platforms hub:
+ *   /platforms/
+ *
+ * Introduces the different interactive platforms on Mkomigbo
+ * (Forum, Blog, Media, etc.), with Community Forum already active
+ * and others marked as "coming soon".
+ */
 
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
-if (!is_file($init)) { http_response_code(500); exit('Init not found'); }
-require_once $init;
-
-require_once PRIVATE_PATH . '/functions/platform_functions.php';
-
-if (!function_exists('h')) { function h(string $s): string { return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); } }
-if (!function_exists('url_for')) { function url_for(string $p): string { return ($p !== '' && $p[0] !== '/') ? '/'.$p : $p; } }
-
-$platformSlug = $_GET['platform'] ?? '';
-$itemSlug     = $_GET['item']     ?? '';
-
-$page_title   = 'Platforms';
-$active_nav   = 'platforms';
-$stylesheets  = $stylesheets ?? [];
-if (!in_array('/lib/css/ui.css', $stylesheets, true)) $stylesheets[] = '/lib/css/ui.css';
-$body_class   = 'public platforms';
-
-$publicHeader  = PRIVATE_PATH . '/shared/public_header.php';
-$sharedHeader  = PRIVATE_PATH . '/shared/header.php';
-$footer        = PRIVATE_PATH . '/shared/footer.php';
-if (is_file($publicHeader)) require $publicHeader; else if (is_file($sharedHeader)) require $sharedHeader;
-
-/* 1) No slug → list all public platforms */
-if ($platformSlug === '') {
-  $platforms = function_exists('list_platforms_public')
-    ? list_platforms_public()
-    : (function(){
-        $pdo = db();
-        return $pdo->query("SELECT id, slug, name, description_html, COALESCE(visible,1) AS visible, COALESCE(position,1) AS position
-                              FROM platforms
-                             WHERE COALESCE(visible,1)=1
-                             ORDER BY position, name")->fetchAll();
-      })();
-  ?>
-  <main class="container" style="padding:1rem 0;">
-    <h1>Platforms</h1>
-    <?php if (!$platforms): ?>
-      <p>No platforms yet.</p>
-    <?php else: ?>
-      <section class="grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1rem;">
-        <?php foreach ($platforms as $pl): ?>
-          <article class="card" style="border:1px solid #e2e8f0;border-radius:12px;padding:1rem;">
-            <h3 style="margin:.1rem 0 .4rem;">
-              <a href="<?= h(url_for('/platforms/'.$pl['slug'].'/')) ?>" style="text-decoration:none;color:#0b63bd;">
-                <?= h($pl['name']) ?>
-              </a>
-            </h3>
-            <?php if (!empty($pl['description_html'])): ?>
-              <div class="muted" style="font-size:.95rem;line-height:1.5;"><?= $pl['description_html'] ?></div>
-            <?php endif; ?>
-            <p style="margin-top:.6rem">
-              <a class="btn" href="<?= h(url_for('/platforms/'.$pl['slug'].'/')) ?>">Open</a>
-            </p>
-          </article>
-        <?php endforeach; ?>
-      </section>
-    <?php endif; ?>
-  </main>
-  <style>.btn{display:inline-block;border:1px solid #e2e8f0;background:#f8fafc;padding:.35rem .6rem;border-radius:.5rem;text-decoration:none;color:#0b63bd}</style>
-  <?php if (is_file($footer)) require $footer; exit;
+/* 1) Bootstrap initialize.php */
+if (!defined('PRIVATE_PATH')) {
+  $init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+  if (!is_file($init)) {
+    http_response_code(500);
+    echo "<h1>FATAL: initialize.php missing</h1>";
+    echo "<p>Expected at: " . htmlspecialchars($init, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</p>";
+    exit;
+  }
+  require_once $init;
 }
 
-/* 2) Platform page (no item) → list visible items */
-$platform = function_exists('find_platform_by_slug')
-  ? find_platform_by_slug($platformSlug)
-  : (function($slug){ $pdo = db(); $s=$pdo->prepare("SELECT * FROM platforms WHERE slug=? AND COALESCE(visible,1)=1 LIMIT 1"); $s->execute([$slug]); return $s->fetch(); })($platformSlug);
+/* 2) Basic page context for header */
+$page_title  = 'Platforms';
+$body_class  = 'platforms-body';
+$active_nav  = 'platforms';
 
-if (!$platform || (int)($platform['visible'] ?? 1) !== 1) {
-  http_response_code(404);
-  echo "<main class='container' style='padding:1rem 0;'><h1>Platform not found</h1></main>";
-  if (is_file($footer)) require $footer; exit;
-}
+$meta = [
+  'description' => 'Explore the platforms of Mkomigbo – forums, communities, and media spaces that deepen how Ndi Mkomigbo and friends discuss and share knowledge.',
+];
 
-if ($itemSlug === '') {
-  $items = function_exists('list_items_public')
-    ? list_items_public((int)$platform['id'])
-    : (function($pid){ $pdo = db(); $s=$pdo->prepare("SELECT * FROM platform_items WHERE platform_id=? AND COALESCE(visible,1)=1 ORDER BY COALESCE(position,1), id"); $s->execute([$pid]); return $s->fetchAll(); })((int)$platform['id']);
-  $page_title = $platform['name'].' — Items';
-  ?>
-  <main class="container" style="padding:1rem 0;">
-    <h1><?= h($platform['name']) ?></h1>
-    <?php if (!empty($platform['description_html'])): ?>
-      <div class="muted" style="margin:.25rem 0 1rem;"><?= $platform['description_html'] ?></div>
-    <?php endif; ?>
-    <?php if (!$items): ?>
-      <p>No items yet for this platform.</p>
-    <?php else: ?>
-      <ul class="list" style="padding-left:1rem;">
-        <?php foreach ($items as $it): ?>
-          <li><a href="<?= h(url_for('/platforms/'.$platform['slug'].'/'.$it['slug'].'/')) ?>"><?= h($it['menu_name'] ?? $it['name'] ?? ('Item #'.(int)$it['id'])) ?></a></li>
-        <?php endforeach; ?>
-      </ul>
-    <?php endif; ?>
-  </main>
-  <?php if (is_file($footer)) require $footer; exit;
-}
+// Optional: extra small styles just for this hub
+$extra_head = <<<'HTML'
+<style>
+  .platforms-hero {
+    padding: 1.5rem 0 1.25rem;
+  }
+  .platforms-hero-eyebrow {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: #6b7280;
+    margin: 0 0 .25rem;
+  }
+  .platforms-hero-title {
+    font-size: 1.6rem;
+    margin: 0 0 .4rem;
+  }
+  .platforms-hero-lead {
+    max-width: 46rem;
+    font-size: .95rem;
+    color: #4b5563;
+    margin: 0;
+  }
 
-/* 3) Item page */
-$item = function_exists('find_item_by_slug')
-  ? find_item_by_slug((int)$platform['id'], $itemSlug)
-  : (function($pid,$slug){ $pdo=db(); $s=$pdo->prepare("SELECT * FROM platform_items WHERE platform_id=? AND slug=? AND COALESCE(visible,1)=1 LIMIT 1"); $s->execute([$pid,$slug]); return $s->fetch(); })((int)$platform['id'], $itemSlug);
+  .platforms-grid {
+    margin-top: 1.6rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
 
-if (!$item || (int)($item['visible'] ?? 1) !== 1) {
-  http_response_code(404);
-  echo "<main class='container' style='padding:1rem 0;'><h1>Item not found</h1></main>";
-  if (is_file($footer)) require $footer; exit;
-}
+  .platform-card {
+    border-radius: .9rem;
+    border: 1px solid #e5e7eb;
+    padding: .9rem .95rem 1rem;
+    background: #ffffff;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 
-$page_title = $platform['name'].' — '.($item['menu_name'] ?? 'Item');
+  .platform-card-header {
+    margin-bottom: .6rem;
+  }
+  .platform-card-eyebrow {
+    font-size: .75rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: #9ca3af;
+    margin: 0 0 .15rem;
+  }
+  .platform-card-title {
+    font-size: 1.05rem;
+    margin: 0 0 .1rem;
+  }
+  .platform-card-status {
+    font-size: .78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    color: #059669;
+  }
+  .platform-card-status.badge-soon {
+    color: #b45309;
+  }
+
+  .platform-card-body {
+    font-size: .9rem;
+    color: #4b5563;
+    margin-bottom: .7rem;
+  }
+
+  .platform-card-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .4rem;
+    align-items: center;
+  }
+
+  .platform-card-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .35rem .8rem;
+    border-radius: .6rem;
+    border: 1px solid #111827;
+    background: #111827;
+    color: #ffffff;
+    font-size: .86rem;
+    text-decoration: none;
+  }
+  .platform-card-link.secondary {
+    background: transparent;
+    color: #111827;
+    border-color: #d1d5db;
+  }
+
+  .platform-card-meta {
+    font-size: .78rem;
+    color: #9ca3af;
+  }
+
+  @media (max-width: 640px) {
+    .platforms-hero-title {
+      font-size: 1.35rem;
+    }
+  }
+</style>
+HTML;
+
+require_once PRIVATE_PATH . '/shared/header.php';
 ?>
-<main class="container" style="padding:1rem 0;max-width:900px;">
-  <nav class="breadcrumbs" style="margin:.5rem 0;">
-    <a href="<?= h(url_for('/platforms/')) ?>">Platforms</a> /
-    <a href="<?= h(url_for('/platforms/'.$platform['slug'].'/')) ?>"><?= h($platform['name']) ?></a> /
-    <strong><?= h($item['menu_name'] ?? $item['name'] ?? ('Item #'.(int)$item['id'])) ?></strong>
-  </nav>
-  <article class="content">
-    <h1><?= h($item['menu_name'] ?? $item['name'] ?? 'Item') ?></h1>
-    <div><?= $item['body_html'] ?? '' ?></div>
-  </article>
+
+<main class="mk-container platforms-main" style="padding:1.25rem 0 2rem;">
+
+  <section class="platforms-hero">
+    <p class="platforms-hero-eyebrow">Platforms</p>
+    <h1 class="platforms-hero-title">Interactive spaces on Mkomigbo</h1>
+    <p class="platforms-hero-lead">
+      Beyond static articles, Mkomigbo hosts and will grow several platforms where
+      people can ask questions, share interpretations, and contribute materials
+      around History, Language, Culture, Struggles and more.
+    </p>
+  </section>
+
+  <section class="platforms-grid" aria-label="Mkomigbo platforms">
+    <!-- Community Forum -->
+    <article class="platform-card">
+      <div>
+        <header class="platform-card-header">
+          <p class="platform-card-eyebrow">Discussion</p>
+          <h2 class="platform-card-title">Community Forum</h2>
+          <p class="platform-card-status">Now available</p>
+        </header>
+        <div class="platform-card-body">
+          Join structured discussions connected to the subjects and articles
+          on Mkomigbo. Threads are grouped into categories such as
+          <em>History &amp; interpretation</em>, <em>Language &amp; expression</em>,
+          and <em>Culture &amp; belief</em>.
+        </div>
+      </div>
+      <footer class="platform-card-footer">
+        <a class="platform-card-link"
+           href="<?= h(url_for('/platforms/forum/')) ?>">
+          Enter Community Forum
+        </a>
+        <span class="platform-card-meta">
+          Early phase • read-only for visitors
+        </span>
+      </footer>
+    </article>
+
+    <!-- Blog -->
+    <article class="platform-card">
+      <div>
+        <header class="platform-card-header">
+          <p class="platform-card-eyebrow">Essays</p>
+          <h2 class="platform-card-title">Blog &amp; commentary</h2>
+          <p class="platform-card-status badge-soon">Coming soon</p>
+        </header>
+        <div class="platform-card-body">
+          A curated stream of essays, reflections and commentary that
+          expand on the core subjects. Longer-form writing from contributors
+          and invited voices will live here.
+        </div>
+      </div>
+      <footer class="platform-card-footer">
+        <span class="platform-card-link secondary" aria-disabled="true">
+          Not yet open
+        </span>
+        <span class="platform-card-meta">
+          Structure and workflow still in design.
+        </span>
+      </footer>
+    </article>
+
+    <!-- Media / Library -->
+    <article class="platform-card">
+      <div>
+        <header class="platform-card-header">
+          <p class="platform-card-eyebrow">Media</p>
+          <h2 class="platform-card-title">Media &amp; resources</h2>
+          <p class="platform-card-status badge-soon">Coming soon</p>
+        </header>
+        <div class="platform-card-body">
+          A focused place for images, documents, audio and video related to
+          the subjects: archival materials, interviews, maps, and teaching
+          resources that complement the written pages.
+        </div>
+      </div>
+      <footer class="platform-card-footer">
+        <span class="platform-card-link secondary" aria-disabled="true">
+          Not yet open
+        </span>
+        <span class="platform-card-meta">
+          Will connect to your uploads &amp; attachments.
+        </span>
+      </footer>
+    </article>
+  </section>
+
 </main>
-<?php if (is_file($footer)) require $footer;
+
+<?php require_once PRIVATE_PATH . '/shared/footer.php'; ?>

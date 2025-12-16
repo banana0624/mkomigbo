@@ -4,550 +4,660 @@ declare(strict_types=1);
 /**
  * project-root/public/subjects/index.php
  * Unified public subjects router:
- * - /subjects/                  → list all subjects
- * - /subjects/{subject}/        → list pages for that subject
- * - /subjects/{subject}/{page}/ → show one page
  *
- * Flexible for schema (menu_name/name; body/content; visible flags)
+ *  - /subjects/                       → list all subjects
+ *  - /subjects/{subject}/             → subject overview + list of pages
+ *  - /subjects/{subject}/{page}/      → show specific page + list of pages
+ *
+ *  Each subject has an "overview" page which is simply the
+ *  first page for that subject (by nav_order / position / id).
+ *
+ *  This file aims to be:
+ *   - robust (works even if some helpers/columns are missing),
+ *   - professional (clear layout and structure),
+ *   - easy to extend later.
  */
 
-/* 1) initialize.php (tolerant path walker) */
+/* 1) Bootstrap initialize.php */
 if (!defined('PRIVATE_PATH')) {
-  $base = __DIR__;
-  $init = '';
-  for ($i = 0; $i < 6; $i++) {
-    $try = $base . DIRECTORY_SEPARATOR . 'private' . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'initialize.php';
-    if (is_file($try)) { $init = $try; break; }
-    $base = dirname($base);
-  }
-  if ($init === '') {
+  $init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+  if (!is_file($init)) {
     http_response_code(500);
-    exit('Init not found');
+    echo "<h1>FATAL: initialize.php missing</h1>";
+    echo "<p>Expected at: " . htmlspecialchars($init, ENT_QUOTES, 'UTF-8') . "</p>";
+    exit;
   }
   require_once $init;
 }
 
 /* Ensure $db PDO is available */
-if (!isset($db) && function_exists('db')) {
-  $db = db();
+if (!isset($db) || !($db instanceof PDO)) {
+  if (function_exists('db')) {
+    $db = db();
+  } else {
+    http_response_code(500);
+    exit('Database connection not available.');
+  }
 }
 
-/* 2) local helpers (fallbacks only if missing) */
+/* 2) Helper: safe HTML escape */
 if (!function_exists('h')) {
-  function h(string $s): string {
-    return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+  function h(string $value): string {
+    return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
   }
 }
 
+/* 3) Helper: build URL (fallback if url_for not defined) */
 if (!function_exists('url_for')) {
-  function url_for(string $p): string {
-    return ($p !== '' && $p[0] !== '/') ? '/' . $p : $p;
-  }
-}
-
-if (!function_exists('subject_css_class_from_slug')) {
-  function subject_css_class_from_slug(string $slug): string {
-    $slug = strtolower($slug);
-    return preg_replace('/[^a-z0-9]+/', '', $slug);
-  }
-}
-
-if (!function_exists('body_classes_for_subject')) {
-  function body_classes_for_subject(?array $subject = null, bool $is_public = true): string {
-    $classes = [$is_public ? 'public-subjects' : 'staff-subjects'];
-    if ($subject && !empty($subject['slug'])) {
-      $classes[] = 'subject';
-      $classes[] = subject_css_class_from_slug((string)$subject['slug']);
+  function url_for(string $script_path): string {
+    if ($script_path === '' || $script_path[0] !== '/') {
+      $script_path = '/' . $script_path;
     }
-    return implode(' ', $classes);
+    // If WWW_ROOT is defined in initialize.php, respect it
+    if (defined('WWW_ROOT')) {
+      return WWW_ROOT . $script_path;
+    }
+    return $script_path;
+  }
+}
+
+/* 4) Data access helpers
+ *    These try to use your existing functions if present and
+ *    fall back to simple PDO queries if not.
+ */
+
+/**
+ * Find subject by slug.
+ */
+function subjects_load_subject_by_slug(string $slug): ?array {
+  if (function_exists('find_subject_by_slug')) {
+    $row = find_subject_by_slug($slug);
+  } else {
+    global $db;
+    $sql = "SELECT * FROM subjects WHERE slug = :slug LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([':slug' => $slug]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+  }
+  return is_array($row) ? $row : null;
+}
+
+/**
+ * Get all public subjects (for /subjects/ listing).
+ */
+function subjects_load_all_public_subjects(): array {
+  if (function_exists('find_all_subjects')) {
+    // If your helper already filters public, great.
+    $rows = find_all_subjects();
+    return is_array($rows) ? $rows : [];
+  }
+
+  global $db;
+
+  // Try visible column first; fallback if missing.
+  try {
+    $sql = "SELECT * FROM subjects WHERE visible = 1 ORDER BY position ASC, id ASC";
+    $stmt = $db->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  } catch (Throwable $e) {
+    $sql = "SELECT * FROM subjects ORDER BY id ASC";
+    $stmt = $db->query($sql);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
   }
 }
 
 /**
- * NOTE: we intentionally do NOT define subject_logo_url() here.
- * Your real implementation lives in private/functions/subject_functions.php
- * and expects an ARRAY ($subject). We will always call it with the full row.
+ * Get all pages for a subject, roughly ordered with "overview" first.
  */
-
-/* 3) schema-tolerant DB helpers */
-if (!function_exists('db_column_exists')) {
-  function db_column_exists(string $table, string $column): bool {
-    static $cache = [];
-    $k = strtolower("$table.$column");
-    if (array_key_exists($k, $cache)) {
-      return $cache[$k];
-    }
-
-    try {
-      global $db;
-      $sql = "SELECT 1
-                FROM information_schema.COLUMNS
-               WHERE TABLE_SCHEMA = DATABASE()
-                 AND TABLE_NAME   = :t
-                 AND COLUMN_NAME  = :c
-               LIMIT 1";
-      $st = $db->prepare($sql);
-      $st->execute([':t' => $table, ':c' => $column]);
-      $cache[$k] = (bool)$st->fetchColumn();
-    } catch (Throwable $e) {
-      $cache[$k] = false;
-    }
-
-    return $cache[$k];
+function subjects_load_pages_for_subject(int $subject_id, bool $public_only = true): array {
+  // Prefer your own helper if present.
+  if (function_exists('find_pages_by_subject_id')) {
+    $rows = find_pages_by_subject_id($subject_id, $public_only);
+    return is_array($rows) ? $rows : [];
   }
-}
 
-/** Get visible pages for a subject; tolerant to nav_order/is_active/visible/position missing. */
-function fetch_public_pages_for_subject(int $subject_id): array {
   global $db;
 
-  // ORDER BY: prefer nav_order; else position; else id
-  $has_nav      = db_column_exists('pages', 'nav_order');
-  $has_position = db_column_exists('pages', 'position');
+  $params = [':sid' => $subject_id];
 
-  if ($has_nav) {
-    $order_by = 'p.nav_order ASC, p.slug ASC';
-  } elseif ($has_position) {
-    $order_by = 'p.position ASC, p.slug ASC';
-  } else {
-    $order_by = 'p.id ASC, p.slug ASC';
+  // Attempt with is_public + nav_order
+  try {
+    $sql = "SELECT * FROM pages WHERE subject_id = :sid";
+    if ($public_only) {
+      $sql .= " AND is_public = 1";
+    }
+    $sql .= " ORDER BY nav_order ASC, id ASC";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($rows)) {
+      return $rows;
+    }
+  } catch (Throwable $e) {
+    // ignore and fall through
   }
 
-  // Visibility: tolerate missing is_active / visible
-  $has_is_active = db_column_exists('pages', 'is_active');
-  $has_visible   = db_column_exists('pages', 'visible');
-
-  if ($has_is_active && $has_visible) {
-    $visible_pred = 'COALESCE(p.visible,1)=1 AND COALESCE(p.is_active,1)=1';
-  } elseif ($has_is_active) {
-    $visible_pred = 'COALESCE(p.is_active,1)=1';
-  } elseif ($has_visible) {
-    $visible_pred = 'COALESCE(p.visible,1)=1';
-  } else {
-    $visible_pred = '1=1';
+  // Fallback: visible + position (older schema)
+  try {
+    $sql = "SELECT * FROM pages WHERE subject_id = :sid";
+    if ($public_only) {
+      $sql .= " AND visible = 1";
+    }
+    $sql .= " ORDER BY position ASC, id ASC";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
+    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    if (!empty($rows)) {
+      return $rows;
+    }
+  } catch (Throwable $e) {
+    // ignore and fall through
   }
 
-  // Build SELECT only with columns that may exist
-  $cols = ['p.id', 'p.subject_id', 'p.slug'];
-  if (db_column_exists('pages', 'menu_name')) { $cols[] = 'p.menu_name'; }
-  if ($has_position)                           { $cols[] = 'p.position'; }
-
-  $sql = "SELECT " . implode(', ', $cols) . "
-            FROM pages p
-           WHERE p.subject_id = :sid
-             AND {$visible_pred}
-        ORDER BY {$order_by}";
-  $st = $db->prepare($sql);
-  $st->execute([':sid' => $subject_id]);
-  return $st->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  // Final fallback: just get something.
+  $sql = "SELECT * FROM pages WHERE subject_id = :sid";
+  $stmt = $db->prepare($sql);
+  $stmt->execute($params);
+  return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 }
 
-/** List all public subjects; tolerant to nav_order/is_public/visible/position missing. */
-function fetch_public_subjects(): array {
+/**
+ * Find a single page by subject + slug.
+ */
+function subjects_load_page_by_slug(int $subject_id, string $page_slug, bool $public_only = true): ?array {
   global $db;
 
-  // ORDER BY: prefer nav_order; else position; else id
-  $has_nav      = db_column_exists('subjects', 'nav_order');
-  $has_position = db_column_exists('subjects', 'position');
-
-  if ($has_nav) {
-    $order_by = 's.nav_order ASC, s.slug ASC';
-  } elseif ($has_position) {
-    $order_by = 's.position ASC, s.slug ASC';
-  } else {
-    $order_by = 's.id ASC, s.slug ASC';
+  // If you have a helper, use it.
+  if (function_exists('find_page_by_slug_and_subject_id')) {
+    $row = find_page_by_slug_and_subject_id($page_slug, $subject_id, $public_only);
+    return is_array($row) ? $row : null;
   }
 
-  // Visibility: tolerate is_public / visible
-  $has_is_public = db_column_exists('subjects', 'is_public');
-  $has_visible   = db_column_exists('subjects', 'visible');
-
-  if ($has_is_public && $has_visible) {
-    $visible_pred = 'COALESCE(s.is_public,1)=1 AND COALESCE(s.visible,1)=1';
-  } elseif ($has_is_public) {
-    $visible_pred = 'COALESCE(s.is_public,1)=1';
-  } elseif ($has_visible) {
-    $visible_pred = 'COALESCE(s.visible,1)=1';
-  } else {
-    $visible_pred = '1=1';
-  }
-
-  // Build SELECT only with existing columns
-  $cols = ['s.id', 's.slug'];
-  if (db_column_exists('subjects', 'menu_name')) { $cols[] = 's.menu_name'; }
-  if (db_column_exists('subjects', 'name'))      { $cols[] = 's.name'; }
-  if ($has_position)                             { $cols[] = 's.position'; }
-
-  $sql = "SELECT " . implode(', ', $cols) . "
-            FROM subjects s
-           WHERE {$visible_pred}
-        ORDER BY {$order_by}";
-  $st = $db->query($sql);
-  return $st ? ($st->fetchAll(PDO::FETCH_ASSOC) ?: []) : [];
-}
-
-/* 4) request vars + chrome/header selection */
-$subjectSlug = $_GET['subject'] ?? '';
-$pageSlug    = $_GET['page'] ?? '';
-
-$page_title  = 'Subjects';
-$active_nav  = 'subjects';
-$stylesheets = $stylesheets ?? [];
-if (!in_array('/lib/css/ui.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/ui.css';
-}
-if (!in_array('/lib/css/subjects.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/subjects.css';
-}
-
-// For body class we can already inject the slug (even before DB row)
-$subjectContextForBody = $subjectSlug !== '' ? ['slug' => $subjectSlug] : null;
-$body_class            = body_classes_for_subject($subjectContextForBody, true);
-
-$subjectsHeader = (defined('SHARED_PATH'))
-  ? SHARED_PATH . '/subjects/public_subjects_header.php'
-  : PRIVATE_PATH . '/shared/subjects/public_subjects_header.php';
-
-$publicHeader  = PRIVATE_PATH . '/shared/public_header.php';
-$genericHeader = PRIVATE_PATH . '/shared/header.php';
-
-if (is_file($subjectsHeader)) {
-  require $subjectsHeader;
-} elseif (is_file($publicHeader)) {
-  require $publicHeader;
-} else {
-  require $genericHeader;
-}
-
-/* 5) display helpers */
-$subjectDisplayName = function(array $s): string {
-  if (!empty($s['menu_name'])) { return $s['menu_name']; }
-  if (!empty($s['name']))      { return $s['name']; }
-  if (!empty($s['slug']))      { return $s['slug']; }   // final fallback
-  return 'Subject';
-};
-
-$pageDisplayName = function(array $p): string {
-  if (!empty($p['menu_name'])) { return $p['menu_name']; }
-  if (!empty($p['name']))      { return $p['name']; }   // if present in your schema
-  if (!empty($p['title']))     { return $p['title']; }  // if present
-  if (!empty($p['slug']))      { return $p['slug']; }   // final fallback
-  return 'Page';
-};
-
-$pageBody = function(array $p): string {
-  if (!empty($p['body']))    { return $p['body']; }
-  if (!empty($p['content'])) { return $p['content']; }
-  return '';
-};
-
-?>
-<main class="container" style="padding:1rem 0;">
-<?php
-/* 6) No subject → list all subjects */
-if ($subjectSlug === '') {
-
-  // Prefer your function if present; otherwise use our tolerant helper
-  if (function_exists('find_all_subjects')) {
-    $rows = find_all_subjects();
-  } else {
-    $rows = fetch_public_subjects();
-  }
-
-  $subjects = [];
-  foreach ($rows as $row) {
-    $slug = $row['slug'] ?? '';
-    if ($slug === '') {
-      $slug = 'subject-' . ($row['id'] ?? uniqid());
+  // Try modern schema (is_public, slug)
+  try {
+    $sql = "SELECT * FROM pages
+            WHERE subject_id = :sid
+              AND slug = :slug";
+    if ($public_only) {
+      $sql .= " AND is_public = 1";
     }
-    $subjects[$slug] = $row;
+    $sql .= " LIMIT 1";
+    $stmt = $db->prepare($sql);
+    $stmt->execute([
+      ':sid'  => $subject_id,
+      ':slug' => $page_slug,
+    ]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row) {
+      return $row;
+    }
+  } catch (Throwable $e) {
+    // ignore and fall through
   }
+
+  // Fallback: older schema might not have is_public but should still have slug
+  $sql = "SELECT * FROM pages
+          WHERE subject_id = :sid
+            AND slug = :slug
+          LIMIT 1";
+  $stmt = $db->prepare($sql);
+  $stmt->execute([
+    ':sid'  => $subject_id,
+    ':slug' => $page_slug,
+  ]);
+  $row = $stmt->fetch(PDO::FETCH_ASSOC);
+  return $row ?: null;
+}
+
+/* 5) Presentation helpers */
+
+function subjects_subject_name(array $subject): string {
+  return (string)($subject['name']
+    ?? $subject['menu_name']
+    ?? $subject['title']
+    ?? $subject['slug']
+    ?? 'Subject');
+}
+
+function subjects_subject_tagline(array $subject): ?string {
+  return $subject['tagline'] ?? $subject['description'] ?? null;
+}
+
+function subjects_page_title(array $page): string {
+  return (string)($page['title']
+    ?? $page['menu_name']
+    ?? $page['name']
+    ?? $page['slug']
+    ?? 'Page');
+}
+
+function subjects_page_body(array $page): string {
+  return (string)($page['body'] ?? $page['content'] ?? '');
+}
+
+/**
+ * Render the list of subjects for /subjects/.
+ */
+function subjects_render_subjects_index(array $subjects): void {
+  // These variables will be seen inside header.php
+  $page_title  = 'Subjects';
+  $body_class  = 'subjects-body';
+  $active_nav  = 'subjects';
+
+  include PRIVATE_PATH . '/shared/header.php';
   ?>
-  <section class="subjects-hero">
-    <h1>Subjects</h1>
-    <p>Explore the Mkomigbo knowledge base.</p>
-  </section>
 
-  <?php if (empty($subjects)): ?>
-    <p>No subjects yet.</p>
-  <?php else: ?>
-    <ul class="grid-subjects"
-        style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem;list-style:none;padding:0;">
-      <?php foreach ($subjects as $slug => $s): ?>
-        <?php
-          $name       = $subjectDisplayName($s);
-          $slug_class = subject_css_class_from_slug((string)$slug);
-          $url        = url_for('/subjects/' . rawurlencode((string)$slug) . '/');
-        ?>
-        <li class="<?= h($slug_class) ?>"
-            style="border:1px solid #e2e8f0;border-radius:12px;padding:.9rem;">
-          <a href="<?= h($url) ?>"
-             style="text-decoration:none;color:#0b63bd;display:block;">
-            <strong><?= h($name) ?></strong><br>
-            <small class="muted"><?= h((string)$slug) ?></small>
-          </a>
-        </li>
-      <?php endforeach; ?>
-    </ul>
-  <?php endif; ?>
+  <main class="subjects-index-layout mk-container">
+    <header class="subjects-index-header">
+      <h1 class="subjects-index-title"><?= h($page_title) ?></h1>
+      <p class="subjects-index-lead">
+        Explore all <?= count($subjects) ?> subjects. Each subject has its own overview page,
+        introducing the theme and listing all related articles.
+      </p>
+    </header>
 
-<?php
-/* 7) Subject (and optional page) */
-} else {
+    <section class="subjects-grid">
+      <?php if (empty($subjects)): ?>
+        <p>No subjects are currently available.</p>
+      <?php else: ?>
+        <ul class="subjects-grid-list">
+          <?php foreach ($subjects as $subject): ?>
+            <?php
+              $slug_raw = $subject['slug'] ?? null;
+              if (!$slug_raw) { continue; }
 
-  // === Single subject by slug (visibility tolerant) ===
-  $has_is_public = db_column_exists('subjects', 'is_public');
-  $has_visible   = db_column_exists('subjects', 'visible');
+              $name = subjects_subject_name($subject);
+              $slug = rawurlencode((string)$slug_raw);
 
-  if ($has_is_public && $has_visible) {
-    $visible_sql = 'COALESCE(is_public,1)=1 AND COALESCE(visible,1)=1';
-  } elseif ($has_is_public) {
-    $visible_sql = 'COALESCE(is_public,1)=1';
-  } elseif ($has_visible) {
-    $visible_sql = 'COALESCE(visible,1)=1';
+              // Build clean web URL: /subjects/{subject}/
+              if (function_exists('url_for')) {
+                $url = url_for('/subjects/' . $slug . '/');
+              } else {
+                $url = '/subjects/' . $slug . '/';
+              }
+            ?>
+            <li class="subjects-grid-item">
+              <article class="subject-card">
+                <h2 class="subject-card-title">
+                  <a href="<?= h($url) ?>"><?= h($name) ?></a>
+                </h2>
+                <?php if ($tagline = subjects_subject_tagline($subject)): ?>
+                  <p class="subject-card-tagline">
+                    <?= h($tagline) ?>
+                  </p>
+                <?php else: ?>
+                  <p class="subject-card-tagline">
+                    Introduction and articles about <?= h($name) ?>.
+                  </p>
+                <?php endif; ?>
+                <p class="subject-card-more">
+                  <a href="<?= h($url) ?>" class="subject-card-link">
+                    View overview &amp; pages →
+                  </a>
+                </p>
+              </article>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
+    </section>
+  </main>
+
+  <?php
+  include PRIVATE_PATH . '/shared/footer.php';
+}
+
+/**
+ * Render view for a single subject (overview + page + list of pages).
+ */
+function subjects_render_subject_view(
+  array $subject,
+  ?array $current_page,
+  array $all_pages,
+  ?string $requested_page_slug
+): void {
+  $subject_slug_raw = $subject['slug'] ?? '';
+  $subject_slug     = (string)$subject_slug_raw;
+  $subject_name     = subjects_subject_name($subject);
+
+  // Determine overview page as "first page" (if any)
+  $overview_page = !empty($all_pages) ? $all_pages[0] : null;
+
+  // Page title: current page if present, else overview, else subject
+  if ($current_page) {
+    $page_title = subjects_page_title($current_page);
+  } elseif ($overview_page) {
+    $page_title = subjects_page_title($overview_page);
   } else {
-    $visible_sql = '1=1';
+    $page_title = $subject_name;
   }
 
-  $scols = ['id', 'slug'];
-  if (db_column_exists('subjects', 'menu_name')) { $scols[] = 'menu_name'; }
-  if (db_column_exists('subjects', 'name'))      { $scols[] = 'name'; }
-  if (db_column_exists('subjects', 'position'))  { $scols[] = 'position'; }
+  // For the article body, show the selected page if there is one,
+  // otherwise fall back to the overview page.
+  $page_for_body = $current_page ?? $overview_page;
 
-  $stmt = $db->prepare("
-    SELECT " . implode(', ', $scols) . "
-      FROM subjects
-     WHERE slug = :slug
-       AND {$visible_sql}
-     LIMIT 1
-  ");
-  $stmt->execute([':slug' => $subjectSlug]);
-  $subject = $stmt->fetch(PDO::FETCH_ASSOC);
+  // Optional: build a clean overview URL
+  $overview_slug = '';
+  if ($overview_page && !empty($overview_page['slug'])) {
+    $overview_slug = (string)$overview_page['slug'];
+  }
 
-  if (!$subject) {
-    http_response_code(404);
-    echo "<p>Subject not found: " . h($subjectSlug) . "</p>";
+  if ($overview_slug !== '') {
+    $overview_url = function_exists('url_for')
+      ? url_for('/subjects/' . rawurlencode($subject_slug) . '/' . rawurlencode($overview_slug) . '/')
+      : '/subjects/' . rawurlencode($subject_slug) . '/' . rawurlencode($overview_slug) . '/';
   } else {
-    $subjectId        = (int)$subject['id'];
-    $subjectName      = $subjectDisplayName($subject);
-    $subjectSlugLower = strtolower((string)$subject['slug']);
+    // If we don't have any pages, just point to the subject root
+    $overview_url = function_exists('url_for')
+      ? url_for('/subjects/' . rawurlencode($subject_slug) . '/')
+      : '/subjects/' . rawurlencode($subject_slug) . '/';
+  }
 
-    // Try to resolve logo URL using your real helper (expects ARRAY)
-    $logoUrl = null;
-    if (function_exists('subject_logo_url')) {
-      try {
-        $logoUrl = subject_logo_url($subject); // ARRAY, not string
-      } catch (Throwable $e) {
-        $logoUrl = null;
-      }
-    } else {
-      // Fallback convention if your helper is missing
-      $logoUrl = '/lib/images/subjects/' . $subjectSlugLower . '-logo.png';
-    }
+  // let header.php know which nav / body style to use
+  $body_class = 'subjects-body';
+  $active_nav = 'subjects';
 
-    if ($pageSlug !== '') {
-      /* 7a) Page view (visibility tolerant; select only existing columns) */
-      $has_is_active = db_column_exists('pages', 'is_active');
-      $has_visible   = db_column_exists('pages', 'visible');
+  include PRIVATE_PATH . '/shared/header.php';
+  ?>
 
-      if ($has_is_active && $has_visible) {
-        $visible_page = 'COALESCE(visible,1)=1 AND COALESCE(is_active,1)=1';
-      } elseif ($has_is_active) {
-        $visible_page = 'COALESCE(is_active,1)=1';
-      } elseif ($has_visible) {
-        $visible_page = 'COALESCE(visible,1)=1';
-      } else {
-        $visible_page = '1=1';
-      }
+  <main class="subject-article-layout mk-container">
 
-      $pcols = ['id', 'slug'];
-      if (db_column_exists('pages', 'menu_name')) { $pcols[] = 'menu_name'; }
-      if (db_column_exists('pages', 'name'))      { $pcols[] = 'name'; }
-      if (db_column_exists('pages', 'title'))     { $pcols[] = 'title'; }
-      if (db_column_exists('pages', 'body'))      { $pcols[] = 'body'; }
-      if (db_column_exists('pages', 'content'))   { $pcols[] = 'content'; }
-      if (db_column_exists('pages', 'position'))  { $pcols[] = 'position'; }
+    <nav class="breadcrumbs">
+      <a href="<?= h(url_for('/')) ?>">Home</a>
+      <span class="breadcrumb-separator">»</span>
+      <a href="<?= h(url_for('/subjects/')) ?>">Subjects</a>
+      <span class="breadcrumb-separator">»</span>
+      <a href="<?= h($overview_url) ?>"><?= h($subject_name) ?></a>
+      <?php
+        $is_overview_view =
+          ($requested_page_slug === null || $requested_page_slug === '' || $requested_page_slug === $overview_slug);
 
-      $stmt = $db->prepare("
-        SELECT " . implode(', ', $pcols) . "
-          FROM pages
-         WHERE subject_id = :sid
-           AND slug       = :pslug
-           AND {$visible_page}
-         LIMIT 1
-      ");
-      $stmt->execute([':sid' => $subjectId, ':pslug' => $pageSlug]);
-      $page = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($page_for_body && !$is_overview_view):
+      ?>
+        <span class="breadcrumb-separator">»</span>
+        <span><?= h(subjects_page_title($page_for_body)) ?></span>
+      <?php endif; ?>
+    </nav>
 
-      if (!$page) {
-        http_response_code(404);
-        echo "<p>Page not found for subject " . h($subjectSlug) . ": " . h($pageSlug) . "</p>";
-      } else {
-        $pageTitle = $page['title']
-          ?? $page['menu_name']
-          ?? $page['name']
-          ?? $page['slug'];
+    <div class="subject-layout-columns">
+      <!-- LEFT: main article -->
+      <section class="subject-layout-main">
 
-        ?>
-        <div class="subject-page-layout subject-<?= h($subjectSlugLower) ?>">
-          <!-- Breadcrumb -->
-          <nav class="mk-breadcrumb">
-            <a href="<?= h(url_for('/')) ?>">Home</a>
-            <span>&raquo;</span>
-            <a href="<?= h(url_for('/subjects/')) ?>">Subjects</a>
-            <span>&raquo;</span>
-            <a href="<?= h(url_for('/subjects/' . $subjectSlugLower . '/')) ?>">
-              <?= h($subjectDisplayName($subject)) ?>
-            </a>
-            <span>&raquo;</span>
-            <span><?= h($pageTitle) ?></span>
-          </nav>
+        <article class="subject-article">
+          <header class="subject-article-header">
+            <p class="subject-article-subject">
+              <?= h($subject_name) ?>
+            </p>
 
-          <?php
-            $allSubjectsUrl  = url_for('/subjects/');
-            $subjectPagesUrl = url_for('/subjects/' . rawurlencode($subject['slug']) . '/');
-          ?>
-          <nav class="subject-page-breadcrumb">
-            <a href="<?= h($allSubjectsUrl); ?>" class="crumb-link">
-              &larr; Back to all subjects
-            </a>
+            <h1 class="subject-article-title">
+              <?= h($page_title) ?>
+            </h1>
 
-            <a href="<?= h($subjectPagesUrl); ?>" class="crumb-link">
-              &larr; Back to all <?= h($subject['name'] ?? $subjectDisplayName($subject)); ?> pages
-            </a>
-          </nav>
-
-          <!-- Hero -->
-          <header class="subject-hero">
-            <div class="subject-hero-text">
-              <p class="subject-kicker">
-                Subject: <?= h($subjectDisplayName($subject)) ?>
+            <?php if ($is_overview_view && $overview_page): ?>
+              <p class="subject-article-lead">
+                This overview introduces the main ideas in the <?= h($subject_name) ?> subject
+                and lists the articles available for further reading.
               </p>
-
-              <h1 class="subject-page-title">
-                <?= h($pageTitle) ?>
-              </h1>
-
-              <p class="subject-hero-tagline">
-                <?= h("Articles and knowledge about " . $subjectDisplayName($subject)) ?>
+            <?php elseif (!$is_overview_view && $page_for_body): ?>
+              <p class="subject-article-lead">
+                This article is part of the <?= h($subject_name) ?> subject. Scroll down to see
+                more pages and topics within this area.
               </p>
-            </div>
-
-            <?php if (!empty($logoUrl)): ?>
-              <div class="subject-hero-media">
-                <img src="<?= h(url_for($logoUrl)) ?>"
-                     alt="<?= h($subjectDisplayName($subject)) ?> logo"
-                     class="subject-hero-logo"
-                     onerror="this.style.display='none';">
-              </div>
             <?php endif; ?>
           </header>
 
-          <!-- Article body -->
-          <article class="subject-article">
-            <?= $pageBody($page) ?>
-          </article>
+          <div class="subject-article-body">
+            <?php if ($page_for_body): ?>
+              <?php
+                // IMPORTANT: body/content is already HTML; we do NOT escape it again.
+                $body_html = subjects_page_body($page_for_body);
+                echo $body_html;
+              ?>
+            <?php else: ?>
+              <p>No content is available for this subject yet.</p>
+            <?php endif; ?>
+          </div>
 
+          <footer class="subject-article-footer">
+            <p>
+              <a href="<?= h(url_for('/subjects/')) ?>">← Back to all subjects</a>
+              <?php if (!$is_overview_view && $overview_page): ?>
+                &nbsp;|&nbsp;
+                <a href="<?= h($overview_url) ?>">Back to overview</a>
+              <?php endif; ?>
+            </p>
+          </footer>
+
+          <!-- Discuss this article: forum links -->
+          <section class="article-forum-links" style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid #e5e7eb;">
+            <h2 style="font-size:1rem;margin:0 0 .5rem;">Discuss this article</h2>
+
+            <?php
+              // Map subject slugs to forum category slugs.
+              $forum_category_slug = null;
+              switch ($subject['slug'] ?? '') {
+                case 'history':
+                  $forum_category_slug = 'history-interpretation';
+                  break;
+                case 'language1':
+                case 'language2':
+                  $forum_category_slug = 'language-expression';
+                  break;
+                case 'culture':
+                  $forum_category_slug = 'culture-belief-life';
+                  break;
+                // Add more mappings as you wish...
+                default:
+                  $forum_category_slug = null;
+                  break;
+              }
+            ?>
+
+            <?php if ($forum_category_slug !== null): ?>
+              <p style="margin:.1rem 0 .6rem;font-size:.9rem;color:#555;">
+                You can explore questions and discussions related to this topic in the Community Forum.
+              </p>
+              <p style="margin:0 0 .7rem;">
+                <a href="<?= h(url_for('/platforms/forum/category.php?slug=' . urlencode($forum_category_slug))) ?>">
+                  View discussions in the forum
+                </a>
+              </p>
+            <?php else: ?>
+              <p style="margin:.1rem 0 .7rem;font-size:.9rem;color:#555;">
+                Forum discussions for this subject will be organised as the platform grows.
+              </p>
+            <?php endif; ?>
+
+            <?php
+              // Staff detection
+              $is_staff = false;
+              if (function_exists('is_logged_in_admin')) {
+                $is_staff = (bool)is_logged_in_admin();
+              } elseif (!empty($_SESSION['admin_id'] ?? null)) {
+                $is_staff = true;
+              }
+            ?>
+
+            <?php if ($is_staff): ?>
+              <?php
+                $subject_id = (int)($subject['id'] ?? 0);
+                $page_id    = (int)($page_for_body['id'] ?? 0);
+
+                // staff route for creating a thread
+                $staff_new_thread_url = url_for(
+                  '/staff/platforms/forums/create.php?subject_id=' . $subject_id . '&page_id=' . $page_id
+                );
+              ?>
+              <p style="margin:.6rem 0 0;font-size:.82rem;color:#444;">
+                <strong>Staff:</strong>
+                <a href="<?= h($staff_new_thread_url) ?>">
+                  Start a new forum thread linked to this article
+                </a>
+              </p>
+            <?php endif; ?>
+          </section>
+
+          <!-- Contributors for this article (your snippet, wired to $page_for_body) -->
           <?php
-          // Attachments for this page
-          if (function_exists('page_files_for_page')) {
-            $files = page_files_for_page((int)$page['id']);
-          } else {
-            $files = [];
-          }
+            $page = $page_for_body; // make $page available for the snippet
 
-          if (!empty($files)):
+            $contributors = [];
+            if (isset($page['id']) && function_exists('contributors_find_for_page')) {
+              $contributors = contributors_find_for_page((int)$page['id']);
+            }
           ?>
-            <section class="page-attachments">
-              <h2 class="page-attachments-heading">Attachments</h2>
-              <ul class="page-attachments-list">
-                <?php foreach ($files as $f): ?>
-                  <?php
-                    $fileUrl = url_for('/lib/uploads/pages/' . $f['stored_filename']);
-                    $label   = $f['title'] ?? $f['original_filename'];
-                    $mime    = (string)($f['mime_type'] ?? '');
-                    $isImage = function_exists('str_starts_with')
-                      ? str_starts_with($mime, 'image/')
-                      : (strpos($mime, 'image/') === 0);
-                  ?>
-                  <li class="page-attachment-item">
-                    <?php if ($isImage): ?>
-                      <figure class="page-attachment-figure">
-                        <img src="<?= h($fileUrl) ?>"
-                             alt="<?= h($label) ?>"
-                             class="page-attachment-image" />
-                        <?php if (!empty($f['caption'])): ?>
-                          <figcaption class="page-attachment-caption">
-                            <?= h($f['caption']) ?>
-                          </figcaption>
-                        <?php endif; ?>
-                      </figure>
-                    <?php else: ?>
-                      <a href="<?= h($fileUrl) ?>"
-                         target="_blank"
-                         rel="noopener"
-                         class="page-attachment-link">
-                        <?= h($label) ?>
-                      </a>
+
+          <?php if (!empty($contributors)): ?>
+            <section class="subject-article-contributors">
+              <h2>Contributors for this article</h2>
+              <ul class="contributors-list">
+                <?php foreach ($contributors as $c): ?>
+                  <li class="contributor-pill">
+                    <span class="contributor-name">
+                      <?= h(contributor_display_name($c)) ?>
+                    </span>
+                    <?php if (!empty($c['role_label'] ?? '')): ?>
+                      <span class="contributor-role">
+                        (<?= h($c['role_label']) ?>)
+                      </span>
                     <?php endif; ?>
                   </li>
                 <?php endforeach; ?>
               </ul>
             </section>
-          <?php endif; // attachments ?>
-        </div>
-        <?php
-      }
-
-    } else {
-      /* 7b) Subject landing (list pages) — use tolerant helper */
-      $pages = fetch_public_pages_for_subject($subjectId);
-      ?>
-      <section class="subject-landing subject-<?= h($subjectSlugLower) ?>">
-        <header class="subject-hero">
-          <div class="subject-hero-text">
-            <h1><?= h($subjectName) ?></h1>
-            <p class="subject-hero-tagline">
-              <?= h("Explore pages in the " . $subjectName . " subject.") ?>
-            </p>
-          </div>
-
-          <?php if (!empty($logoUrl)): ?>
-            <div class="subject-hero-media">
-              <img src="<?= h(url_for($logoUrl)) ?>"
-                   alt="<?= h($subjectName) ?> logo"
-                   class="subject-hero-logo"
-                   onerror="this.style.display='none';">
-            </div>
           <?php endif; ?>
-        </header>
 
-        <?php if (!$pages): ?>
-          <p>No pages yet for this subject.</p>
-        <?php else: ?>
-          <ul style="padding-left:1rem;">
-            <?php foreach ($pages as $p):
-              $pName = $pageDisplayName($p);
-              $pUrl  = url_for('/subjects/' . $subject['slug'] . '/' . $p['slug'] . '/'); ?>
-              <li><a href="<?= h($pUrl) ?>"><?= h($pName) ?></a></li>
-            <?php endforeach; ?>
-          </ul>
-        <?php endif; ?>
+        </article>
+
       </section>
-      <?php
-    }
+
+      <!-- RIGHT: table of contents for this subject -->
+      <aside class="subject-layout-sidebar">
+        <section class="subject-toc">
+          <h2 class="subject-toc-title">
+            Pages under <?= h($subject_name) ?>
+          </h2>
+
+          <?php if (empty($all_pages)): ?>
+            <p>No pages have been published for this subject yet.</p>
+          <?php else: ?>
+            <ul class="subject-page-list">
+              <?php foreach ($all_pages as $page): ?>
+                <?php
+                  $subject_slug_local = (string)($subject['slug'] ?? '');
+                  $page_slug          = (string)($page['slug'] ?? '');
+
+                  if ($page_slug === '') { continue; }
+
+                  // Build the clean web URL: /subjects/{subject}/{page}/
+                  if (function_exists('url_for')) {
+                    $page_url = url_for(
+                      '/subjects/' . rawurlencode($subject_slug_local) . '/' . rawurlencode($page_slug) . '/'
+                    );
+                  } else {
+                    $page_url = '/subjects/' . rawurlencode($subject_slug_local) . '/' . rawurlencode($page_slug) . '/';
+                  }
+
+                  // Determine if this list item is the current page
+                  if ($requested_page_slug !== null && $requested_page_slug !== '') {
+                    $is_current = ($requested_page_slug === $page_slug);
+                  } else {
+                    // No page slug in URL → we treat the overview (first item) as current
+                    $is_current = isset($all_pages[0]['id'], $page['id'])
+                                  ? ((int)$all_pages[0]['id'] === (int)$page['id'])
+                                  : false;
+                  }
+                ?>
+                <li class="subject-page-item<?= $is_current ? ' is-current' : '' ?>">
+                  <a href="<?= h($page_url) ?>" class="subject-page-link">
+                    <?= h(subjects_page_title($page)) ?>
+                  </a>
+                </li>
+              <?php endforeach; ?>
+            </ul>
+          <?php endif; ?>
+        </section>
+      </aside>
+    </div>
+
+  </main>
+
+  <?php
+  include PRIVATE_PATH . '/shared/footer.php';
+}
+
+/* 6) ROUTING LOGIC */
+
+// Parse the path: e.g. /subjects/, /subjects/history/, /subjects/history/history-overview/
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+$segments = explode('/', trim($path, '/'));
+
+// Expecting:
+//   [0] => 'subjects'
+//   [1] => '{subject-slug}' (optional)
+//   [2] => '{page-slug}'    (optional)
+$subject_slug = $segments[1] ?? null;
+$page_slug    = $segments[2] ?? null;
+
+// Fallback to query parameters if needed (e.g. ?subject=history&page=overview)
+if (!$subject_slug && isset($_GET['subject'])) {
+  $subject_slug = (string)$_GET['subject'];
+}
+if (!$page_slug && isset($_GET['page'])) {
+  $page_slug = (string)$_GET['page'];
+}
+
+/* No subject slug → show list of all subjects */
+if (empty($subject_slug)) {
+  $subjects = subjects_load_all_public_subjects();
+  subjects_render_subjects_index($subjects);
+  exit;
+}
+
+/* Subject slug present → load subject */
+$subject = subjects_load_subject_by_slug($subject_slug);
+
+if (!$subject) {
+  http_response_code(404);
+
+  $page_title  = 'Subject not found';
+  $body_class  = 'subjects-body';
+  $active_nav  = 'subjects';
+
+  include PRIVATE_PATH . '/shared/header.php';
+  ?>
+  <main class="subject-article-layout mk-container">
+    <article class="subject-article">
+      <header class="subject-article-header">
+        <h1 class="subject-article-title">Subject not found</h1>
+      </header>
+      <p>We couldn’t find the subject <strong><?= h($subject_slug) ?></strong>.</p>
+      <p><a href="<?= h(url_for('/subjects/')) ?>">← Back to all subjects</a></p>
+    </article>
+  </main>
+  <?php
+  include PRIVATE_PATH . '/shared/footer.php';
+  exit;
+}
+
+/* Load all pages for this subject (public only) */
+$pages = subjects_load_pages_for_subject((int)$subject['id'], true);
+
+/* Determine current page */
+$current_page = null;
+
+if (!empty($page_slug)) {
+  $current_page = subjects_load_page_by_slug((int)$subject['id'], $page_slug, true);
+} else {
+  if (!empty($pages)) {
+    $current_page = $pages[0]; // overview/landing page
   }
 }
-?>
-</main>
-<?php
-/* 8) footer (mirrors your logic) */
-$subjectsFooter = (defined('SHARED_PATH'))
-  ? SHARED_PATH . '/subjects/public_subjects_footer.php'
-  : PRIVATE_PATH . '/shared/subjects/public_subjects_footer.php';
 
-if (is_file($subjectsFooter)) {
-  require $subjectsFooter;
-} else {
-  require PRIVATE_PATH . '/shared/footer.php';
-}
+/* Render subject view */
+subjects_render_subject_view(
+  $subject,
+  $current_page,
+  $pages,
+  $page_slug
+);

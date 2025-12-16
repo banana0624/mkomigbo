@@ -1064,3 +1064,487 @@ body.public-subjects {
 .crumb-link:hover {
   border-bottom-color: currentColor;
 }
+
+.subject-article-layout {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.subject-article-header {
+  margin-bottom: 1.5rem;
+}
+
+.subject-article-subject {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.7;
+  margin-bottom: 0.25rem;
+}
+
+.subject-article-title {
+  font-size: 2rem;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.subject-article-body img {
+  max-width: 100%;
+  height: auto;
+}
+
+.subject-article-attachments {
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #ddd;
+}
+
+.attachments-heading {
+  font-size: 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.attachments-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.attachments-item + .attachments-item {
+  margin-top: 0.5rem;
+}
+
+.attachments-item a {
+  text-decoration: none;
+}
+
+.attachments-item a:hover {
+  text-decoration: underline;
+}
+
+.attachment-meta {
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   Mkomigbo – Subjects Hub & Article Layout
+   File: public/lib/css/subjects.css
+   --------------------------------------------------------------------------
+   Handles:
+   - /subjects/                       → subjects index (all subjects)
+   - /subjects/{subject}/             → subject overview + pages list
+   - /subjects/{subject}/{page}/      → article + pages list
+   ========================================================================== */
+
+/* Root-level tokens (override as needed) */
+:root {
+  --mk-page-max-width: 1120px;
+  --mk-page-padding-x: 16px;
+
+  --mk-surface-bg: #ffffff;
+  --mk-body-bg: #f5f5f7;
+
+  --mk-border-subtle: #e1e4ea;
+  --mk-text-main: #1e293b;
+  --mk-text-muted: #6b7280;
+
+  --mk-accent: #2563eb;           /* main accent for subjects */
+  --mk-accent-soft: #dbeafe;      /* soft background for accents */
+
+  --mk-radius-lg: 12px;
+  --mk-radius-xl: 18px;
+
+  --mk-shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.06);
+}
+
+/* Let the subjects area sit on a soft background */
+body.subjects-body {
+  background-color: var(--mk-body-bg);
+}
+
+/* Utility container (if not already present globally) */
+.mk-container {
+  max-width: var(--mk-page-max-width);
+  margin: 0 auto;
+  padding: 0 var(--mk-page-padding-x);
+}
+
+/* ==========================================================================
+   SUBJECTS INDEX (/subjects/)
+   ========================================================================== */
+
+.subjects-index-layout {
+  padding: 32px 0 48px;
+}
+
+.subjects-index-layout .mk-container {
+  /* Use .mk-container in your header/footer if you want this same width */
+}
+
+.subjects-index-header {
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.subjects-index-title {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--mk-text-main);
+  margin: 0 0 8px;
+}
+
+.subjects-index-lead {
+  margin: 0;
+  max-width: 640px;
+  color: var(--mk-text-muted);
+  font-size: 0.98rem;
+}
+
+/* Grid of subject cards */
+
+.subjects-grid {
+  margin-top: 24px;
+}
+
+.subjects-grid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.subjects-grid-item {
+  margin: 0;
+}
+
+.subject-card {
+  background-color: var(--mk-surface-bg);
+  border-radius: var(--mk-radius-xl);
+  padding: 18px 18px 16px;
+  box-shadow: var(--mk-shadow-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.subject-card-title {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.subject-card-title a {
+  text-decoration: none;
+  color: var(--mk-text-main);
+}
+
+.subject-card-title a:hover,
+.subject-card-title a:focus {
+  color: var(--mk-accent);
+  text-decoration: underline;
+}
+
+.subject-card-tagline {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--mk-text-muted);
+}
+
+.subject-card-more {
+  margin: auto 0 0;
+  font-size: 0.9rem;
+}
+
+.subject-card-link {
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--mk-accent);
+}
+
+.subject-card-link:hover,
+.subject-card-link:focus {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   BREADCRUMBS
+   ========================================================================== */
+
+.breadcrumbs {
+  font-size: 0.82rem;
+  color: var(--mk-text-muted);
+  margin: 16px 0 20px;
+}
+
+.breadcrumbs a {
+  text-decoration: none;
+  color: var(--mk-text-muted);
+}
+
+.breadcrumbs a:hover,
+.breadcrumbs a:focus {
+  color: var(--mk-accent);
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  margin: 0 4px;
+}
+
+/* ==========================================================================
+   SUBJECT LAYOUT (overview + article + sidebar) 
+   (/subjects/{subject}/, /subjects/{subject}/{page}/)
+   ========================================================================== */
+
+.subject-article-layout {
+  padding: 24px 0 40px;
+}
+
+/* Outer two-column layout */
+.subject-layout-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 1.5fr);
+  gap: 24px;
+}
+
+/* Main article area */
+.subject-layout-main {
+  min-width: 0; /* prevent overflow in flex/grid */
+}
+
+/* Sidebar / table of contents */
+.subject-layout-sidebar {
+  min-width: 0;
+}
+
+/* ==========================================================================
+   ARTICLE STYLING
+   ========================================================================== */
+
+.subject-article {
+  background-color: var(--mk-surface-bg);
+  border-radius: var(--mk-radius-xl);
+  padding: 24px 24px 20px;
+  box-shadow: var(--mk-shadow-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.subject-article-header {
+  margin-bottom: 16px;
+}
+
+.subject-article-subject {
+  margin: 0 0 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.095em;
+  font-weight: 600;
+  color: var(--mk-accent);
+}
+
+.subject-article-title {
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+  font-weight: 700;
+  color: var(--mk-text-main);
+}
+
+.subject-article-lead {
+  margin: 0 0 10px;
+  color: var(--mk-text-muted);
+  font-size: 0.98rem;
+}
+
+/* Body text inside the article */
+.subject-article-body {
+  font-size: 0.98rem;
+  line-height: 1.6;
+  color: var(--mk-text-main);
+}
+
+.subject-article-body p {
+  margin: 0 0 0.9em;
+}
+
+.subject-article-body h2,
+.subject-article-section h2 {
+  margin-top: 1.6em;
+  margin-bottom: 0.6em;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--mk-text-main);
+}
+
+.subject-article-body h3,
+.subject-article-section h3 {
+  margin-top: 1.2em;
+  margin-bottom: 0.4em;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.subject-article-body ul,
+.subject-article-body ol {
+  margin: 0.6em 0 1em 1.3em;
+  padding: 0;
+}
+
+.subject-article-body li {
+  margin-bottom: 0.35em;
+}
+
+/* Sections if you use .subject-article-section wrappers */
+.subject-article-section {
+  margin-top: 1.4em;
+}
+
+/* Article footer */
+.subject-article-footer {
+  margin-top: 1.8em;
+  padding-top: 1em;
+  border-top: 1px solid var(--mk-border-subtle);
+  font-size: 0.9rem;
+  color: var(--mk-text-muted);
+}
+
+.subject-article-footer a {
+  color: var(--mk-accent);
+  text-decoration: none;
+}
+
+.subject-article-footer a:hover,
+.subject-article-footer a:focus {
+  text-decoration: underline;
+}
+
+/* ==========================================================================
+   SUBJECT TABLE OF CONTENTS (sidebar)
+   ========================================================================== */
+
+.subject-toc {
+  background-color: var(--mk-surface-bg);
+  border-radius: var(--mk-radius-xl);
+  padding: 18px 18px 16px;
+  box-shadow: var(--mk-shadow-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  position: sticky;
+  top: 90px; /* adjust depending on your fixed header height */
+}
+
+.subject-toc-title {
+  margin: 0 0 12px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--mk-text-main);
+}
+
+.subject-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.92rem;
+}
+
+.subject-toc-item {
+  margin: 0;
+}
+
+.subject-toc-item + .subject-toc-item {
+  margin-top: 4px;
+}
+
+.subject-toc-item a {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--mk-text-main);
+}
+
+.subject-toc-item a:hover,
+.subject-toc-item a:focus {
+  background-color: var(--mk-accent-soft);
+  color: var(--mk-accent);
+}
+
+/* Current page in TOC */
+.subject-toc-item.is-current a {
+  background-color: var(--mk-accent-soft);
+  color: var(--mk-accent);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   RESPONSIVE BEHAVIOUR
+   ========================================================================== */
+
+@media (max-width: 960px) {
+  .subjects-index-layout {
+    padding: 24px 0 32px;
+  }
+
+  .subject-layout-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .subject-layout-sidebar {
+    order: -1; /* show TOC above article on small screens, optional */
+  }
+
+  .subject-toc {
+    position: static;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .subjects-index-title {
+    font-size: 1.6rem;
+  }
+
+  .subject-article-title {
+    font-size: 1.35rem;
+  }
+
+  .subject-article,
+  .subject-toc {
+    padding: 16px 14px 14px;
+  }
+}
+
+/* === Staff form inputs: restore borders === */
+.staff-form input[type="text"],
+.staff-form input[type="email"],
+.staff-form input[type="password"],
+.staff-form input[type="number"],
+.staff-form select,
+.staff-form textarea {
+  border: 1px solid #d1d5db;   /* light grey border */
+  border-radius: 4px;
+  padding: 0.45rem 0.55rem;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+/* On focus, show a clear outline */
+.staff-form input[type="text"]:focus,
+.staff-form input[type="email"]:focus,
+.staff-form input[type="password"]:focus,
+.staff-form input[type="number"]:focus,
+.staff-form select:focus,
+.staff-form textarea:focus {
+  outline: none;
+  border-color: #2563eb;       /* blue */
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.4);
+}

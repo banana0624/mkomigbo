@@ -1,0 +1,22 @@
+{
+  "name": "Mkomigbo – Igbo Lunar Calendar",
+  "short_name": "Igbo Calendar",
+  "description": "Interactive Igbo 13-month lunar calendar with Eke, Orie, Afọ, Nkwọ and moon phases.",
+  "start_url": "/platforms/igbo-calendar.php",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#222222",
+  "icons": [
+    {
+      "src": "/lib/images/icons/igbo-calendar-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/lib/images/icons/igbo-calendar-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -12,7 +12,7 @@ declare(strict_types=1);
  * - Base dir:  PUBLIC_PATH . '/lib/uploads/images'
  * - Default max size: 5 MB (override with IMAGE_MAX_BYTES in .env)
  * - Supported image types (by MIME):
- *     - JPEG family: image/jpeg, image/pjpeg, image/jfif
+ *     - JPEG family: image/jpeg, image/pjpeg, image/jfif  (stored as .jpg or .jfif)
  *     - PNG:         image/png, image/x-png
  *     - GIF:         image/gif
  *     - AVIF:        image/avif
@@ -62,9 +62,23 @@ if (!function_exists('image_allowed_mimes')) {
     if (($_ENV['IMAGE_ALLOW_WEBP'] ?? '') === '1') {
       $m[] = 'image/webp'; // WEBP (opt-in)
     }
-    // To allow SVG safely, you must sanitize it first, then uncomment the next line:
+    // If you ever want SVG (with sanitizing), also allow:
     // $m[] = 'image/svg+xml';
     return $m;
+  }
+}
+
+if (!function_exists('image_allowed_extensions')) {
+  /**
+   * File extensions allowed for image uploads.
+   * We explicitly include JFIF here.
+   */
+  function image_allowed_extensions(): array {
+    $ext = ['jpg', 'jpeg', 'jfif', 'png', 'gif', 'avif'];
+    if (($_ENV['IMAGE_ALLOW_WEBP'] ?? '') === '1') {
+      $ext[] = 'webp';
+    }
+    return $ext;
   }
 }
 
@@ -91,20 +105,28 @@ if (!function_exists('image_sanitize_basename')) {
 }
 
 if (!function_exists('image_detect_extension_from_mime')) {
+  /**
+   * Map MIME -> file extension.
+   *
+   * NOTE:
+   * - image/jpeg, image/pjpeg => "jpg"
+   * - image/jfif              => "jfif" (your JFIF preference)
+   */
   function image_detect_extension_from_mime(string $mime): ?string {
     return match ($mime) {
       'image/jpeg',
-      'image/pjpeg',
-      'image/jfif'     => 'jpg',
+      'image/pjpeg'            => 'jpg',
+
+      'image/jfif'             => 'jfif',
 
       'image/png',
-      'image/x-png'    => 'png',
+      'image/x-png'            => 'png',
 
-      'image/gif'      => 'gif',
-      'image/webp'     => 'webp',
-      'image/avif'     => 'avif',
-      // 'image/svg+xml' => 'svg', // dangerous unless sanitized externally
-      default          => null,
+      'image/gif'              => 'gif',
+      'image/webp'             => 'webp',
+      'image/avif'             => 'avif',
+      // 'image/svg+xml'        => 'svg', // dangerous unless sanitized externally
+      default                  => null,
     };
   }
 }
@@ -174,12 +196,18 @@ if (!function_exists('validate_image_upload')) {
       return $errors;
     }
 
+    // Detect MIME via finfo
+    if (!class_exists('finfo')) {
+      $errors['type'] = 'Fileinfo (finfo) extension not available on server.';
+      return $errors;
+    }
+
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime  = (string)($finfo->file($file['tmp_name']) ?: '');
 
     if (!in_array($mime, image_allowed_mimes(), true)) {
       $errors['type'] =
-        'Invalid type. Allowed: JPEG (jpeg/pjpeg/jfif), PNG, GIF, AVIF'
+        'Invalid type. Allowed: JPEG (including JFIF), PNG, GIF, AVIF'
         . (($_ENV['IMAGE_ALLOW_WEBP'] ?? '') === '1' ? ', WEBP' : '')
         . '.';
       return $errors;
@@ -224,9 +252,23 @@ if (!function_exists('process_image_upload')) {
       ];
     }
 
+    if (!class_exists('finfo')) {
+      return [
+        'ok'    => false,
+        'error' => 'Fileinfo (finfo) extension not available on server.',
+      ];
+    }
+
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mime  = (string)$finfo->file($file['tmp_name']);
     $ext   = image_detect_extension_from_mime($mime);
+
+    if ($ext === null) {
+      return [
+        'ok'    => false,
+        'error' => 'Could not detect a safe file extension from MIME type.',
+      ];
+    }
 
     $prefix  = (string)($opts['basename_prefix'] ?? 'img');
     $baseDir = image_upload_base_dir();
@@ -248,7 +290,7 @@ if (!function_exists('process_image_upload')) {
     }
     @chmod($absPath, 0644);
 
-    // Optional autorotate for JPEGs
+    // Optional autorotate for JPEGs (including JFIF)
     $autoOrient = array_key_exists('auto_orient', $opts)
       ? (bool)$opts['auto_orient']
       : true;
@@ -260,12 +302,16 @@ if (!function_exists('process_image_upload')) {
       __image_try_exif_autorotate($absPath);
     }
 
-    // Optional resize (JPEG/PNG/WEBP only)
+    // Optional resize (JPEG/PNG/WEBP including JFIF)
     $autoResize = !empty($opts['auto_resize']);
     if (
       $autoResize &&
       extension_loaded('gd') &&
-      in_array($mime, ['image/jpeg', 'image/pjpeg', 'image/jfif', 'image/png', 'image/x-png', 'image/webp'], true)
+      in_array(
+        $mime,
+        ['image/jpeg', 'image/pjpeg', 'image/jfif', 'image/png', 'image/x-png', 'image/webp'],
+        true
+      )
     ) {
       $maxW = (int)($opts['max_w'] ?? 1600);
       $maxH = (int)($opts['max_h'] ?? 1600);
@@ -345,7 +391,7 @@ if (!function_exists('__image_try_exif_autorotate')) {
 
 if (!function_exists('__image_try_resize')) {
   /**
-   * Downscale in place (keeps aspect ratio); supports JPEG/PNG/WEBP
+   * Downscale in place (keeps aspect ratio); supports JPEG/PNG/WEBP (incl. JFIF)
    */
   function __image_try_resize(string $absPath, string $mime, int $maxW, int $maxH): void {
     [$w, $h] = @getimagesize($absPath) ?: [0, 0];

@@ -75,9 +75,9 @@ if (!function_exists('subjects_catalog')) {
                 'name' => 'Nigeria',
                 'meta_description' => 'Relations and experiences within Nigeria.',
             ],
-            'ipob' => [
+            'resistance' => [
                 'id'   => 14,
-                'name' => 'IPOB',
+                'name' => 'Resistance',
                 'meta_description' => 'Information and perspectives on IPOB.',
             ],
             'africa' => [

@@ -2,21 +2,32 @@
 declare(strict_types=1);
 
 /**
- * project-root/private/assets/helper_functions.php
+ * project-root/private/functions/helper_functions.php
  * Common helper functions used across the app.
  * Idempotent: each is guarded with function_exists().
  */
 
 /* ===== Basic HTML helpers ===== */
 if (!function_exists('h')) {
-    function h(string $s = ''): string {
-        return htmlspecialchars($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    /**
+     * Escape for HTML output.
+     * Accepts string/int/float/bool/null and safely casts to string.
+     */
+    function h($s): string {
+        if ($s === null) {
+            return '';
+        }
+
+        // Safely cast everything else to string
+        return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
 }
 
 if (!function_exists('html_decode_utf8')) {
+    /**
+     * Decode HTML entities using UTF-8, twice, to handle things like &amp;#803;
+     */
     function html_decode_utf8(string $s): string {
-        // Double decode to handle things like &amp;#803;
         $s = html_entity_decode($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
         return html_entity_decode($s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
     }
@@ -25,7 +36,7 @@ if (!function_exists('html_decode_utf8')) {
 /* ===== Text cleaning / slugging ===== */
 if (!function_exists('sanitize_text')) {
     /**
-     * Strip tags, decode entities, collapse whitespace.
+     * Strip tags, decode entities, normalise line endings, collapse whitespace.
      */
     function sanitize_text(string $s): string {
         $s = html_decode_utf8($s);
@@ -63,6 +74,9 @@ if (!function_exists('slugify')) {
 
 /* ===== File-system helpers ===== */
 if (!function_exists('safe_path_join')) {
+    /**
+     * Join path segments with the correct directory separator and normalise.
+     */
     function safe_path_join(string ...$parts): string {
         $p = join(DIRECTORY_SEPARATOR, array_map(
             fn($x) => trim($x, " \t\n\r\0\x0B\\/"),
@@ -74,6 +88,9 @@ if (!function_exists('safe_path_join')) {
 }
 
 if (!function_exists('ensure_dir')) {
+    /**
+     * Ensure a directory exists (recursively creates if missing).
+     */
     function ensure_dir(string $dir, int $mode = 0775): bool {
         if (is_dir($dir)) {
             return true;
@@ -127,14 +144,16 @@ if (!function_exists('render_markdown_safe')) {
         $md = html_decode_utf8($md);
         $md = str_replace(["\r\n", "\r"], "\n", $md);
         $paras = array_map('trim', preg_split('~\n{2,}~', $md));
-        $html = '';
+        $html  = '';
+
         foreach ($paras as $p) {
             if ($p === '') {
                 continue;
             }
-            $p = nl2br(h($p));
+            $p    = nl2br(h($p));
             $html .= "<p>{$p}</p>\n";
         }
+
         return $html;
     }
 }
@@ -148,123 +167,121 @@ if (!function_exists('array_get')) {
 
 /* ===== Redirect helper (web URLs only) ===== */
 if (!function_exists('redirect_to')) {
-     function redirect_to(string $to, int $status = 302): void {
-       if (!preg_match('~^https?://~i', $to)) {
-         $to = url_for($to);
-       }
-       header('Location: ' . $to, true, $status);
-       exit;
-     }
-   }
+    function redirect_to(string $to, int $status = 302): void {
+        if (!preg_match('~^https?://~i', $to)) {
+            $to = url_for($to);
+        }
 
+        header('Location: ' . $to, true, $status);
+        exit;
+    }
+}
 
 // Pretty CRUD link helpers
 // ----------------------------------------------------------------------
 
 if (!function_exists('link_show')) {
-  /**
-   * Build a "show" URL for an entity.
-   *
-   * @param string $entity  'subject' | 'page' | other
-   * @param int    $id
-   * @param string $ctx     'staff' | 'public' | etc.
-   */
-  function link_show(string $entity, int $id, string $ctx = 'staff'): string {
-    $entity = strtolower($entity);
-    $ctx    = strtolower($ctx);
+    /**
+     * Build a "show" URL for an entity.
+     *
+     * @param string $entity  'subject' | 'page' | other
+     * @param int    $id
+     * @param string $ctx     'staff' | 'public' | etc.
+     */
+    function link_show(string $entity, int $id, string $ctx = 'staff'): string {
+        $entity = strtolower($entity);
+        $ctx    = strtolower($ctx);
 
-    // Modern pretty routes
-    if ($ctx === 'staff') {
-      if ($entity === 'subject') {
-        return url_for("/staff/subjects/{$id}/show/");
-      }
-      if ($entity === 'page') {
-        return url_for("/staff/pages/{$id}/show/");
-      }
+        // Modern pretty routes
+        if ($ctx === 'staff') {
+            if ($entity === 'subject') {
+                return url_for("/staff/subjects/{$id}/show/");
+            }
+            if ($entity === 'page') {
+                return url_for("/staff/pages/{$id}/show/");
+            }
+        }
+
+        // Fallback: old common CRUD engine
+        $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
+        return url_for('/common/show.php?' . $q);
     }
-
-    // Fallback: old common CRUD engine
-    $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
-    return url_for('/common/show.php?' . $q);
-  }
 }
 
 if (!function_exists('link_edit')) {
-  function link_edit(string $entity, int $id, string $ctx = 'staff'): string {
-    $entity = strtolower($entity);
-    $ctx    = strtolower($ctx);
+    function link_edit(string $entity, int $id, string $ctx = 'staff'): string {
+        $entity = strtolower($entity);
+        $ctx    = strtolower($ctx);
 
-    if ($ctx === 'staff') {
-      if ($entity === 'subject') {
-        return url_for("/staff/subjects/{$id}/edit/");
-      }
-      if ($entity === 'page') {
-        return url_for("/staff/pages/{$id}/edit/");
-      }
+        if ($ctx === 'staff') {
+            if ($entity === 'subject') {
+                return url_for("/staff/subjects/{$id}/edit/");
+            }
+            if ($entity === 'page') {
+                return url_for("/staff/pages/{$id}/edit/");
+            }
+        }
+
+        $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
+        return url_for('/common/edit.php?' . $q);
     }
-
-    $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
-    return url_for('/common/edit.php?' . $q);
-  }
 }
 
 if (!function_exists('link_delete')) {
-  function link_delete(string $entity, int $id, string $ctx = 'staff'): string {
-    $entity = strtolower($entity);
-    $ctx    = strtolower($ctx);
+    function link_delete(string $entity, int $id, string $ctx = 'staff'): string {
+        $entity = strtolower($entity);
+        $ctx    = strtolower($ctx);
 
-    if ($ctx === 'staff') {
-      if ($entity === 'subject') {
-        return url_for("/staff/subjects/{$id}/delete/");
-      }
-      if ($entity === 'page') {
-        return url_for("/staff/pages/{$id}/delete/");
-      }
+        if ($ctx === 'staff') {
+            if ($entity === 'subject') {
+                return url_for("/staff/subjects/{$id}/delete/");
+            }
+            if ($entity === 'page') {
+                return url_for("/staff/pages/{$id}/delete/");
+            }
+        }
+
+        $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
+        return url_for('/common/delete.php?' . $q);
     }
-
-    $q = http_build_query(['e' => $entity, 'id' => $id, 'ctx' => $ctx]);
-    return url_for('/common/delete.php?' . $q);
-  }
 }
 
 if (!function_exists('link_new')) {
-  /**
-   * Build a "new" URL for an entity.
-   *
-   * @param string      $entity 'subject' | 'page' | other
-   * @param string|null $ctx    'staff' | 'public' | etc.
-   */
-  function link_new(string $entity, string $ctx = 'staff'): string {
-    $entity = strtolower($entity);
-    $ctx    = strtolower($ctx);
+    /**
+     * Build a "new" URL for an entity.
+     *
+     * @param string $entity 'subject' | 'page' | other
+     * @param string $ctx    'staff' | 'public' | etc.
+     */
+    function link_new(string $entity, string $ctx = 'staff'): string {
+        $entity = strtolower($entity);
+        $ctx    = strtolower($ctx);
 
-    if ($ctx === 'staff') {
-      if ($entity === 'subject') {
-        return url_for("/staff/subjects/new/");
-      }
-      if ($entity === 'page') {
-        return url_for("/staff/pages/new/");
-      }
+        if ($ctx === 'staff') {
+            if ($entity === 'subject') {
+                return url_for("/staff/subjects/new/");
+            }
+            if ($entity === 'page') {
+                return url_for("/staff/pages/new/");
+            }
+        }
+
+        $q = http_build_query(['e' => $entity, 'ctx' => $ctx]);
+        return url_for('/common/new.php?' . $q);
     }
-
-    $q = http_build_query(['e' => $entity, 'ctx' => $ctx]);
-    return url_for('/common/new.php?' . $q);
-  }
 }
 
 if (!function_exists('asset_path')) {
-  /**
-   * Optional: resolve a public asset web path (e.g. "/lib/css/app.css")
-   * to its absolute filesystem path under PUBLIC_PATH.
-   */
-  function asset_path(string $webPath): string {
-    $webPath = '/' . ltrim($webPath, '/');
-    $public = defined('PUBLIC_PATH') ? rtrim((string)PUBLIC_PATH, DIRECTORY_SEPARATOR)
-                                     : dirname(__DIR__, 2) . '/public';
-    return $public . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
-  }
+    /**
+     * Resolve a public asset web path (e.g. "/lib/css/app.css")
+     * to its absolute filesystem path under PUBLIC_PATH.
+     */
+    function asset_path(string $webPath): string {
+        $webPath = '/' . ltrim($webPath, '/');
+        $public  = defined('PUBLIC_PATH')
+            ? rtrim((string)PUBLIC_PATH, DIRECTORY_SEPARATOR)
+            : dirname(__DIR__, 2) . '/public';
+
+        return $public . str_replace('/', DIRECTORY_SEPARATOR, $webPath);
+    }
 }
-
-
-   
-

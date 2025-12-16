@@ -4,313 +4,289 @@ declare(strict_types=1);
 /**
  * project-root/public/contributors/index.php
  *
- * Public contributors:
- *   /contributors/          → grid of contributors
- *   /contributors/{handle}/ → single contributor profile
+ * Public Contributors hub:
+ *   /contributors/
  *
- * Staff CRUD lives under:
- *   /staff/contributors/
+ * Explains the idea of contributors on Mkomigbo – researchers, writers,
+ * translators, media partners – and sets the stage for future profiles
+ * and contributor logins.
  */
 
-$init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
-if (!is_file($init)) {
-  http_response_code(500);
-  exit('Init not found');
-}
-require_once $init;
-
-/**
- * Helpers
- * - h() and db() and (optionally) current_user() come from initialize.php
- * - Provide a minimal fallback for url_for() only if missing.
- */
-if (!function_exists('url_for')) {
-  function url_for(string $script_path): string {
-    if (!defined('WWW_ROOT')) {
-      return $script_path;
-    }
-    if ($script_path === '') {
-      return WWW_ROOT;
-    }
-    if ($script_path[0] !== '/') {
-      $script_path = '/' . $script_path;
-    }
-    return WWW_ROOT . $script_path;
-  }
-}
-
-// Handle from rewrite: /contributors/{handle}/ -> ?handle={handle}
-$handle = trim((string)($_GET['handle'] ?? ''));
-
-// Page chrome
-$page_title  = $handle !== '' ? 'Contributor' : 'Contributors';
-$active_nav  = 'contributors';
-
-$stylesheets = $stylesheets ?? [];
-if (!in_array('/lib/css/ui.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/ui.css';
-}
-if (!in_array('/lib/css/contributors.css', $stylesheets, true)) {
-  $stylesheets[] = '/lib/css/contributors.css';
-}
-
-// Prefer public_header if it exists
-$publicHeader = PRIVATE_PATH . '/shared/public_header.php';
-$header       = is_file($publicHeader) ? $publicHeader : (PRIVATE_PATH . '/shared/header.php');
-require $header;
-
-/**
- * Check if a column exists on contributors table (cached).
- */
-if (!function_exists('contributors_column_exists')) {
-  function contributors_column_exists(string $column): bool {
-    static $cache = [];
-
-    $column = strtolower($column);
-    if (array_key_exists($column, $cache)) {
-      return $cache[$column];
-    }
-
-    try {
-      $db = db(); /** @var PDO $db */
-      $sql = "
-        SELECT 1
-          FROM information_schema.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME   = 'contributors'
-           AND COLUMN_NAME  = :col
-         LIMIT 1
-      ";
-      $stmt = $db->prepare($sql);
-      $stmt->execute([':col' => $column]);
-      $cache[$column] = (bool)$stmt->fetchColumn();
-    } catch (Throwable $e) {
-      $cache[$column] = false;
-    }
-
-    return $cache[$column];
-  }
-}
-
-$db = db(); /** @var PDO $db */
-
-// Detect optional columns once
-$hasSlug     = contributors_column_exists('slug');
-$hasBioHtml  = contributors_column_exists('bio_html');
-$hasAvatar   = contributors_column_exists('avatar_url');
-$hasVisible  = contributors_column_exists('visible');
-$hasEmail    = contributors_column_exists('email');
-
-// Build common column list for SELECT
-$columns = [
-  'id',
-  'COALESCE(display_name, username) AS display_name',
-  'username',
-];
-
-$columns[] = $hasSlug    ? 'slug'       : 'NULL AS slug';
-$columns[] = $hasBioHtml ? 'bio_html'   : 'NULL AS bio_html';
-$columns[] = $hasAvatar  ? 'avatar_url' : 'NULL AS avatar_url';
-$columns[] = $hasEmail   ? 'email'      : 'NULL AS email';
-
-$selectCols = implode(",\n         ", $columns);
-
-/* ==========================================================
- * Single profile: /contributors/{handle}/
- * ======================================================== */
-if ($handle !== '') {
-  // Which column is used as the public handle
-  $handleCol = $hasSlug ? 'slug' : 'username';
-
-  $sql = "
-    SELECT {$selectCols}
-      FROM contributors
-     WHERE {$handleCol} = :handle
-  ";
-  if ($hasVisible) {
-    $sql .= " AND COALESCE(visible,1) = 1";
-  }
-  $sql .= " LIMIT 1";
-
-  $stmt = $db->prepare($sql);
-  $stmt->execute([':handle' => $handle]);
-  $c = $stmt->fetch(PDO::FETCH_ASSOC);
-
-  if (!$c) {
-    http_response_code(404);
-    ?>
-    <main class="container" style="max-width:900px;padding:1.75rem 0;">
-      <div class="page-header-block">
-        <h1>Contributor not found</h1>
-        <p class="page-intro">
-          We couldn’t find a contributor matching
-          <strong><?= h($handle) ?></strong>.
-        </p>
-      </div>
-      <p>
-        <a class="btn" href="<?= h(url_for('/contributors/')) ?>">
-          &larr; Back to all contributors
-        </a>
-      </p>
-    </main>
-    <?php
-    require PRIVATE_PATH . '/shared/footer.php';
+/* 1) Bootstrap initialize.php */
+if (!defined('PRIVATE_PATH')) {
+  $init = dirname(__DIR__, 2) . '/private/assets/initialize.php';
+  if (!is_file($init)) {
+    http_response_code(500);
+    echo "<h1>FATAL: initialize.php missing</h1>";
+    echo "<p>Expected at: " . htmlspecialchars($init, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . "</p>";
     exit;
   }
-
-  $displayName = $c['display_name'] ?? $c['username'] ?? ('Contributor #' . (string)$c['id']);
-  $avatar      = $c['avatar_url']   ?? '/lib/images/avatar-placeholder.png';
-  $username    = $c['username']     ?? '';
-  $slugValue   = $c['slug']         ?? '';
-  $email       = $c['email']        ?? '';
-
-  ?>
-  <main class="container" style="max-width:900px;padding:1.75rem 0;">
-    <div class="page-header-block" style="margin-bottom:1.5rem;">
-      <header style="display:flex;gap:1.5rem;align-items:flex-start;">
-        <img src="<?= h($avatar) ?>"
-             alt=""
-             style="width:80px;height:80px;border-radius:50%;object-fit:cover;flex-shrink:0;">
-        <div>
-          <h1 style="margin:0 0 .25rem;"><?= h($displayName) ?></h1>
-          <?php if ($username !== ''): ?>
-            <p class="muted" style="margin:0;">@<?= h($username) ?></p>
-          <?php elseif ($slugValue !== ''): ?>
-            <p class="muted" style="margin:0;">@<?= h($slugValue) ?></p>
-          <?php endif; ?>
-          <?php if ($email !== ''): ?>
-            <p style="margin:0.25rem 0 0;font-size:0.9rem;">
-              <a href="mailto:<?= h($email) ?>"><?= h($email) ?></a>
-            </p>
-          <?php endif; ?>
-        </div>
-      </header>
-    </div>
-
-    <article class="prose" style="line-height:1.6;">
-      <?php
-      if ($hasBioHtml && !empty($c['bio_html'])) {
-        echo $c['bio_html']; // assumed sanitized on input
-      } else {
-        echo '<p class="muted">No bio yet.</p>';
-      }
-      ?>
-    </article>
-
-    <p style="margin-top:1.5rem;">
-      <a class="btn" href="<?= h(url_for('/contributors/')) ?>">&larr; All contributors</a>
-    </p>
-  </main>
-  <?php
-  require PRIVATE_PATH . '/shared/footer.php';
-  exit;
+  require_once $init;
 }
 
-/* ==========================================================
- * List view: /contributors/ — public card grid
- * ======================================================== */
-$sql = "
-  SELECT {$selectCols}
-    FROM contributors
-";
-if ($hasVisible) {
-  $sql .= " WHERE COALESCE(visible,1) = 1";
-}
-$sql .= "
-   ORDER BY COALESCE(display_name, username, CAST(id AS CHAR))
-";
+/* 2) Basic page context for header */
+$page_title  = 'Contributors';
+$body_class  = 'contributors-body';
+$active_nav  = 'contributors';
 
-$rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+$meta = [
+  'description' => 'Learn about contributors to Mkomigbo – researchers, writers, translators and media partners who help document and interpret the life of Ndi Mkomigbo.',
+];
 
-// Optional: show small note for logged-in staff/admin
-$currentUser = function_exists('current_user') ? current_user() : null;
+$breadcrumbs = [
+  ['label' => 'Home',        'url' => '/'],
+  ['label' => 'Contributors'],
+];
+
+// Optional: extra small styles just for this hub
+$extra_head = <<<'HTML'
+<style>
+  .contributors-hero {
+    padding: 1.5rem 0 1.25rem;
+  }
+  .contributors-hero-eyebrow {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: #6b7280;
+    margin: 0 0 .25rem;
+  }
+  .contributors-hero-title {
+    font-size: 1.6rem;
+    margin: 0 0 .4rem;
+  }
+  .contributors-hero-lead {
+    max-width: 46rem;
+    font-size: .95rem;
+    color: #4b5563;
+    margin: 0;
+  }
+
+  .contributors-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1.3fr);
+    gap: 1.5rem;
+    margin-top: 1.75rem;
+  }
+
+  .contributors-section {
+    margin-bottom: 1.5rem;
+  }
+  .contributors-section h2 {
+    font-size: 1.05rem;
+    margin: 0 0 .4rem;
+  }
+  .contributors-section p {
+    font-size: .9rem;
+    color: #4b5563;
+    margin: 0 0 .4rem;
+  }
+
+  .contributors-roles-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+  }
+  .contributors-roles-item {
+    padding: .4rem .5rem;
+    border-radius: .55rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+  }
+  .contributors-roles-item strong {
+    font-size: .9rem;
+    display: block;
+    margin-bottom: .1rem;
+  }
+  .contributors-roles-item span {
+    font-size: .82rem;
+    color: #6b7280;
+  }
+
+  .contributors-card {
+    border-radius: .9rem;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: .85rem .9rem 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,.03);
+    margin-bottom: .9rem;
+  }
+  .contributors-card h3 {
+    font-size: .98rem;
+    margin: 0 0 .35rem;
+  }
+  .contributors-card p {
+    font-size: .86rem;
+    color: #4b5563;
+    margin: 0 0 .4rem;
+  }
+
+  .contributors-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .15rem .55rem;
+    border-radius: 999px;
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    border: 1px solid #d1d5db;
+    color: #6b7280;
+    background: #f9fafb;
+    margin-bottom: .35rem;
+  }
+
+  .contributors-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin-top: .3rem;
+  }
+  .contributors-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .35rem .8rem;
+    border-radius: .6rem;
+    font-size: .85rem;
+    border: 1px solid #111827;
+    background: #111827;
+    color: #ffffff;
+    text-decoration: none;
+  }
+  .contributors-btn.secondary {
+    background: transparent;
+    color: #111827;
+    border-color: #d1d5db;
+  }
+  .contributors-meta {
+    font-size: .78rem;
+    color: #9ca3af;
+  }
+
+  @media (max-width: 768px) {
+    .contributors-layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .contributors-hero-title {
+      font-size: 1.4rem;
+    }
+  }
+</style>
+HTML;
+
+require_once PRIVATE_PATH . '/shared/header.php';
 ?>
-<main class="container" style="padding:1.75rem 0;">
-  <div class="page-header-block">
-    <h1>Contributors</h1>
-    <p class="page-intro">
-      Public directory of Mkomigbo contributors.
+
+<main class="mk-container contributors-main" style="padding:1.25rem 0 2.1rem;">
+
+  <section class="contributors-hero">
+    <p class="contributors-hero-eyebrow">Contributors</p>
+    <h1 class="contributors-hero-title">People who help Mkomigbo speak</h1>
+    <p class="contributors-hero-lead">
+      Mkomigbo is designed to grow with the work of many hands: researchers,
+      writers, translators, media partners and community members who help
+      document and interpret the life of Ndi Mkomigbo.
     </p>
-    <?php if ($currentUser): ?>
-      <p class="muted" style="margin-top:.25rem;">
-        Staff editing tools are available at
-        <a href="<?= h(url_for('/staff/contributors/')) ?>">/staff/contributors/</a>.
-      </p>
-    <?php endif; ?>
-  </div>
+  </section>
 
-  <?php if (!$rows): ?>
-    <p class="muted">No contributors yet.</p>
-  <?php else: ?>
-    <div class="contributors-grid"
-         style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px;">
-      <?php foreach ($rows as $c):
-        $id        = (int)($c['id'] ?? 0);
-        $name      = $c['display_name'] ?? $c['username'] ?? ('Contributor #' . (string)$id);
-        $avatar    = $c['avatar_url']   ?? '/lib/images/avatar-placeholder.png';
-        $username  = $c['username']     ?? '';
-        $slugValue = $c['slug']         ?? '';
-        $email     = $c['email']        ?? '';
+  <section class="contributors-layout">
+    <!-- LEFT: explanation + roles -->
+    <div>
+      <section class="contributors-section">
+        <h2>What does it mean to be a contributor?</h2>
+        <p>
+          A contributor is anyone who actively adds to the knowledge stored on
+          Mkomigbo – by researching sources, shaping narratives, translating
+          materials, or curating media that supports the subjects.
+        </p>
+        <p>
+          Over time, contributors will have profiles, clearer attribution on
+          articles, and ways to collaborate around History, Language, Culture,
+          Struggles and other themes.
+        </p>
+      </section>
 
-        // Choose a public handle for the URL
-        $handleKey = $hasSlug && $slugValue !== ''
-          ? $slugValue
-          : ($username !== '' ? $username : (string)$id);
-
-        $url = url_for('/contributors/' . rawurlencode((string)$handleKey) . '/');
-
-        // Plain-text preview of bio_html, if present
-        $bioPreview = '';
-        if ($hasBioHtml && !empty($c['bio_html'])) {
-          $plain      = trim(strip_tags($c['bio_html']));
-          if ($plain !== '') {
-            $bioPreview = mb_substr($plain, 0, 160);
-            if (mb_strlen($plain) > 160) {
-              $bioPreview .= '…';
-            }
-          }
-        }
-        ?>
-        <article class="card"
-                 style="border:1px solid #e5e7eb;border-radius:10px;padding:14px;background:#fff;
-                        box-shadow:0 1px 2px rgba(15,23,42,0.04);">
-          <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
-            <img src="<?= h($avatar) ?>"
-                 alt=""
-                 style="width:48px;height:48px;border-radius:50%;object-fit:cover;">
-            <div>
-              <div style="font-weight:600;"><?= h($name) ?></div>
-              <?php if ($username !== ''): ?>
-                <div class="muted" style="font-size:12px;">@<?= h($username) ?></div>
-              <?php elseif ($slugValue !== ''): ?>
-                <div class="muted" style="font-size:12px;">@<?= h($slugValue) ?></div>
-              <?php endif; ?>
-              <?php if ($email !== ''): ?>
-                <div class="muted" style="font-size:12px;margin-top:2px;">
-                  <a href="mailto:<?= h($email) ?>"><?= h($email) ?></a>
-                </div>
-              <?php endif; ?>
-            </div>
-          </div>
-
-          <?php if ($bioPreview !== ''): ?>
-            <p style="margin:0 0 10px;font-size:14px;color:#374151;white-space:pre-wrap;">
-              <?= h($bioPreview) ?>
-            </p>
-          <?php else: ?>
-            <p class="muted" style="margin:0 0 10px;font-size:14px;">
-              No bio yet.
-            </p>
-          <?php endif; ?>
-
-          <div style="text-align:right;">
-            <a href="<?= h($url) ?>" class="btn btn-primary btn-sm">
-              View profile
-            </a>
-          </div>
-        </article>
-      <?php endforeach; ?>
+      <section class="contributors-section">
+        <h2>Typical contributor roles</h2>
+        <ul class="contributors-roles-list">
+          <li class="contributors-roles-item">
+            <strong>Researcher</strong>
+            <span>Helps locate, verify and organise historical or cultural sources.</span>
+          </li>
+          <li class="contributors-roles-item">
+            <strong>Writer / editor</strong>
+            <span>Drafts and refines the subject pages, articles and explanatory notes.</span>
+          </li>
+          <li class="contributors-roles-item">
+            <strong>Translator</strong>
+            <span>Works across languages (Igbo / English and others) to keep content accessible.</span>
+          </li>
+          <li class="contributors-roles-item">
+            <strong>Media contributor</strong>
+            <span>Shares images, documents, audio or video that illuminate a topic.</span>
+          </li>
+          <li class="contributors-roles-item">
+            <strong>Community connector</strong>
+            <span>Helps gather stories, oral histories and perspectives from the wider community.</span>
+          </li>
+        </ul>
+      </section>
     </div>
-  <?php endif; ?>
+
+    <!-- RIGHT: small cards about next steps -->
+    <aside>
+      <article class="contributors-card">
+        <span class="contributors-badge">Phase 1</span>
+        <h3>Contributor profiles (coming soon)</h3>
+        <p>
+          In a later phase, this page will list named contributors with short
+          biographies and links to the pages or projects they have worked on.
+        </p>
+        <p class="contributors-meta">
+          This will connect directly to the existing <code>contributors</code> table
+          in your database.
+        </p>
+      </article>
+
+      <article class="contributors-card">
+        <span class="contributors-badge">In preparation</span>
+        <h3>How to become a contributor</h3>
+        <p>
+          A simple onboarding flow will be added here: how to express interest,
+          what kind of work is needed, and how materials are reviewed before
+          they appear on the site.
+        </p>
+        <div class="contributors-actions">
+          <span class="contributors-btn secondary" aria-disabled="true">
+            Not yet open
+          </span>
+          <span class="contributors-meta">
+            Workflow and permissions are still being designed.
+          </span>
+        </div>
+      </article>
+
+      <article class="contributors-card">
+        <span class="contributors-badge">For staff</span>
+        <h3>Managing contributors</h3>
+        <p>
+          Site staff will eventually have tools in the staff area to review
+          contributor accounts and connect them to specific subjects or pages.
+        </p>
+        <div class="contributors-actions">
+          <a class="contributors-btn secondary"
+             href="<?= h(url_for('/staff/')) ?>">
+            Go to staff area
+          </a>
+        </div>
+      </article>
+    </aside>
+  </section>
+
 </main>
-<?php require PRIVATE_PATH . '/shared/footer.php'; ?>
+
+<?php require_once PRIVATE_PATH . '/shared/footer.php'; ?>
